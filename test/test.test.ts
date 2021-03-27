@@ -1,0 +1,80 @@
+import test from 'ava'
+import { describe, scenario, it } from '../src/index'
+import { FakeReporter } from './FakeReporter'
+
+test("it runs a single passing test", (t) => {
+  const reporter = new FakeReporter()
+
+  describe("a single test", [
+    scenario("my first test")
+      .given(() => { })
+      .observeThat([
+        it("does something cool", () => {
+          // nothing
+        })
+      ])
+  ], reporter)
+
+  t.deepEqual(reporter.logLines, [
+    "TAP version 13",
+    "# a single test",
+    "# my first test",
+    "ok 1 it does something cool",
+    "1..1"
+  ], "it prints the expected output for a scenario with a single valid observation")
+})
+
+test("it runs more than one passing test", (t) => {
+  const reporter = new FakeReporter()
+
+  describe("a single test", [
+    scenario("several observations")
+      .given(() => { })
+      .observeThat([
+        it("does something cool", () => {
+          // nothing
+        }),
+        it("does something else cool", () => {
+          // nothing
+        })
+      ])
+  ], reporter)
+
+  t.deepEqual(reporter.logLines, [
+    "TAP version 13",
+    "# a single test",
+    "# several observations",
+    "ok 1 it does something cool",
+    "ok 2 it does something else cool",
+    "1..2"
+  ], "it prints the expected output for a scenarion with multiple valid observations")
+})
+
+test("it runs a failing test", (t) => {
+  const reporter = new FakeReporter()
+
+  describe("a single test", [
+    scenario("failing observation")
+      .given(() => {})
+      .observeThat([
+        it("does something that fails", () => {
+          const testFailure = new Error()
+          testFailure.stack = "fake stack"
+          throw testFailure
+        }),
+        it("passes", () => {})
+      ])
+  ], reporter)
+
+  t.deepEqual(reporter.logLines, [
+    "TAP version 13",
+    "# a single test",
+    "# failing observation",
+    "not ok 1 it does something that fails",
+    " ---",
+    " fake stack",
+    " ...",
+    "ok 2 it passes",
+    "1..2"
+  ], "it prints the expected output for a scenario with an invalid observation")
+})
