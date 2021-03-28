@@ -1,6 +1,6 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { describe, scenario, it, runDocs } from '../src/index'
+import { document, scenario, it, runDocs } from '../src/index'
 import { FakeReporter } from './helpers/FakeReporter'
 import { expect } from 'chai'
 
@@ -8,7 +8,7 @@ test("it runs multiple describes", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
-    describe("a single test", [
+    document("a single test", [
       scenario("just a test")
         .given(() => 7)
         .observeThat([
@@ -17,7 +17,7 @@ test("it runs multiple describes", async () => {
           })
         ])
     ]),
-    describe("another test", [
+    document("another test", [
       scenario("just another test")
         .given(() => 18)
         .observeThat([

@@ -1,14 +1,14 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { FakeReporter } from './helpers/FakeReporter'
-import { describe, scenario, it, runDocs } from '../src/index'
+import { document, scenario, it, runDocs } from '../src/index'
 import { expect } from 'chai'
 
 test("it runs a scenario with an async given", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
-    describe("a single test", [
+    document("a single test", [
       scenario("async given")
         .given(() => {
           return new Promise(resolve => {
@@ -36,7 +36,7 @@ test("it runs a scenario with an async given and async observation", async () =>
   const reporter = new FakeReporter()
 
   await runDocs([
-    describe("a single test", [
+    document("a single test", [
       scenario<number>("async given and observation")
         .given(() => {
           return new Promise(resolve => {
@@ -83,7 +83,7 @@ test("it runs async when blocks", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
-    describe("a single test", [
+    document("a single test", [
       scenario<{ val: number }>("multiple when blocks")
         .given(() => ({ val: 7 }))
         .when("the value is incremented", (context) => { context.val++ })

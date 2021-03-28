@@ -28,7 +28,7 @@ export async function runDocs(docs: Array<Documentation>, options: Documentation
   reporter.writeLine(`1..${observationCount}`)
 }
 
-export function describe<T>(description: string, scenarios: Array<RunnablePlan>): Documentation {
+export function document<T>(description: string, scenarios: Array<RunnablePlan>): Documentation {
   return { description, scenarios }
 }
 

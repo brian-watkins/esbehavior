@@ -1,7 +1,7 @@
 import { expect } from 'chai'
-import { describe, it, runDocs, scenario } from '../../src/index'
+import { document, it, runDocs, scenario } from '../../src/index'
 
-const spec = describe("a sample spec", [
+const spec = document("a sample spec", [
   scenario("comparing some numbers")
     .given(() => 7)
     .observeThat([

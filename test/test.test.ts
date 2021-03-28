@@ -1,14 +1,14 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { describe, scenario, it, runDocs } from '../src/index'
+import { document, scenario, it, runDocs } from '../src/index'
 import { FakeReporter } from './helpers/FakeReporter'
 
 test("it runs a single passing test", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
-    describe("a single test", [
+    document("a single test", [
       scenario("my first test")
         .given(() => { })
         .observeThat([
@@ -32,7 +32,7 @@ test("it runs more than one passing test", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
-    describe("a single test", [
+    document("a single test", [
       scenario("several observations")
         .given(() => { })
         .observeThat([
@@ -60,7 +60,7 @@ test("it runs a failing test", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
-    describe("a single test", [
+    document("a single test", [
       scenario("failing observation")
         .given(() => { })
         .observeThat([
@@ -98,7 +98,7 @@ test("it runs when blocks", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
-    describe("a single test", [
+    document("a single test", [
       scenario<{ val: number }>("multiple when blocks")
         .given(() => ({ val: 7 }))
         .when("the value is incremented", (context) => { context.val++ })
