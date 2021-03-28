@@ -2,13 +2,34 @@ import { Observation } from "./Observation"
 import { Plan, RunnablePlan, ScenarioPlan } from "./Plan"
 import { ConsoleReporter, Reporter } from "./Reporter"
 
-export async function describe<T>(description: string, scenarios: Array<RunnablePlan<T>>, reporter: Reporter = new ConsoleReporter()): Promise<void> {
-  reporter.writeLine("TAP version 13")
-  reporter.writeLine(`# ${description}`)
+export interface Documentation {
+  description: string
+  scenarios: Array<RunnablePlan>
+}
 
-  for (const scenario of scenarios) {
-    await scenario.run(reporter)
+export interface DocumentationOptions {
+  reporter?: Reporter
+}
+
+export async function runDocs(docs: Array<Documentation>, options: DocumentationOptions = {}): Promise<void> {
+  const reporter = options.reporter || new ConsoleReporter()
+
+  reporter.writeLine("TAP version 13")
+
+  let observationCount = 0
+  for (const documentation of docs) {
+    reporter.writeLine(`# ${documentation.description}`)
+    for (const scenario of documentation.scenarios) {
+      const result = await scenario.run(reporter)
+      observationCount += result.observations
+    }
   }
+
+  reporter.writeLine(`1..${observationCount}`)
+}
+
+export function describe<T>(description: string, scenarios: Array<RunnablePlan>): Documentation {
+  return { description, scenarios }
 }
 
 export interface Setup<T> {

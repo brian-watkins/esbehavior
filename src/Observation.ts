@@ -7,7 +7,7 @@ export interface Observation<T> {
 }
 
 export class ObservationRunner<T> {
-  constructor(private id: number, private observation: Observation<T>, private reporter: Reporter) {}
+  constructor(private observation: Observation<T>, private reporter: Reporter) {}
 
   async run(context: T): Promise<void> {
     try {
@@ -19,11 +19,11 @@ export class ObservationRunner<T> {
   }
 
   private reportOk() {
-    this.reporter.writeLine(`ok ${this.id} it ${this.observation.description}`)
+    this.reporter.writeLine(`ok it ${this.observation.description}`)
   }
 
   private reportError(err: any) {
-    this.reporter.writeLine(`not ok ${this.id} it ${this.observation.description}`)
+    this.reporter.writeLine(`not ok it ${this.observation.description}`)
     this.reporter.writeLine('  ---')
     this.reporter.writeLine(`  operator: ${err.operator}`)
     this.reporter.writeLine(`  expected: ${err.expected}`)

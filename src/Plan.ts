@@ -4,11 +4,15 @@ import { waitFor } from "./waitFor"
 
 export interface Plan<T> {
   when: (description: string, actions: (context: T) => void | Promise<void>) => Plan<T>
-  observeThat: (observations: Array<Observation<T>>) => RunnablePlan<T>
+  observeThat: (observations: Array<Observation<T>>) => RunnablePlan
 }
 
-export interface RunnablePlan<T> {
-  run(reporter: Reporter): Promise<void>
+export interface PlanResult {
+  observations: number
+}
+
+export interface RunnablePlan {
+  run(reporter: Reporter): Promise<PlanResult>
 }
 
 interface ScenarioAction<T> {
@@ -26,7 +30,7 @@ export class ScenarioPlan<T> implements Plan<T> {
     return this
   }
 
-  observeThat(observations: Observation<T>[]): RunnablePlan<T> {
+  observeThat(observations: Observation<T>[]): RunnablePlan {
     return {
       run: async (reporter) => {
         reporter.writeLine(`# ${this.description}`)
@@ -38,11 +42,12 @@ export class ScenarioPlan<T> implements Plan<T> {
           reporter.writeLine(`# when ${action.description}`)
         }
 
-        for (let i = 0; i < observations.length; i++) {
-          const runner = new ObservationRunner(i + 1, observations[i], reporter)
+        for (const observation of observations) {
+          const runner = new ObservationRunner(observation, reporter)
           await runner.run(resolvedContext)
         }
-        reporter.writeLine(`1..${observations.length}`)
+
+        return { observations: observations.length }
       }
     }
   }
