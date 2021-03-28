@@ -1,7 +1,6 @@
 import { test } from 'uvu'
-import * as assert from 'uvu/assert'
 import { document, scenario, it, runDocs } from '../src/index'
-import { FakeReporter } from './helpers/FakeReporter'
+import { docReport, FakeReporter, scenarioReport, validObservation } from './helpers/FakeReporter'
 import { expect } from 'chai'
 
 test("it runs multiple describes", async () => {
@@ -28,15 +27,17 @@ test("it runs multiple describes", async () => {
     ])
   ], { reporter })
 
-  assert.equal(reporter.logLines, [
-    "TAP version 13",
-    "# a single test",
-    "# just a test",
-    "ok it compares the correct number",
-    "# another test",
-    "# just another test",
-    "ok it compares another correct number",
-    "1..2"
+  reporter.expectTestReportWith([
+    docReport("a single test", [
+      scenarioReport("just a test", [], [
+        validObservation("compares the correct number")
+      ])
+    ]),
+    docReport("another test", [
+      scenarioReport("just another test", [], [
+        validObservation("compares another correct number")
+      ])
+    ])
   ], "it prints the expected output for multiple describes")
 })
 

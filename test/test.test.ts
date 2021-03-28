@@ -1,8 +1,7 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import * as assert from 'uvu/assert'
 import { document, scenario, it, runDocs } from '../src/index'
-import { FakeReporter } from './helpers/FakeReporter'
+import { actionReport, docReport, FakeReporter, invalidObservation, scenarioReport, validObservation } from './helpers/FakeReporter'
 
 test("it runs a single passing test", async () => {
   const reporter = new FakeReporter()
@@ -19,12 +18,12 @@ test("it runs a single passing test", async () => {
     ])
   ], { reporter })
 
-  assert.equal(reporter.logLines, [
-    "TAP version 13",
-    "# a single test",
-    "# my first test",
-    "ok it does something cool",
-    "1..1"
+  reporter.expectTestReportWith([
+    docReport("a single test", [
+      scenarioReport("my first test", [], [
+        validObservation("does something cool")
+      ])
+    ])
   ], "it prints the expected output for a scenario with a single valid observation")
 })
 
@@ -46,13 +45,13 @@ test("it runs more than one passing test", async () => {
     ])
   ], { reporter })
 
-  assert.equal(reporter.logLines, [
-    "TAP version 13",
-    "# a single test",
-    "# several observations",
-    "ok it does something cool",
-    "ok it does something else cool",
-    "1..2"
+  reporter.expectTestReportWith([
+    docReport("a single test", [
+      scenarioReport("several observations", [], [
+        validObservation("does something cool"),
+        validObservation("does something else cool")
+      ])
+    ])
   ], "it prints the expected output for a scenarion with multiple valid observations")
 })
 
@@ -77,20 +76,15 @@ test("it runs a failing test", async () => {
     ])
   ], { reporter })
 
-  assert.equal(reporter.logLines, [
-    "TAP version 13",
-    "# a single test",
-    "# failing observation",
-    "not ok it does something that fails",
-    "  ---",
-    "  operator: equals",
-    "  expected: something",
-    "  actual:   nothing",
-    "  stack: |-",
-    "    fake stack",
-    "  ...",
-    "ok it passes",
-    "1..2"
+  reporter.expectTestReportWith([
+    docReport("a single test", [
+      scenarioReport("failing observation", [], [
+        invalidObservation("does something that fails", {
+          operator: "equals", expected: "something", actual: "nothing", stack: "fake stack"
+        }),
+        validObservation("passes")
+      ])
+    ])
   ], "it prints the expected output for a scenario with an observation that throws an AssertionError")
 })
 
@@ -112,15 +106,16 @@ test("it runs when blocks", async () => {
     ])
   ], { reporter })
 
-  assert.equal(reporter.logLines, [
-    "TAP version 13",
-    "# a single test",
-    "# multiple when blocks",
-    "# when the value is incremented",
-    "# when the value is incremented",
-    "# when the value is incremented",
-    "ok it compares the correct number",
-    "1..1"
+  reporter.expectTestReportWith([
+    docReport("a single test", [
+      scenarioReport("multiple when blocks", [
+        actionReport("the value is incremented"),
+        actionReport("the value is incremented"),
+        actionReport("the value is incremented")
+      ], [
+        validObservation("compares the correct number")
+      ])
+    ])
   ], "it prints the expected output for a scenario with multiple when blocks")
 })
 
