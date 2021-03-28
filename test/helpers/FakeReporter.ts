@@ -1,4 +1,4 @@
-import { Reporter } from "../src";
+import { Reporter } from "../../src";
 
 export class FakeReporter implements Reporter {
   public logLines: Array<string> = []

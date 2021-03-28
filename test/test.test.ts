@@ -1,7 +1,7 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { describe, scenario, it } from '../src/index'
-import { FakeReporter } from './FakeReporter'
+import { FakeReporter } from './helpers/FakeReporter'
 
 test("it runs a single passing test", () => {
   const reporter = new FakeReporter()
