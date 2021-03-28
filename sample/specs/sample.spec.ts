@@ -4,6 +4,8 @@ import { document, it, runDocs, scenario } from '../../src/index'
 const spec = document("a sample spec", [
   scenario("comparing some numbers")
     .given(() => 7)
+    .when("something happens", () => {})
+    .when("something else happens", () => {})
     .observeThat([
       it("compares two numbers", (actual) => {
         expect(actual).to.equal(7)
