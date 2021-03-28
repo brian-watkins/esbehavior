@@ -11,13 +11,18 @@ export interface RunnablePlan<T> {
   run(reporter: Reporter): Promise<void>
 }
 
+interface ScenarioAction<T> {
+  description: string
+  run(context: T): void | Promise<void>
+}
+
 export class ScenarioPlan<T> implements Plan<T> {
-  private actions: Array<(context: T) => void | Promise<void>> = []
+  private actions: Array<ScenarioAction<T>> = []
 
   constructor(private description: string, private context: T | Promise<T>) { }
 
-  when(description: string, action: (context: T) => void | Promise<void>): Plan<T> {
-    this.actions.push(action)
+  when(description: string, run: (context: T) => void | Promise<void>): Plan<T> {
+    this.actions.push({ description, run })
     return this
   }
 
@@ -29,7 +34,8 @@ export class ScenarioPlan<T> implements Plan<T> {
         const resolvedContext = await waitFor(this.context)
 
         for (const action of this.actions) {
-          await waitFor(action(resolvedContext))
+          await waitFor(action.run(resolvedContext))
+          reporter.writeLine(`# when ${action.description}`)
         }
 
         for (let i = 0; i < observations.length; i++) {

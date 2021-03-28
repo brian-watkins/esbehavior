@@ -102,6 +102,9 @@ test("it runs async when blocks", async () => {
     "TAP version 13",
     "# a single test",
     "# multiple when blocks",
+    "# when the value is incremented",
+    "# when the value is incremented asynchronously",
+    "# when the value is incremented",
     "ok 1 it compares the correct number",
     "1..1"
   ], "it prints the expected output for a scenario with multiple when blocks")
