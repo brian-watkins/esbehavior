@@ -18,11 +18,11 @@ export async function describe<T>(description: string, scenarios: Array<Runnable
 }
 
 class ScenarioPlan<T> implements Plan<T> {
-  private actions: Array<(context: T) => void> = []
+  private actions: Array<(context: T) => void | Promise<void>> = []
 
   constructor(private description: string, private context: T | Promise<T>) { }
 
-  when(description: string, action: (context: T) => void): Plan<T> {
+  when(description: string, action: (context: T) => void | Promise<void>): Plan<T> {
     this.actions.push(action)
     return this
   }
@@ -40,7 +40,10 @@ class ScenarioPlan<T> implements Plan<T> {
         }
 
         for (const action of this.actions) {
-          action(resolvedContext)
+          const result = action(resolvedContext)
+          if (result instanceof Promise) {
+            await result
+          }
         }
 
         for (let i = 0; i < observations.length; i++) {
@@ -50,7 +53,6 @@ class ScenarioPlan<T> implements Plan<T> {
             if (result instanceof Promise) {
               await result
             }
-            observation.observer(resolvedContext)
             reporter.writeLine(`ok ${i + 1} it ${observation.description}`)
           } catch (err) {
             reporter.writeLine(`not ok ${i + 1} it ${observation.description}`)
@@ -86,7 +88,7 @@ export interface RunnableScenario<T> {
 }
 
 export interface Plan<T> {
-  when: (description: string, actions: (context: T) => void) => Plan<T>
+  when: (description: string, actions: (context: T) => void | Promise<void>) => Plan<T>
   observeThat: (observations: Array<Observation<T>>) => RunnableScenario<T>
 }
 

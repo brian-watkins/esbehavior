@@ -94,9 +94,9 @@ test("it runs when blocks", () => {
   describe("a single test", [
     scenario<{val: number}>("multiple when blocks")
       .given(() => ({ val: 7 }))
-      .when("the value is incremented", (context) => context.val++)
-      .when("the value is incremented", (context) => context.val++)
-      .when("the value is incremented", (context) => context.val++)
+      .when("the value is incremented", (context) => { context.val++ })
+      .when("the value is incremented", (context) => { context.val++ })
+      .when("the value is incremented", (context) => { context.val++ })
       .observeThat([
         it("compares the correct number", (actual) => {
           expect(actual.val).to.equal(10)

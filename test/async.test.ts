@@ -75,4 +75,36 @@ test("it runs a scenario with an async given and async observation", async () =>
   ], "it prints the expected output for a scenario with an async given and async observation")
 })
 
+test("it runs async when blocks", async () => {
+  const reporter = new FakeReporter()
+
+  await describe("a single test", [
+    scenario<{val: number}>("multiple when blocks")
+      .given(() => ({ val: 7 }))
+      .when("the value is incremented", (context) => { context.val++ })
+      .when("the value is incremented asynchronously", (context) => {
+        return new Promise(resolve => {
+          setTimeout(() => {
+            context.val++
+            resolve()
+          }, 150)
+        })
+      })
+      .when("the value is incremented", (context) => { context.val++ })
+      .observeThat([
+        it("compares the correct number", (actual) => {
+          expect(actual.val).to.equal(10)
+        })
+      ])
+  ], reporter)
+
+  assert.equal(reporter.logLines, [
+    "TAP version 13",
+    "# a single test",
+    "# multiple when blocks",
+    "ok 1 it compares the correct number",
+    "1..1"
+  ], "it prints the expected output for a scenario with multiple when blocks")
+})
+
 test.run()
