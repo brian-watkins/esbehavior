@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-  },
+  "scripts": {},
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/chai": "^4.2.15",
-    "chai": "^4.3.4"
+    "chai": "^4.3.4",
+    "tap-spec": "^5.0.0"
   }
 }
