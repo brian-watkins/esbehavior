@@ -8,16 +8,17 @@ class ConsoleReporter implements Reporter {
   }
 }
 
-export function describe<T>(description: string, scenarios: Array<RunnableScenario<T>>, reporter: Reporter = new ConsoleReporter()) {
+export async function describe<T>(description: string, scenarios: Array<RunnableScenario<T>>, reporter: Reporter = new ConsoleReporter()): Promise<void> {
   reporter.writeLine("TAP version 13")
   reporter.writeLine(`# ${description}`)
-  scenarios.forEach(scenario => {
-    scenario.run(reporter)
-  })
+
+  for (const scenario of scenarios) {
+    await scenario.run(reporter)
+  }
 }
 
 class ScenarioPlan<T> implements Plan<T> {
-  constructor(private description: string, private context: T) { }
+  constructor(private description: string, private context: T | Promise<T>) { }
 
   when(description: string, actions: (context: T) => void): Plan<T> {
     return this
@@ -25,14 +26,27 @@ class ScenarioPlan<T> implements Plan<T> {
 
   observeThat(observations: Observation<T>[]): RunnableScenario<T> {
     return {
-      run: (reporter) => {
+      run: async (reporter) => {
         reporter.writeLine(`# ${this.description}`)
-        observations.forEach((observation, index) => {
+        
+        let resolvedContext: T
+        if (this.context instanceof Promise) {
+          resolvedContext = await this.context
+        } else {
+          resolvedContext = this.context
+        }
+
+        for (let i = 0; i < observations.length; i++) {
+          const observation = observations[i]
           try {
-            observation.observer(this.context)
-            reporter.writeLine(`ok ${index + 1} it ${observation.description}`)
+            const result = observation.observer(resolvedContext)
+            if (result instanceof Promise) {
+              await result
+            }
+            observation.observer(resolvedContext)
+            reporter.writeLine(`ok ${i + 1} it ${observation.description}`)
           } catch (err) {
-            reporter.writeLine(`not ok ${index + 1} it ${observation.description}`)
+            reporter.writeLine(`not ok ${i + 1} it ${observation.description}`)
             reporter.writeLine('  ---')
             reporter.writeLine(`  operator: ${err.operator}`)
             reporter.writeLine(`  expected: ${err.expected}`)
@@ -41,7 +55,7 @@ class ScenarioPlan<T> implements Plan<T> {
             reporter.writeLine(`    ${err.stack}`)
             reporter.writeLine('  ...')
           }
-        })
+        }
         reporter.writeLine(`1..${observations.length}`)
       }
     }
@@ -50,18 +64,18 @@ class ScenarioPlan<T> implements Plan<T> {
 
 export const scenario = <T>(description: string): Setup<T> => {
   return {
-    given: (generator: () => T) => {
+    given: (generator: () => T | Promise<T>) => {
       return new ScenarioPlan(description, generator())
     }
   }
 }
 
 export interface Setup<T> {
-  given: (generator: () => T) => Plan<T>
+  given: (generator: () => T | Promise<T>) => Plan<T>
 }
 
 export interface RunnableScenario<T> {
-  run(reporter: Reporter): void
+  run(reporter: Reporter): Promise<void>
 }
 
 export interface Plan<T> {
@@ -71,10 +85,10 @@ export interface Plan<T> {
 
 export interface Observation<T> {
   description: string
-  observer: (context: T) => void
+  observer: (context: T) => void | Promise<void>
 }
 
-export function it<T>(description: string, observer: (context: T) => void): Observation<T> {
+export function it<T>(description: string, observer: (context: T) => void | Promise<void>): Observation<T> {
   return {
     description,
     observer
