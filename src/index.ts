@@ -18,9 +18,12 @@ export async function describe<T>(description: string, scenarios: Array<Runnable
 }
 
 class ScenarioPlan<T> implements Plan<T> {
+  private actions: Array<(context: T) => void> = []
+
   constructor(private description: string, private context: T | Promise<T>) { }
 
-  when(description: string, actions: (context: T) => void): Plan<T> {
+  when(description: string, action: (context: T) => void): Plan<T> {
+    this.actions.push(action)
     return this
   }
 
@@ -34,6 +37,10 @@ class ScenarioPlan<T> implements Plan<T> {
           resolvedContext = await this.context
         } else {
           resolvedContext = this.context
+        }
+
+        for (const action of this.actions) {
+          action(resolvedContext)
         }
 
         for (let i = 0; i < observations.length; i++) {
