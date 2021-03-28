@@ -33,9 +33,13 @@ class ScenarioPlan<T> implements Plan<T> {
             reporter.writeLine(`ok ${index + 1} it ${observation.description}`)
           } catch (err) {
             reporter.writeLine(`not ok ${index + 1} it ${observation.description}`)
-            reporter.writeLine(' ---')
-            reporter.writeLine(` ${err.stack}`)
-            reporter.writeLine(' ...')
+            reporter.writeLine('  ---')
+            reporter.writeLine(`  operator: ${err.operator}`)
+            reporter.writeLine(`  expected: ${err.expected}`)
+            reporter.writeLine(`  actual:   ${err.actual}`)
+            reporter.writeLine(`  stack: |-`)
+            reporter.writeLine(`    ${err.stack}`)
+            reporter.writeLine('  ...')
           }
         })
         reporter.writeLine(`1..${observations.length}`)

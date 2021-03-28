@@ -58,7 +58,10 @@ test("it runs a failing test", (t) => {
       .given(() => {})
       .observeThat([
         it("does something that fails", () => {
-          const testFailure = new Error()
+          const testFailure: any = new Error()
+          testFailure.expected = "something"
+          testFailure.actual = "nothing"
+          testFailure.operator = "equals"
           testFailure.stack = "fake stack"
           throw testFailure
         }),
@@ -71,10 +74,14 @@ test("it runs a failing test", (t) => {
     "# a single test",
     "# failing observation",
     "not ok 1 it does something that fails",
-    " ---",
-    " fake stack",
-    " ...",
+    "  ---",
+    "  operator: equals",
+    "  expected: something",
+    "  actual:   nothing",
+    "  stack: |-",
+    "    fake stack",
+    "  ...",
     "ok 2 it passes",
     "1..2"
-  ], "it prints the expected output for a scenario with an invalid observation")
+  ], "it prints the expected output for a scenario with an observation that throws an AssertionError")
 })
