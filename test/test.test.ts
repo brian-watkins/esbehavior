@@ -1,8 +1,9 @@
-import test from 'ava'
+import { test } from 'uvu'
+import * as assert from 'uvu/assert'
 import { describe, scenario, it } from '../src/index'
 import { FakeReporter } from './FakeReporter'
 
-test("it runs a single passing test", (t) => {
+test("it runs a single passing test", () => {
   const reporter = new FakeReporter()
 
   describe("a single test", [
@@ -15,7 +16,7 @@ test("it runs a single passing test", (t) => {
       ])
   ], reporter)
 
-  t.deepEqual(reporter.logLines, [
+  assert.equal(reporter.logLines, [
     "TAP version 13",
     "# a single test",
     "# my first test",
@@ -24,7 +25,7 @@ test("it runs a single passing test", (t) => {
   ], "it prints the expected output for a scenario with a single valid observation")
 })
 
-test("it runs more than one passing test", (t) => {
+test("it runs more than one passing test", () => {
   const reporter = new FakeReporter()
 
   describe("a single test", [
@@ -40,7 +41,7 @@ test("it runs more than one passing test", (t) => {
       ])
   ], reporter)
 
-  t.deepEqual(reporter.logLines, [
+  assert.equal(reporter.logLines, [
     "TAP version 13",
     "# a single test",
     "# several observations",
@@ -50,7 +51,7 @@ test("it runs more than one passing test", (t) => {
   ], "it prints the expected output for a scenarion with multiple valid observations")
 })
 
-test("it runs a failing test", (t) => {
+test("it runs a failing test", () => {
   const reporter = new FakeReporter()
 
   describe("a single test", [
@@ -69,7 +70,7 @@ test("it runs a failing test", (t) => {
       ])
   ], reporter)
 
-  t.deepEqual(reporter.logLines, [
+  assert.equal(reporter.logLines, [
     "TAP version 13",
     "# a single test",
     "# failing observation",
@@ -85,3 +86,5 @@ test("it runs a failing test", (t) => {
     "1..2"
   ], "it prints the expected output for a scenario with an observation that throws an AssertionError")
 })
+
+test.run()
