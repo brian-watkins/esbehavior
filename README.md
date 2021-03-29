@@ -1,4 +1,6 @@
-# ex-docs
+# bdvp
+
+### behavior documentation and verification program
 
 Create executable documentation!
 

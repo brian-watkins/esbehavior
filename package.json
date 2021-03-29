@@ -1,7 +1,7 @@
 {
-  "name": "beep",
+  "name": "bdvp",
   "version": "1.0.0",
-  "description": "test things",
+  "description": "behavior documentation and verification program",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
