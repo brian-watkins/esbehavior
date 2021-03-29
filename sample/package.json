@@ -10,6 +10,8 @@
   "devDependencies": {
     "@types/chai": "^4.2.15",
     "chai": "^4.3.4",
+    "tap-difflet": "^0.7.2",
+    "tap-mocha-reporter": "^5.0.1",
     "tap-spec": "^5.0.0"
   }
 }
