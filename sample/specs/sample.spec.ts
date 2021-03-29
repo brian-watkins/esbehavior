@@ -1,4 +1,4 @@
-import { expect } from 'chai'
+import proclaim from 'proclaim'
 import { document, it, runDocs, scenario } from '../../src/index'
 
 const spec = document("a sample spec", [
@@ -8,10 +8,10 @@ const spec = document("a sample spec", [
     .when("something else happens", () => {})
     .observeThat([
       it("compares two numbers", (actual) => {
-        expect(actual).to.equal(7)
+        proclaim.equal(actual, 7)
       }),
       it("does something that fails", (actual) => {
-        expect(actual).to.equal(8)
+        proclaim.equal(actual, 8)
       })
     ])
 ])
