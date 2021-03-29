@@ -101,3 +101,11 @@ export function invalidObservation(description: string, details: InvalidObservat
     ]
   }
 }
+
+export function skippedObservation(description: string): TestObservation {
+  return {
+    lines: () => [
+      `ok it ${description} # SKIP`
+    ]
+  }
+}

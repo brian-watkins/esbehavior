@@ -21,9 +21,9 @@ interface ScenarioAction<T> {
 }
 
 export class ScenarioPlan<T> implements Plan<T> {
-  private actions: Array<ScenarioAction<T>> = []
+  protected actions: Array<ScenarioAction<T>> = []
 
-  constructor(private description: string, private context: T | Promise<T>) { }
+  constructor(protected description: string, protected initializer: () => T | Promise<T>) { }
 
   when(description: string, run: (context: T) => void | Promise<void>): Plan<T> {
     this.actions.push({ description, run })
@@ -34,8 +34,8 @@ export class ScenarioPlan<T> implements Plan<T> {
     return {
       run: async (reporter) => {
         reporter.writeLine(`# ${this.description}`)
-        
-        const resolvedContext = await waitFor(this.context)
+
+        const resolvedContext = await waitFor(this.initializer())
 
         for (const action of this.actions) {
           await waitFor(action.run(resolvedContext))
@@ -48,6 +48,29 @@ export class ScenarioPlan<T> implements Plan<T> {
         }
 
         return { observations: observations.length }
+      }
+    }
+  }
+}
+
+export class SkippedScenarioPlan<T> extends ScenarioPlan<T> {
+  observeThat(observations: Array<Observation<T>>): RunnablePlan {
+    return {
+      run: async (reporter) => {
+        reporter.writeLine(`# ${this.description}`)
+
+        for (const action of this.actions) {
+          reporter.writeLine(`# when ${action.description}`)
+        }
+
+        for (const observation of observations) {
+          const runner = new ObservationRunner(observation, reporter)
+          runner.reportSkipped()
+        }
+
+        return {
+          observations: observations.length
+        }
       }
     }
   }

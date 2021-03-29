@@ -1,5 +1,5 @@
 import proclaim from 'proclaim'
-import { document, it, runDocs, scenario } from '../../src/index'
+import { document, it, runDocs, scenario, skip } from '../../src/index'
 
 const spec = document("a sample spec", [
   scenario("comparing some numbers")
@@ -12,6 +12,13 @@ const spec = document("a sample spec", [
       }),
       it("does something that fails", (actual) => {
         proclaim.equal(actual, 8)
+      })
+    ]),
+  skip.scenario("some boring scenario")
+    .given(() => {})
+    .observeThat([
+      it("never runs this", () => {
+        proclaim.equal(7, 5)
       })
     ])
 ])

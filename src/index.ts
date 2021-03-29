@@ -1,5 +1,5 @@
 import { Observation } from "./Observation"
-import { Plan, RunnablePlan, ScenarioPlan } from "./Plan"
+import { Plan, RunnablePlan, ScenarioPlan, SkippedScenarioPlan } from "./Plan"
 import { ConsoleReporter, Reporter } from "./Reporter"
 
 export interface Documentation {
@@ -36,10 +36,20 @@ export interface Setup<T> {
   given: (generator: () => T | Promise<T>) => Plan<T>
 }
 
+export const skip = {
+  scenario<T>(description: string): Setup<T> {
+    return {
+      given: (generator: () => T | Promise<T>) => {
+        return new SkippedScenarioPlan(description, generator)
+      }
+    }
+  }
+}
+
 export const scenario = <T>(description: string): Setup<T> => {
   return {
     given: (generator: () => T | Promise<T>) => {
-      return new ScenarioPlan(description, generator())
+      return new ScenarioPlan(description, generator)
     }
   }
 }

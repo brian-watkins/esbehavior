@@ -18,6 +18,10 @@ export class ObservationRunner<T> {
     }
   }
 
+  reportSkipped() {
+    this.reporter.writeLine(`ok it ${this.observation.description} # SKIP`)
+  }
+
   private reportOk() {
     this.reporter.writeLine(`ok it ${this.observation.description}`)
   }
