@@ -1,6 +1,4 @@
-# bdvp
-
-### behavior documentation and verification program
+## behavior documentation and verification program (bdvp)
 
 Create executable documentation!
 
