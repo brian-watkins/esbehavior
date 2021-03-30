@@ -1,5 +1,5 @@
 import { Observation } from "./Observation"
-import { Plan, Scenario, ScenarioKind, ScenarioPlan } from "./Plan"
+import { Plan, Scenario, ScenarioKind, ScenarioPlan } from "./Scenario"
 import { ConsoleReporter, Reporter } from "./Reporter"
 import { Document, DocumentDetails } from "./Document"
 

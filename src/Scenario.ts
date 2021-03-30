@@ -2,6 +2,11 @@ import { Observation, ObservationRunner } from "./Observation"
 import { Reporter } from "./Reporter"
 import { waitFor } from "./waitFor"
 
+export interface Scenario {
+  kind: ScenarioKind
+  run(onlyIfPicked: boolean, reporter: Reporter): Promise<ScenarioResult>
+}
+
 export interface Plan<T> {
   when: (description: string, actions: (context: T) => void | Promise<void>) => Plan<T>
   observeThat: (observations: Array<Observation<T>>) => Scenario
@@ -13,11 +18,6 @@ export interface ScenarioResult {
 
 export enum ScenarioKind {
   Normal, Skipped, Picked
-}
-
-export interface Scenario {
-  kind: ScenarioKind
-  run(onlyIfPicked: boolean, reporter: Reporter): Promise<ScenarioResult>
 }
 
 interface ScenarioAction<T> {

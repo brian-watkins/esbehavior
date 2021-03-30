@@ -1,4 +1,4 @@
-import { Scenario, ScenarioKind } from "./Plan";
+import { Scenario, ScenarioKind } from "./Scenario";
 import { Reporter } from "./Reporter";
 
 export interface Document {
