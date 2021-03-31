@@ -1,5 +1,5 @@
 import proclaim from 'proclaim'
-import { document, it, runDocs, scenario, skip } from '../../src/index'
+import { document, it, runDocs, scenario, skip } from 'bdvp'
 
 const spec = document("a sample spec", [
   scenario("comparing some numbers")
