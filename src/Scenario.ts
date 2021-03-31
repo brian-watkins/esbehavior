@@ -1,4 +1,4 @@
-import { Observation, ObservationRunner } from "./Observation"
+import { Observation, ObservationResult, ObservationRunner } from "./Observation"
 import { Reporter } from "./Reporter"
 import { waitFor } from "./waitFor"
 
@@ -13,7 +13,9 @@ export interface Plan<T> {
 }
 
 export interface ScenarioResult {
-  observations: number
+  valid: number
+  invalid: number
+  skipped: number
 }
 
 export enum ScenarioKind {
@@ -58,12 +60,23 @@ export class ScenarioPlan<T> implements Plan<T> {
       reporter.writeLine(`# when ${action.description}`)
     }
 
-    for (const observation of observations) {
-      const runner = new ObservationRunner(observation, reporter)
-      await runner.run(resolvedContext)
+    const results = {
+      valid: 0,
+      invalid: 0,
+      skipped: 0
     }
 
-    return { observations: observations.length }
+    for (const observation of observations) {
+      const runner = new ObservationRunner(observation, reporter)
+      const result = await runner.run(resolvedContext)
+      if (result === ObservationResult.Valid) {
+        results.valid += 1
+      } else {
+        results.invalid += 1
+      }
+    }
+
+    return results
   }
 
   private skip(observations: Array<Observation<T>>, reporter: Reporter): ScenarioResult {
@@ -79,7 +92,9 @@ export class ScenarioPlan<T> implements Plan<T> {
     }
 
     return {
-      observations: observations.length
+      valid: 0,
+      invalid: 0,
+      skipped: observations.length
     }
   }
 }

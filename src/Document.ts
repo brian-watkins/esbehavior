@@ -9,7 +9,9 @@ export interface Document {
 }
 
 export interface DocumentResult {
-  observations: number
+  valid: number
+  invalid: number
+  skipped: number
 }
 
 export class DocumentDetails implements Document {
@@ -24,13 +26,15 @@ export class DocumentDetails implements Document {
 
     reporter.writeLine(`# ${this.description}`)
 
+    const results = { valid: 0, invalid: 0, skipped: 0 }
+
     for (const scenario of this.scenarios) {
       const result = await scenario.run(onlyIfPicked, reporter)
-      totalObservations += result.observations
+      results.valid += result.valid
+      results.invalid += result.invalid
+      results.skipped += result.skipped
     }
 
-    return {
-      observations: totalObservations
-    }
+    return results
   }
 }

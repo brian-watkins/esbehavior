@@ -6,15 +6,21 @@ export interface Observation<T> {
   observer(context: T): void | Promise<void>
 }
 
+export enum ObservationResult {
+  Valid, Invalid
+}
+
 export class ObservationRunner<T> {
   constructor(private observation: Observation<T>, private reporter: Reporter) {}
 
-  async run(context: T): Promise<void> {
+  async run(context: T): Promise<ObservationResult> {
     try {
       await waitFor(this.observation.observer(context))
       this.reportOk()
+      return ObservationResult.Valid
     } catch (err) {
       this.reportError(err)
+      return ObservationResult.Invalid
     }
   }
 

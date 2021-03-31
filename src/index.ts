@@ -14,13 +14,19 @@ export async function runDocs<T>(docs: Array<Document>, options: RunnerOptions =
 
   const onlyIfPicked = docs.find(doc => doc.hasBeenPicked) !== undefined
 
-  let observationCount = 0
+  let results = { valid: 0, invalid: 0, skipped: 0 }
+
   for (const document of docs) {
     const result = await document.run(onlyIfPicked, reporter)
-    observationCount += result.observations
+    results.valid += result.valid
+    results.invalid += result.invalid
+    results.skipped += result.skipped
   }
 
-  reporter.writeLine(`1..${observationCount}`)
+  reporter.writeLine(`1..${results.valid + results.invalid + results.skipped}`)
+  reporter.writeLine(`# valid observations: ${results.valid}`)
+  reporter.writeLine(`# invalid observations: ${results.invalid}`)
+  reporter.writeLine(`# skipped: ${results.skipped}`)
 }
 
 export function document(description: string, scenarios: Array<Scenario>): Document {
