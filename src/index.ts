@@ -1,6 +1,6 @@
 import { Observation } from "./Observation"
 import { Plan, Scenario, ScenarioKind, ScenarioPlan } from "./Scenario"
-import { ConsoleReporter, Reporter } from "./Reporter"
+import { ConsoleReporter, Reporter, writeComment } from "./Reporter"
 import { Document, DocumentCollection, ScenarioDocument } from "./Document"
 
 export interface RunnerOptions {
@@ -17,9 +17,9 @@ export async function runDocs<T>(docs: Array<Document>, options: RunnerOptions =
   const results = await docCollection.run(reporter)
 
   reporter.writeLine(`1..${results.valid + results.invalid + results.skipped}`)
-  reporter.writeLine(`# valid observations: ${results.valid}`)
-  reporter.writeLine(`# invalid observations: ${results.invalid}`)
-  reporter.writeLine(`# skipped: ${results.skipped}`)
+  writeComment(reporter, `valid observations: ${results.valid}`)
+  writeComment(reporter, `invalid observations: ${results.invalid}`)
+  writeComment(reporter, `skipped: ${results.skipped}`)
 }
 
 export function document(description: string, scenarios: Array<Scenario>): Document {

@@ -1,5 +1,5 @@
 import { Scenario, ScenarioKind } from "./Scenario";
-import { Reporter } from "./Reporter";
+import { Reporter, writeComment } from "./Reporter";
 
 export interface Document {
   description: string
@@ -34,7 +34,7 @@ export class ScenarioDocument implements Document {
   }
 
   async run(onlyIfPicked: boolean, reporter: Reporter): Promise<DocumentResult> {
-    reporter.writeLine(`# ${this.description}`)
+    writeComment(reporter, this.description)
     return await gatherResults(onlyIfPicked, reporter, this.scenarios)
   }
 }

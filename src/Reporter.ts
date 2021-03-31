@@ -7,3 +7,7 @@ export class ConsoleReporter implements Reporter {
     console.log(message)
   }
 }
+
+export function writeComment(reporter: Reporter, comment: string) {
+  reporter.writeLine(`# ${comment}`)
+}
