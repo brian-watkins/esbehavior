@@ -1,5 +1,5 @@
 import { Observation, ObservationResult, ObservationRunner } from "./Observation"
-import { Reporter } from "./Reporter"
+import { Reporter, writeComment } from "./Reporter"
 import { waitFor } from "./waitFor"
 
 export interface Scenario {
@@ -29,8 +29,9 @@ interface ScenarioAction<T> {
 
 export class ScenarioPlan<T> implements Plan<T> {
   public actions: Array<ScenarioAction<T>> = []
+  public observations: Array<Observation<T>> = []
 
-  constructor(private description: string, private kind: ScenarioKind, private initializer: () => T | Promise<T>) { }
+  constructor(public description: string, public kind: ScenarioKind, public initializer: () => T | Promise<T>) { }
 
   when(description: string, run: (context: T) => void | Promise<void>): Plan<T> {
     this.actions.push({ description, run })
@@ -38,68 +39,89 @@ export class ScenarioPlan<T> implements Plan<T> {
   }
 
   observeThat(observations: Observation<T>[]): Scenario {
-    return {
-      kind: this.kind,
-      run: async (onlyIfPicked, reporter) => {
-        if (this.kind === ScenarioKind.Skipped || (onlyIfPicked && this.kind !== ScenarioKind.Picked)) {
-          return this.skip(observations, reporter)
-        } else {
-          return this.run(observations, reporter)
-        }
+    this.observations = observations
+    return new RunnableScenario(this)
+  }
+}
+
+interface SkipScenarioMode {
+  type: "Skip"
+}
+
+interface VerifyScenarioMode<T> {
+  type: "Verify"
+  context: T
+}
+
+type ScenarioMode<T>
+  = SkipScenarioMode
+  | VerifyScenarioMode<T>
+
+
+class RunnableScenario<T> implements Scenario {
+  constructor(private plan: ScenarioPlan<T>) {}
+
+  get kind(): ScenarioKind {
+    return this.plan.kind
+  }
+
+  async run(verifyOnlyIfPicked: boolean, reporter: Reporter): Promise<ScenarioResult> {
+    writeComment(reporter, this.plan.description)
+
+    const scenarioMode = await this.determineMode(verifyOnlyIfPicked)
+    
+    await this.runActions(scenarioMode, reporter)
+    return this.runObservations(scenarioMode, reporter)
+  }
+
+  private async determineMode(verifyOnlyIfPicked: boolean): Promise<ScenarioMode<T>> {
+    if (this.kind === ScenarioKind.Skipped || (verifyOnlyIfPicked && this.kind !== ScenarioKind.Picked)) {
+      return { type: "Skip" }
+    } else {
+      return {
+        type: "Verify",
+        context: await waitFor(this.plan.initializer())
       }
     }
   }
 
-  private async run(observations: Array<Observation<T>>, reporter: Reporter): Promise<ScenarioResult> {
-    reporter.writeLine(`# ${this.description}`)
-
-    const resolvedContext = await waitFor(this.initializer())
-
-    for (const action of this.actions) {
-      await waitFor(action.run(resolvedContext))
-      reporter.writeLine(`# when ${action.description}`)
+  async runActions(scenarioMode: ScenarioMode<T>, reporter: Reporter): Promise<void> {
+    for (const action of this.plan.actions) {
+      if (scenarioMode.type === "Verify") {
+          await waitFor(action.run(scenarioMode.context))
+      }
+      writeAction(reporter, action.description)
     }
+  }
 
-    const results = {
-      valid: 0,
-      invalid: 0,
-      skipped: 0
-    }
+  async runObservations(scenarioMode: ScenarioMode<T>, reporter: Reporter): Promise<ScenarioResult> {
+    const results = { valid: 0, invalid: 0, skipped: 0 }
 
-    for (const observation of observations) {
+    for (const observation of this.plan.observations) {
       const runner = new ObservationRunner(observation, reporter)
-
-      const result = await runner.run(resolvedContext)
-
-      switch (result) {
-        case ObservationResult.Valid:
-          results.valid += 1
+      switch (scenarioMode.type) {
+        case "Verify":
+          const result = await runner.run(scenarioMode.context)
+          switch (result) {
+            case ObservationResult.Valid:
+              results.valid += 1
+              break
+            case ObservationResult.Invalid:
+              results.invalid += 1
+              break
+          }
           break
-        case ObservationResult.Invalid:
-          results.invalid += 1
+        case "Skip":
+          runner.reportSkipped()
+          results.skipped += 1
           break
       }
     }
 
     return results
   }
+}
 
-  private skip(observations: Array<Observation<T>>, reporter: Reporter): ScenarioResult {
-    reporter.writeLine(`# ${this.description}`)
-
-    for (const action of this.actions) {
-      reporter.writeLine(`# when ${action.description}`)
-    }
-
-    for (const observation of observations) {
-      const runner = new ObservationRunner(observation, reporter)
-      runner.reportSkipped()
-    }
-
-    return {
-      valid: 0,
-      invalid: 0,
-      skipped: observations.length
-    }
-  }
+function writeAction(reporter: Reporter, action: string) {
+  writeComment(reporter, `when ${action}`)
 }
