@@ -1,7 +1,7 @@
 import { Observation } from "./Observation"
 import { Plan, Scenario, ScenarioKind, ScenarioPlan } from "./Scenario"
 import { ConsoleReporter, Reporter } from "./Reporter"
-import { Document, DocumentDetails } from "./Document"
+import { Document, DocumentCollection, ScenarioDocument } from "./Document"
 
 export interface RunnerOptions {
   reporter?: Reporter
@@ -12,16 +12,9 @@ export async function runDocs<T>(docs: Array<Document>, options: RunnerOptions =
 
   reporter.writeLine("TAP version 13")
 
-  const onlyIfPicked = docs.find(doc => doc.hasBeenPicked) !== undefined
+  const docCollection = new DocumentCollection(docs)
 
-  let results = { valid: 0, invalid: 0, skipped: 0 }
-
-  for (const document of docs) {
-    const result = await document.run(onlyIfPicked, reporter)
-    results.valid += result.valid
-    results.invalid += result.invalid
-    results.skipped += result.skipped
-  }
+  const results = await docCollection.run(reporter)
 
   reporter.writeLine(`1..${results.valid + results.invalid + results.skipped}`)
   reporter.writeLine(`# valid observations: ${results.valid}`)
@@ -30,7 +23,7 @@ export async function runDocs<T>(docs: Array<Document>, options: RunnerOptions =
 }
 
 export function document(description: string, scenarios: Array<Scenario>): Document {
-  return new DocumentDetails(description, scenarios)
+  return new ScenarioDocument(description, scenarios)
 }
 
 export interface Setup<T> {

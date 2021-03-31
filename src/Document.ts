@@ -14,7 +14,19 @@ export interface DocumentResult {
   skipped: number
 }
 
-export class DocumentDetails implements Document {
+export class DocumentCollection {
+  constructor(private documents: Array<Document>) {}
+
+  get onlyIfPicked(): boolean {
+    return this.documents.find(doc => doc.hasBeenPicked) !== undefined
+  }
+
+  async run(reporter: Reporter): Promise<DocumentResult> {
+    return gatherResults(this.onlyIfPicked, reporter, this.documents)
+  }
+}
+
+export class ScenarioDocument implements Document {
   constructor(public description: string, public scenarios: Array<Scenario>) {}
   
   get hasBeenPicked(): boolean {
@@ -22,19 +34,24 @@ export class DocumentDetails implements Document {
   }
 
   async run(onlyIfPicked: boolean, reporter: Reporter): Promise<DocumentResult> {
-    let totalObservations = 0
-
     reporter.writeLine(`# ${this.description}`)
-
-    const results = { valid: 0, invalid: 0, skipped: 0 }
-
-    for (const scenario of this.scenarios) {
-      const result = await scenario.run(onlyIfPicked, reporter)
-      results.valid += result.valid
-      results.invalid += result.invalid
-      results.skipped += result.skipped
-    }
-
-    return results
+    return await gatherResults(onlyIfPicked, reporter, this.scenarios)
   }
+}
+
+interface RunnableDocs {
+  run(onlyIfPicked: boolean, reporter: Reporter): Promise<DocumentResult>
+}
+
+async function gatherResults(onlyIfPicked: boolean, reporter: Reporter, runnables: Array<RunnableDocs>): Promise<DocumentResult> {
+  const results = { valid: 0, invalid: 0, skipped: 0 }
+
+  for (const runnable of runnables) {
+    const result = await runnable.run(onlyIfPicked, reporter)
+    results.valid += result.valid
+    results.invalid += result.invalid
+    results.skipped += result.skipped
+  }
+
+  return results
 }
