@@ -68,11 +68,16 @@ export class ScenarioPlan<T> implements Plan<T> {
 
     for (const observation of observations) {
       const runner = new ObservationRunner(observation, reporter)
+
       const result = await runner.run(resolvedContext)
-      if (result === ObservationResult.Valid) {
-        results.valid += 1
-      } else {
-        results.invalid += 1
+
+      switch (result) {
+        case ObservationResult.Valid:
+          results.valid += 1
+          break
+        case ObservationResult.Invalid:
+          results.invalid += 1
+          break
       }
     }
 
