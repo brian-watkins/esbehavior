@@ -2,16 +2,12 @@ import { Readable, Writable } from "stream"
 import { BDVPReporter } from "../src/BDVPReporter"
 
 export class TestableApp {
-  private bdvpReporter
-  private consumer
-
-  constructor() {
-    this.bdvpReporter = new BDVPReporter()
-    this.consumer = new OutputConsumer()
-  }
+  private bdvpReporter = new BDVPReporter()
+  private consumer = new OutputConsumer()
 
   async executeDoc(document: string): Promise<void> {
-    const readableDoc = Readable.from(document.split("\n"))
+    const lines: Array<string> = document.match(/^.*(\n|$)/gm) ?? []
+    const readableDoc = Readable.from(lines)
     readableDoc.pipe(this.bdvpReporter).pipe(this.consumer)
     return new Promise(resolve => {
       readableDoc.on("close", () => {

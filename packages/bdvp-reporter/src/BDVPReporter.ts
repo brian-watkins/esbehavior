@@ -1,11 +1,27 @@
-import { Transform, TransformCallback } from "stream";
 
-export class BDVPReporter extends Transform {
+import Parser from 'tap-parser'
+import { Duplex } from "stream";
+
+export class BDVPReporter extends Duplex {
+  private tapParser
+
   constructor() {
     super()
+    this.tapParser = new Parser()
+
+    this.tapParser.on("comment", (comment: string) => {
+      this.push(comment)
+    })
   }
 
-  _transform(chunk: any, encoding: string, push: TransformCallback) {
-    push(null, chunk.toString())
+  _write(chunk: any, encoding: BufferEncoding, next: (error?: Error | null) => void) {
+    this.tapParser.write(chunk, encoding, next)
   }
+
+  _final(next: (error?: Error | null) => void) {
+    this.tapParser.end()
+    next()
+  }
+
+  _read(size: number) {}
 }
