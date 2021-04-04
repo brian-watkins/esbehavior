@@ -17,8 +17,8 @@ ok it compares two numbers
 const standardScenario =
   scenario<TestableApp>("standard document with scenario and observations")
     .given(() => new TestableApp())
-    .when("it handles a document", (testableApp) => {
-      return testableApp.executeDoc(standardDocument)
+    .when("it handles a document", async (testableApp) => {
+      await testableApp.executeDoc(standardDocument)
     })
     .observeThat([
       it("prints the name of the document", (testableApp) => {
