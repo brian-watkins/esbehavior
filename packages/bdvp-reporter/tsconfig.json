@@ -18,8 +18,7 @@
     ]
   },
   "include": [
-    "src",
-    "spec"
+    "src"
   ],
   "exclude": [
     "node_modules",

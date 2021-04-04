@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "ts-node ./specs/sample.spec.ts"
+    "test:raw": "ts-node ./specs/sample.spec.ts",
+    "test": "npm run test:raw | bdvp-reporter"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +14,7 @@
     "@types/chai": "^4.2.15",
     "@types/proclaim": "^3.6.2",
     "bdvp": "^1.0.0",
+    "bdvp-reporter": "^1.0.0",
     "chai": "^4.3.4",
     "proclaim": "^3.6.0",
     "tap-dancer": "^0.3.1",
