@@ -8,7 +8,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "ts-node ./spec/summary.ts | tap-mocha-reporter dot"
+    "test": "ts-node ./spec/summary.ts | tap-mocha-reporter spec"
   },
   "dependencies": {
     "tap-parser": "^10.1.0"
