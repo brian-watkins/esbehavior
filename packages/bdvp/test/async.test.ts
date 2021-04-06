@@ -1,7 +1,7 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { actionReport, docReport, FakeReporter, invalidObservation, scenarioReport, validObservation } from './helpers/FakeReporter'
-import { document, scenario, it, runDocs } from '../src/index'
+import { document, scenario, it, runDocs, context } from '../src/index'
 import { expect } from 'chai'
 
 test("it runs a scenario with an async given", async () => {
@@ -9,12 +9,11 @@ test("it runs a scenario with an async given", async () => {
 
   await runDocs([
     document("a single test", [
-      scenario("async given")
-        .given(() => {
-          return new Promise(resolve => {
-            setTimeout(() => resolve(7), 150)
-          })
+      scenario("async given", context(() => {
+        return new Promise(resolve => {
+          setTimeout(() => resolve(7), 150)
         })
+      }))
         .observeThat([
           it("compares the right numbers", (actual) => {
             assert.equal(actual, 7, "it does the thing")
@@ -37,12 +36,11 @@ test("it runs a scenario with an async given and async observation", async () =>
 
   await runDocs([
     document("a single test", [
-      scenario<number>("async given and observation")
-        .given(() => {
-          return new Promise(resolve => {
-            setTimeout(() => resolve(7), 150)
-          })
+      scenario("async given and observation", context(() => {
+        return new Promise<number>(resolve => {
+          setTimeout(() => resolve(7), 150)
         })
+      }))
         .observeThat([
           it("async compares the right numbers", async (actual) => {
             const fetchedValue = await new Promise(resolve => {
@@ -82,8 +80,7 @@ test("it runs async when blocks", async () => {
 
   await runDocs([
     document("a single test", [
-      scenario<{ val: number }>("multiple when blocks")
-        .given(() => ({ val: 7 }))
+      scenario("multiple when blocks", context(() => ({ val: 7 })))
         .when("the value is incremented", (context) => { context.val++ })
         .when("the value is incremented asynchronously", (context) => {
           return new Promise(resolve => {
@@ -95,8 +92,8 @@ test("it runs async when blocks", async () => {
         })
         .when("the value is incremented", (context) => { context.val++ })
         .observeThat([
-          it("compares the correct number", (actual) => {
-            expect(actual.val).to.equal(10)
+          it("compares the correct number", (context) => {
+            expect(context.val).to.equal(10)
           })
         ])
     ])

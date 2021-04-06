@@ -20,8 +20,7 @@ Here's an example:
 
 ```
 document("some behavior", [
-  scenario("the app shows things")
-    .given(() => new TestApp())
+  scenario("the app shows things", context(() => new TestApp()))
     .when("the app loads", (app) => await app.start())
     .observeThat([
       it("shows things", (app) => {

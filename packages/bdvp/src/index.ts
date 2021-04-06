@@ -1,5 +1,5 @@
 import { Observation } from "./Observation"
-import { Plan, Scenario, ScenarioKind, ScenarioPlan } from "./Scenario"
+import { Context, Plan, Scenario, ScenarioKind, ScenarioPlan } from "./Scenario"
 import { ConsoleReporter, Reporter, writeComment } from "./Reporter"
 import { Document, DocumentCollection, ScenarioDocument } from "./Document"
 
@@ -26,35 +26,27 @@ export function document(description: string, scenarios: Array<Scenario>): Docum
   return new ScenarioDocument(description, scenarios)
 }
 
-export interface Setup<T> {
-  given: (generator: () => T | Promise<T>) => Plan<T>
+export function context<T>(generator: () => T | Promise<T>): Context<T> {
+  return {
+    generator
+  }
+}
+
+const voidContext: Context<any> = context(() => {})
+
+export function scenario<T = void>(description: string, context: Context<T> = voidContext): Plan<T> {
+  return new ScenarioPlan(description, ScenarioKind.Normal, context)
 }
 
 export const skip = {
-  scenario<T>(description: string): Setup<T> {
-    return {
-      given: (generator: () => T | Promise<T>): Plan<T> => {
-        return new ScenarioPlan(description, ScenarioKind.Skipped, generator)
-      }
-    }
+  scenario<T = void>(description: string, context: Context<T> = voidContext): Plan<T> {
+    return new ScenarioPlan(description, ScenarioKind.Skipped, context)
   }
 }
 
 export const pick = {
-  scenario<T>(description: string): Setup<T> {
-    return {
-      given: (generator: () => T | Promise<T>): Plan<T> => {
-        return new ScenarioPlan(description, ScenarioKind.Picked, generator)
-      }
-    }
-  }
-}
-
-export const scenario = <T>(description: string): Setup<T> => {
-  return {
-    given: (generator: () => T | Promise<T>) => {
-      return new ScenarioPlan(description, ScenarioKind.Normal, generator)
-    }
+  scenario<T = void>(description: string, context: Context<T> = voidContext): Plan<T> {
+    return new ScenarioPlan(description, ScenarioKind.Picked, context)
   }
 }
 

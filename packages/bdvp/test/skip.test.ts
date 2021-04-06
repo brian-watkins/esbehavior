@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, scenario, it, runDocs, skip } from '../src/index'
+import { document, scenario, it, runDocs, skip, context } from '../src/index'
 import { actionReport, docReport, FakeReporter, scenarioReport, skippedObservation, validObservation } from './helpers/FakeReporter'
 
 test("it skips a scenario", async () => {
@@ -8,10 +8,9 @@ test("it skips a scenario", async () => {
 
   await runDocs([
     document("something", [
-      skip.scenario("not important")
-        .given(() => {
-          throw new Error("BAD GIVEN!!")
-        })
+      skip.scenario("not important", context(() => {
+        throw new Error("BAD GIVEN!!")
+      }))
         .when("it does something bad", () => {
           throw new Error("BAD WHEN!!")
         })
@@ -24,7 +23,6 @@ test("it skips a scenario", async () => {
           })
         ]),
       scenario("important")
-        .given(() => {})
         .observeThat([
           it("will run this", () => {
             expect(7).to.equal(7)

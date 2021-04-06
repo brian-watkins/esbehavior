@@ -1,4 +1,4 @@
-import { document, scenario, it } from 'bdvp'
+import { document, scenario, it, context } from 'bdvp'
 import expect from 'proclaim'
 import { TestableApp } from './TestableApp'
 
@@ -15,8 +15,7 @@ ok it compares two numbers
 `
 
 const standardScenario =
-  scenario<TestableApp>("standard document with scenario and observations")
-    .given(() => new TestableApp())
+  scenario("standard document with scenario and observations", context(() => new TestableApp()))
     .when("it handles a document", async (testableApp) => {
       await testableApp.executeDoc(standardDocument)
     })

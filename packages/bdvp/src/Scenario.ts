@@ -7,6 +7,10 @@ export interface Scenario {
   run(onlyIfPicked: boolean, reporter: Reporter): Promise<ScenarioResult>
 }
 
+export interface Context<T> {
+  generator: () => T | Promise<T>
+}
+
 export interface Plan<T> {
   when: (description: string, actions: (context: T) => void | Promise<void>) => Plan<T>
   observeThat: (observations: Array<Observation<T>>) => Scenario
@@ -31,7 +35,7 @@ export class ScenarioPlan<T> implements Plan<T> {
   public actions: Array<ScenarioAction<T>> = []
   public observations: Array<Observation<T>> = []
 
-  constructor(public description: string, public kind: ScenarioKind, public initializer: () => T | Promise<T>) { }
+  constructor(public description: string, public kind: ScenarioKind, public context: Context<T>) { }
 
   when(description: string, run: (context: T) => void | Promise<void>): Plan<T> {
     this.actions.push({ description, run })
@@ -80,7 +84,7 @@ class RunnableScenario<T> implements Scenario {
     } else {
       return {
         type: "Verify",
-        context: await waitFor(this.plan.initializer())
+        context: await waitFor(this.plan.context.generator())
       }
     }
   }

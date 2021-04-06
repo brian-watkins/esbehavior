@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, scenario, it, runDocs } from '../src/index'
+import { document, scenario, it, runDocs, context } from '../src/index'
 import { actionReport, docReport, FakeReporter, invalidObservation, scenarioReport, validObservation } from './helpers/FakeReporter'
 
 test("it runs a single passing test", async () => {
@@ -9,9 +9,8 @@ test("it runs a single passing test", async () => {
   await runDocs([
     document("a single test", [
       scenario("my first test")
-        .given(() => { })
         .observeThat([
-          it("does something cool", () => {
+          it("does something cool", (something) => {
             // nothing
           })
         ])
@@ -33,7 +32,6 @@ test("it runs more than one passing test", async () => {
   await runDocs([
     document("a single test", [
       scenario("several observations")
-        .given(() => { })
         .observeThat([
           it("does something cool", () => {
             // nothing
@@ -61,7 +59,6 @@ test("it runs a failing test", async () => {
   await runDocs([
     document("a single test", [
       scenario("failing observation")
-        .given(() => { })
         .observeThat([
           it("does something that fails", () => {
             const testFailure: any = new Error()
@@ -93,14 +90,13 @@ test("it runs when blocks", async () => {
 
   await runDocs([
     document("a single test", [
-      scenario<{ val: number }>("multiple when blocks")
-        .given(() => ({ val: 7 }))
+      scenario("multiple when blocks", context(() => ({ val: 7 })))
         .when("the value is incremented", (context) => { context.val++ })
         .when("the value is incremented", (context) => { context.val++ })
         .when("the value is incremented", (context) => { context.val++ })
         .observeThat([
-          it("compares the correct number", (actual) => {
-            expect(actual.val).to.equal(10)
+          it("compares the correct number", (context) => {
+            expect(context.val).to.equal(10)
           })
         ])
     ])
