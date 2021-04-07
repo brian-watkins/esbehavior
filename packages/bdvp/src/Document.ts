@@ -1,17 +1,11 @@
 import { Scenario, ScenarioKind } from "./Scenario";
-import { Reporter, writeComment } from "./Reporter";
+import { DocumentResult, Reporter, writeComment } from "./Reporter";
 
 export interface Document {
   description: string
   scenarios: Array<Scenario>
   hasBeenPicked: boolean
   run: (onlyIfPicked: boolean, reporter: Reporter) => Promise<DocumentResult>
-}
-
-export interface DocumentResult {
-  valid: number
-  invalid: number
-  skipped: number
 }
 
 export class DocumentCollection {
