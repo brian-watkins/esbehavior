@@ -9,3 +9,5 @@ some observations. BDVP runs each scenario and generates a report that indicates
 scenarios were successful and which failed.
 
 See [the bdvp subproject](./packages/bdvp) for more info.
+
+Check out the [architecture decision records](./adr) for info on development decisions.
