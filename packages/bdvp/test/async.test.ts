@@ -1,6 +1,6 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { actionReport, docReport, FakeReporter, invalidObservation, scenarioReport, validObservation } from './helpers/FakeReporter'
+import { docReport, FakeReporter, invalidObservation, passingCondition, scenarioReport, validObservation } from './helpers/FakeReporter'
 import { document, scenario, it, runDocs, context } from '../src/index'
 import { expect } from 'chai'
 
@@ -102,9 +102,9 @@ test("it runs async when blocks", async () => {
   reporter.expectTestReportWith([
     docReport("a single test", [
       scenarioReport("multiple when blocks", [
-        actionReport("the value is incremented"),
-        actionReport("the value is incremented asynchronously"),
-        actionReport("the value is incremented")
+        passingCondition("the value is incremented"),
+        passingCondition("the value is incremented asynchronously"),
+        passingCondition("the value is incremented")
       ], [
         validObservation("compares the correct number")
       ])

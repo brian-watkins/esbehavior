@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import { document, scenario, it, runDocs, context } from '../src/index'
-import { actionReport, docReport, FakeReporter, invalidObservation, scenarioReport, validObservation } from './helpers/FakeReporter'
+import { passingCondition, docReport, FakeReporter, invalidObservation, scenarioReport, validObservation } from './helpers/FakeReporter'
 
 test("it runs a single passing test", async () => {
   const reporter = new FakeReporter()
@@ -105,9 +105,9 @@ test("it runs when blocks", async () => {
   reporter.expectTestReportWith([
     docReport("a single test", [
       scenarioReport("multiple when blocks", [
-        actionReport("the value is incremented"),
-        actionReport("the value is incremented"),
-        actionReport("the value is incremented")
+        passingCondition("the value is incremented"),
+        passingCondition("the value is incremented"),
+        passingCondition("the value is incremented")
       ], [
         validObservation("compares the correct number")
       ])

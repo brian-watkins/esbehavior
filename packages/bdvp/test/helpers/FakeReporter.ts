@@ -1,6 +1,5 @@
 import { Reporter } from "../../src/Reporter";
 import * as assert from 'uvu/assert'
-import { ScenarioKind } from "../../src/Scenario";
 
 export class FakeReporter implements Reporter {
   public logLines: Array<string> = []
@@ -49,6 +48,10 @@ enum ObservationType {
   Valid, Invalid, Skipped
 }
 
+enum ConditionType {
+  Valid, Invalid, Skipped
+}
+
 export interface TestObservation {
   type: ObservationType
   lines(): Array<string>
@@ -77,31 +80,67 @@ function sumResults(total: ObservationResults, scenario: TestScenario) {
   }
 }
 
-export interface TestAction {
+export interface TestCondition {
+  type: ConditionType
   lines(): Array<string>
 }
 
-export function actionReport(description: string): TestAction {
+export function passingCondition(description: string): TestCondition {
   return {
+    type: ConditionType.Valid,
     lines: () => {
-      return [`# when ${description}`]
+      return [`ok when ${description}`]
     }
   }
 }
 
-export function scenarioReport(description: string, actions: Array<TestAction>, observations: Array<TestObservation>): TestScenario {
+export function failingCondition(description: string, details: FailureDetails): TestCondition {
+  return {
+    type: ConditionType.Invalid,
+    lines: () => [
+      `not ok when ${description}`,
+      "  ---",
+      `  operator: ${details.operator}`,
+      `  expected: ${details.expected}`,
+      `  actual:   ${details.actual}`,
+      "  stack: |-",
+      `    ${details.stack}`,
+      "  ...",
+    ]
+  }
+}
+
+export function skippedCondition(description: string): TestCondition {
+  return {
+    type: ConditionType.Skipped,
+    lines: () => [
+      `ok when ${description} # SKIP`
+    ]
+  }
+}
+
+
+export function scenarioReport(description: string, conditions: Array<TestCondition>, observations: Array<TestObservation>): TestScenario {
   return {
     lines: () => {
       return [`# ${description}`]
-        .concat(actions.reduce((lines: Array<string>, action) => lines.concat(action.lines()), []))
+        .concat(conditions.reduce((lines: Array<string>, action) => lines.concat(action.lines()), []))
         .concat(observations.reduce((lines: Array<string>, observation) => lines.concat(observation.lines()), []))
     },
     results: () => ({
-      valid: observations.filter(obs => obs.type === ObservationType.Valid).length,
-      invalid: observations.filter(obs => obs.type === ObservationType.Invalid).length,
-      skipped: observations.filter(obs => obs.type === ObservationType.Skipped).length
+      valid: conditionsMatching(conditions, ConditionType.Valid) + observationsMatching(observations, ObservationType.Valid),
+      invalid: conditionsMatching(conditions, ConditionType.Invalid) + observationsMatching(observations, ObservationType.Invalid),
+      skipped: conditionsMatching(conditions, ConditionType.Skipped) + observationsMatching(observations, ObservationType.Skipped)
     })
   }
+}
+
+function conditionsMatching(conditions: Array<TestCondition>, expectedType: ConditionType): number {
+  return conditions.filter(condition => condition.type === expectedType).length
+}
+
+function observationsMatching(observations: Array<TestObservation>, expectedType: ObservationType): number {
+  return observations.filter(observation => observation.type === expectedType).length
 }
 
 export function validObservation(description: string): TestObservation {
@@ -113,14 +152,14 @@ export function validObservation(description: string): TestObservation {
   }
 }
 
-export interface InvalidObservation {
+export interface FailureDetails {
   expected: string,
   actual: string,
   operator: string,
   stack: string
 }
 
-export function invalidObservation(description: string, details: InvalidObservation): TestObservation {
+export function invalidObservation(description: string, details: FailureDetails): TestObservation {
   return {
     type: ObservationType.Invalid,
     lines: () => [

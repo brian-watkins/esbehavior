@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test:raw": "ts-node ./specs/sample.spec.ts",
+    "test:tap": "npm run test:raw | tap-spec",
     "test": "npm run test:raw | bdvp-reporter"
   },
   "keywords": [],

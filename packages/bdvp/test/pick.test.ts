@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import { document, scenario, it, runDocs, pick, context } from '../src/index'
-import { actionReport, docReport, FakeReporter, scenarioReport, skippedObservation, validObservation } from './helpers/FakeReporter'
+import { passingCondition, docReport, FakeReporter, scenarioReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter'
 
 test("it only runs the picked scenario", async () => {
   const reporter = new FakeReporter()
@@ -47,7 +47,7 @@ test("it only runs the picked scenario", async () => {
   reporter.expectTestReportWith([
     docReport("something", [
       scenarioReport("not important", [
-        actionReport("it does something bad")
+        skippedCondition("it does something bad")
       ], [
         skippedObservation("will never run this"),
         skippedObservation("or this")
@@ -58,7 +58,7 @@ test("it only runs the picked scenario", async () => {
     ]),
     docReport("another", [
       scenarioReport("should be skipped", [
-        actionReport("it does something that it shouldn't")
+        skippedCondition("it does something that it shouldn't")
       ], [
         skippedObservation("just won't")
       ])

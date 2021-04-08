@@ -1,4 +1,4 @@
-import { Reporter } from "./Reporter";
+import { Reporter, writeTestFailure, writeTestPass, writeTestSkip } from "./Reporter";
 import { waitFor } from "./waitFor";
 
 export interface Observation<T> {
@@ -25,21 +25,14 @@ export class ObservationRunner<T> {
   }
 
   reportSkipped() {
-    this.reporter.writeLine(`ok it ${this.observation.description} # SKIP`)
+    writeTestSkip(this.reporter, `it ${this.observation.description}`)
   }
 
   private reportOk() {
-    this.reporter.writeLine(`ok it ${this.observation.description}`)
+    writeTestPass(this.reporter, `it ${this.observation.description}`)
   }
 
   private reportError(err: any) {
-    this.reporter.writeLine(`not ok it ${this.observation.description}`)
-    this.reporter.writeLine('  ---')
-    this.reporter.writeLine(`  operator: ${err.operator}`)
-    this.reporter.writeLine(`  expected: ${err.expected}`)
-    this.reporter.writeLine(`  actual:   ${err.actual}`)
-    this.reporter.writeLine(`  stack: |-`)
-    this.reporter.writeLine(`    ${err.stack}`)
-    this.reporter.writeLine('  ...')
+    writeTestFailure(this.reporter, `it ${this.observation.description}`, err)
   }
 }

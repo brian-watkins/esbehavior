@@ -1,3 +1,4 @@
+import { Condition, ConditionResult, ConditionRunner } from "./Condition"
 import { Observation, ObservationResult, ObservationRunner } from "./Observation"
 import { Reporter, writeComment } from "./Reporter"
 import { waitFor } from "./waitFor"
@@ -26,19 +27,14 @@ export enum ScenarioKind {
   Normal, Skipped, Picked
 }
 
-interface ScenarioAction<T> {
-  description: string
-  run(context: T): void | Promise<void>
-}
-
 export class ScenarioPlan<T> implements Plan<T> {
-  public actions: Array<ScenarioAction<T>> = []
+  public conditions: Array<Condition<T>> = []
   public observations: Array<Observation<T>> = []
 
   constructor(public description: string, public kind: ScenarioKind, public context: Context<T>) { }
 
   when(description: string, run: (context: T) => void | Promise<void>): Plan<T> {
-    this.actions.push({ description, run })
+    this.conditions.push({ description, run })
     return this
   }
 
@@ -74,8 +70,20 @@ class RunnableScenario<T> implements Scenario {
 
     const scenarioMode = await this.determineMode(verifyOnlyIfPicked)
     
-    await this.runActions(scenarioMode, reporter)
-    return this.runObservations(scenarioMode, reporter)
+    const conditionResult = await this.runConditions(scenarioMode, reporter)
+    const observationResult = await this.runObservations(scenarioMode, reporter)
+
+    return this.sumResults([conditionResult, observationResult])
+  }
+
+  private sumResults(results: Array<ScenarioResult>): ScenarioResult {
+    return results.reduce((sum, next) => {
+      return {
+        valid: sum.valid + next.valid,
+        invalid: sum.invalid + next.invalid,
+        skipped: sum.skipped + next.skipped
+      }
+    }, { valid: 0, invalid: 0, skipped: 0 })
   }
 
   private async determineMode(verifyOnlyIfPicked: boolean): Promise<ScenarioMode<T>> {
@@ -89,13 +97,31 @@ class RunnableScenario<T> implements Scenario {
     }
   }
 
-  async runActions(scenarioMode: ScenarioMode<T>, reporter: Reporter): Promise<void> {
-    for (const action of this.plan.actions) {
-      if (scenarioMode.type === "Verify") {
-          await waitFor(action.run(scenarioMode.context))
+  async runConditions(scenarioMode: ScenarioMode<T>, reporter: Reporter): Promise<ScenarioResult> {
+    const results = { valid: 0, invalid: 0, skipped: 0 }
+
+    for (const condition of this.plan.conditions) {
+      const runner = new ConditionRunner(condition, reporter)
+      switch (scenarioMode.type) {
+        case "Verify":
+          const result = await runner.run(scenarioMode.context)
+          switch (result) {
+            case ConditionResult.Pass:
+              results.valid += 1
+              break
+            case ConditionResult.Fail:
+              results.invalid += 1
+              break
+          }
+          break
+        case "Skip":
+          runner.reportSkipped()
+          results.skipped += 1
+          break
       }
-      writeAction(reporter, action.description)
     }
+
+    return results
   }
 
   async runObservations(scenarioMode: ScenarioMode<T>, reporter: Reporter): Promise<ScenarioResult> {
@@ -124,8 +150,4 @@ class RunnableScenario<T> implements Scenario {
 
     return results
   }
-}
-
-function writeAction(reporter: Reporter, action: string) {
-  writeComment(reporter, `when ${action}`)
 }
