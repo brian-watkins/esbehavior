@@ -1,6 +1,6 @@
 import { Observation } from "./Observation"
 import { Context, Plan, Scenario, ScenarioKind, ScenarioPlan } from "./Scenario"
-import { ConsoleReporter, Reporter, startReport, writeComment, writeResults } from "./Reporter"
+import { ConsoleReporter, Reporter, startReport, writeResults } from "./Reporter"
 import { Document, DocumentCollection, ScenarioDocument } from "./Document"
 
 export interface RunnerOptions {
@@ -47,8 +47,5 @@ export const pick = {
 }
 
 export function it<T>(description: string, observer: (context: T) => void | Promise<void>): Observation<T> {
-  return {
-    description,
-    observer
-  }
+  return new Observation(description, observer)
 }

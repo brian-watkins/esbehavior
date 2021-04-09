@@ -1,6 +1,7 @@
-import { Condition, ConditionResult, ConditionRunner } from "./Condition"
-import { Observation, ObservationResult, ObservationRunner } from "./Observation"
-import { Reporter, writeComment } from "./Reporter"
+import { Condition } from "./Condition"
+import { Observation } from "./Observation"
+import { Reporter, writeComment, writeTestFailure, writeTestPass, writeTestSkip } from "./Reporter"
+import { ScenarioStep, StepRunner } from "./ScenarioStep"
 import { waitFor } from "./waitFor"
 
 export interface Scenario {
@@ -13,7 +14,7 @@ export interface Context<T> {
 }
 
 export interface Plan<T> {
-  when: (description: string, actions: (context: T) => void | Promise<void>) => Plan<T>
+  when: (description: string, condition: (context: T) => void | Promise<void>) => Plan<T>
   observeThat: (observations: Array<Observation<T>>) => Scenario
 }
 
@@ -34,7 +35,7 @@ export class ScenarioPlan<T> implements Plan<T> {
   constructor(public description: string, public kind: ScenarioKind, public context: Context<T>) { }
 
   when(description: string, run: (context: T) => void | Promise<void>): Plan<T> {
-    this.conditions.push({ description, run })
+    this.conditions.push(new Condition(description, run))
     return this
   }
 
@@ -70,10 +71,10 @@ class RunnableScenario<T> implements Scenario {
 
     const scenarioMode = await this.determineMode(verifyOnlyIfPicked)
     
-    const conditionResult = await this.runConditions(scenarioMode, reporter)
-    const observationResult = await this.runObservations(scenarioMode, reporter)
+    const conditionResults = await this.runSteps(this.plan.conditions, scenarioMode, reporter)
+    const observationResults = await this.runSteps(this.plan.observations, scenarioMode, reporter)
 
-    return this.sumResults([conditionResult, observationResult])
+    return this.sumResults([conditionResults, observationResults])
   }
 
   private sumResults(results: Array<ScenarioResult>): ScenarioResult {
@@ -97,52 +98,27 @@ class RunnableScenario<T> implements Scenario {
     }
   }
 
-  async runConditions(scenarioMode: ScenarioMode<T>, reporter: Reporter): Promise<ScenarioResult> {
+  async runSteps(steps: Array<ScenarioStep<T>>, scenarioMode: ScenarioMode<T>, reporter: Reporter): Promise<ScenarioResult> {
     const results = { valid: 0, invalid: 0, skipped: 0 }
 
-    for (const condition of this.plan.conditions) {
-      const runner = new ConditionRunner(condition, reporter)
+    for (const step of steps) {
+      const runner = new StepRunner(step, reporter)
       switch (scenarioMode.type) {
         case "Verify":
           const result = await runner.run(scenarioMode.context)
-          switch (result) {
-            case ConditionResult.Pass:
+          switch (result.type) {
+            case "Valid":
+              writeTestPass(reporter, step.description)
               results.valid += 1
               break
-            case ConditionResult.Fail:
+            case "Invalid":
+              writeTestFailure(reporter, step.description, result.error)
               results.invalid += 1
               break
           }
           break
         case "Skip":
-          runner.reportSkipped()
-          results.skipped += 1
-          break
-      }
-    }
-
-    return results
-  }
-
-  async runObservations(scenarioMode: ScenarioMode<T>, reporter: Reporter): Promise<ScenarioResult> {
-    const results = { valid: 0, invalid: 0, skipped: 0 }
-
-    for (const observation of this.plan.observations) {
-      const runner = new ObservationRunner(observation, reporter)
-      switch (scenarioMode.type) {
-        case "Verify":
-          const result = await runner.run(scenarioMode.context)
-          switch (result) {
-            case ObservationResult.Valid:
-              results.valid += 1
-              break
-            case ObservationResult.Invalid:
-              results.invalid += 1
-              break
-          }
-          break
-        case "Skip":
-          runner.reportSkipped()
+          writeTestSkip(reporter, step.description)
           results.skipped += 1
           break
       }
