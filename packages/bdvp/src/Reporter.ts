@@ -1,3 +1,5 @@
+import { Summary } from "./Summary"
+
 export interface Reporter {
   writeLine(message: string): void
 }
@@ -14,12 +16,6 @@ export function writeComment(reporter: Reporter, comment: string) {
 
 export function startReport(reporter: Reporter) {
   reporter.writeLine("TAP version 13")
-}
-
-export interface DocumentResult {
-  valid: number
-  invalid: number
-  skipped: number
 }
 
 export interface Failure {
@@ -48,9 +44,9 @@ export function writeTestSkip(reporter: Reporter, description: string) {
   reporter.writeLine(`ok ${description} # SKIP`)
 }
 
-export function writeResults(reporter: Reporter, results: DocumentResult) {
-  reporter.writeLine(`1..${results.valid + results.invalid + results.skipped}`)
-  writeComment(reporter, `valid observations: ${results.valid}`)
-  writeComment(reporter, `invalid observations: ${results.invalid}`)
-  writeComment(reporter, `skipped: ${results.skipped}`)
+export function writeSummary(reporter: Reporter, summary: Summary) {
+  reporter.writeLine(`1..${summary.valid + summary.invalid + summary.skipped}`)
+  writeComment(reporter, `valid observations: ${summary.valid}`)
+  writeComment(reporter, `invalid observations: ${summary.invalid}`)
+  writeComment(reporter, `skipped: ${summary.skipped}`)
 }

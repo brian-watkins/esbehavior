@@ -1,68 +1,63 @@
-import { Scenario, ScenarioKind, ScenarioResult } from "./Scenario";
-import { DocumentResult, Reporter, writeComment } from "./Reporter";
-
-export interface Document {
-  description: string
-  scenarios: Array<Scenario>
-  hasPickedScenario: boolean
-  run: (onlyIfPicked: boolean, reporter: Reporter) => Promise<DocumentResult>
-}
+import { Scenario, ScenarioKind } from "./Scenario";
+import { Reporter, writeComment } from "./Reporter";
+import { addSummary, emptySummary, Summary } from "./Summary";
 
 export class DocumentCollection {
-  constructor(private documents: Array<Document>) {}
+  private someScenarioIsPicked: boolean
 
-  get hasPickeScenario(): boolean {
-    return this.documents.find(doc => doc.hasPickedScenario) !== undefined
+  constructor(private documents: Array<Document>) {
+    this.someScenarioIsPicked = this.documents.find(doc => doc.hasPickedScenario) !== undefined
   }
 
-  async run(reporter: Reporter): Promise<DocumentResult> {
-    return gatherDocumentResults(this.hasPickeScenario, reporter, this.documents)
-  }
-}
+  async run(reporter: Reporter): Promise<Summary> {
+    let summary = emptySummary()
 
-export class ScenarioDocument implements Document {
-  constructor(public description: string, public scenarios: Array<Scenario>) {}
-  
-  get hasPickedScenario(): boolean {
-    return this.scenarios.find(scenario => scenario.kind === ScenarioKind.Picked) !== undefined 
-  }
+    for (const document of this.documents) {
+      let documentSummary: Summary
+      if (this.someScenarioIsPicked) {
+        documentSummary = await document.runPicked(reporter)
+      } else {
+        documentSummary = await document.run(reporter)
+      }
 
-  async run(onlyIfPicked: boolean, reporter: Reporter): Promise<DocumentResult> {
-    writeComment(reporter, this.description)
-    return await gatherScenarioResults(onlyIfPicked, reporter, this.scenarios)
-  }
-}
-
-async function gatherDocumentResults(hasPickedScenario: boolean, reporter: Reporter, documents: Array<Document>): Promise<DocumentResult> {
-  const results = { valid: 0, invalid: 0, skipped: 0 }
-
-  for (const document of documents) {
-    const result = await document.run(hasPickedScenario, reporter)
-    results.valid += result.valid
-    results.invalid += result.invalid
-    results.skipped += result.skipped
-  }
-
-  return results
-}
-
-async function gatherScenarioResults(hasPickedScenario: boolean, reporter: Reporter, scenarios: Array<Scenario>): Promise<DocumentResult> {
-  const results = { valid: 0, invalid: 0, skipped: 0 }
-
-  for (const scenario of scenarios) {
-    let result: ScenarioResult
-    if (hasPickedScenario && scenario.kind !== ScenarioKind.Picked) {
-      result = await scenario.skip(reporter)
-    } else if (scenario.kind === ScenarioKind.Skipped) {
-      result = await scenario.skip(reporter)
-    } else {
-      result = await scenario.run(reporter)
+      summary = addSummary(summary, documentSummary)
     }
 
-    results.valid += result.valid
-    results.invalid += result.invalid
-    results.skipped += result.skipped
+    return summary
+  }
+}
+
+export class Document {
+  public hasPickedScenario: boolean
+
+  constructor(public description: string, public scenarios: Array<Scenario>) {
+    this.hasPickedScenario = this.scenarios.find(scenario => scenario.kind === ScenarioKind.Picked) !== undefined
   }
 
-  return results
+  async runPicked(reporter: Reporter): Promise<Summary> {
+    return this.execute((scenario) => scenario.kind === ScenarioKind.Picked, reporter)
+  }
+
+  async run(reporter: Reporter): Promise<Summary> {
+    return this.execute((scenario) => scenario.kind !== ScenarioKind.Skipped, reporter)
+  }
+
+  private async execute(shouldRun: (scenario: Scenario) => boolean, reporter: Reporter): Promise<Summary> {
+    writeComment(reporter, this.description)
+
+    let summary = emptySummary()
+
+    for (const scenario of this.scenarios) {
+      let scenarioSummary: Summary
+      if (shouldRun(scenario)) {
+        scenarioSummary = await scenario.run(reporter)
+      } else {
+        scenarioSummary = await scenario.skip(reporter)
+      }
+
+      summary = addSummary(summary, scenarioSummary)
+    }
+
+    return summary
+  }
 }

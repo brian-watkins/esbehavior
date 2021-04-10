@@ -2,39 +2,18 @@ import { Condition } from "./Condition"
 import { firstOf } from "./Maybe"
 import { Observation } from "./Observation"
 import { Reporter, writeComment, writeTestFailure, writeTestPass, writeTestSkip } from "./Reporter"
+import { addInvalid, addSkipped, addValid, emptySummary, Summary } from "./Summary"
 import { runStep, ScenarioStep } from "./ScenarioStep"
 import { waitFor } from "./waitFor"
 
 export interface Scenario {
   kind: ScenarioKind
-  run(reporter: Reporter): Promise<ScenarioResult>
-  skip(reporter: Reporter): Promise<ScenarioResult>
+  run(reporter: Reporter): Promise<Summary>
+  skip(reporter: Reporter): Promise<Summary>
 }
 
 export interface Context<T> {
   generator: () => T | Promise<T>
-}
-
-export interface ScenarioResult {
-  valid: number
-  invalid: number
-  skipped: number
-}
-
-function emptyResults(): ScenarioResult {
-  return { valid: 0, invalid: 0, skipped: 0 }
-}
-
-function addValid(results: ScenarioResult): ScenarioResult {
-  return { ...results, valid: results.valid + 1 }
-}
-
-function addInvalid(results: ScenarioResult): ScenarioResult {
-  return { ...results, invalid: results.invalid + 1 }
-}
-
-function addSkipped(results: ScenarioResult): ScenarioResult {
-  return { ...results, skipped: results.skipped + 1 }
 }
 
 export enum ScenarioKind {
@@ -60,46 +39,46 @@ export class Plan<T> {
 
 interface Skip<T> {
   type: "Skip",
-  results: ScenarioResult,
+  summary: Summary,
   steps: Array<ScenarioStep<T>>
 }
 
-function skip<T>(current: Verify<T>, observations: Array<ScenarioStep<T>>, resultsGenerator: (results: ScenarioResult) => ScenarioResult): Skip<T> {
+function skip<T>(current: Verify<T>, observations: Array<ScenarioStep<T>>, resultsGenerator: (results: Summary) => Summary): Skip<T> {
   return {
     type: "Skip",
     steps: [ ...current.steps.slice(1), ...observations ],
-    results: resultsGenerator(current.results)
+    summary: resultsGenerator(current.summary)
   }
 }
 
-function skipRemaining<T>(current: Observe<T> | Skip<T>, resultsGenerator: (results: ScenarioResult) => ScenarioResult): Skip<T> {
+function skipRemaining<T>(current: Observe<T> | Skip<T>, resultsGenerator: (results: Summary) => Summary): Skip<T> {
   return {
     type: "Skip",
     steps: current.steps.slice(1),
-    results: resultsGenerator(current.results)
+    summary: resultsGenerator(current.summary)
   }
 }
 
 interface Verify<T> {
   type: "Verify"
   context: T,
-  results: ScenarioResult,
+  summary: Summary,
   steps: Array<ScenarioStep<T>>
 }
 
-function remainingConditions<T>(current: Verify<T>, resultsGenerator: (results: ScenarioResult) => ScenarioResult): Verify<T> {
+function remainingConditions<T>(current: Verify<T>, resultsGenerator: (results: Summary) => Summary): Verify<T> {
   return {
     type: "Verify",
     context: current.context,
     steps: current.steps.slice(1),
-    results: resultsGenerator(current.results)
+    summary: resultsGenerator(current.summary)
   }
 }
 
 interface Observe<T> {
   type: "Observe"
   context: T,
-  results: ScenarioResult,
+  summary: Summary,
   steps: Array<ScenarioStep<T>>
 }
 
@@ -108,26 +87,26 @@ function observations<T>(current: Verify<T>, observations: Array<ScenarioStep<T>
     type: "Observe",
     steps: observations,
     context: current.context,
-    results: current.results
+    summary: current.summary
   }
 }
 
-function remainingObservations<T>(current: Observe<T>, resultsGenerator: (results: ScenarioResult) => ScenarioResult): Observe<T> {
+function remainingObservations<T>(current: Observe<T>, resultsGenerator: (results: Summary) => Summary): Observe<T> {
   return {
     type: "Observe",
     steps: current.steps.slice(1),
     context: current.context,
-    results: resultsGenerator(current.results)
+    summary: resultsGenerator(current.summary)
   }
 }
 
 interface Complete {
   type: "Complete"
-  results: ScenarioResult
+  summary: Summary
 }
 
 function complete<T>(mode: ScenarioMode<T>): Complete {
-  return { type: "Complete", results: mode.results }
+  return { type: "Complete", summary: mode.summary }
 }
 
 type ScenarioMode<T>
@@ -148,18 +127,18 @@ class RunnableScenario<T> implements Scenario {
       type: "Verify",
       context: await waitFor(this.plan.context.generator()),
       steps: this.plan.conditions,
-      results: emptyResults()
+      summary: emptySummary()
     }
   }
 
-  async run(reporter: Reporter): Promise<ScenarioResult> {
+  async run(reporter: Reporter): Promise<Summary> {
     writeComment(reporter, this.plan.description)
 
     const initialMode = await this.initScenario()
 
     const mode = await this.execute(initialMode, reporter)
 
-    return mode.results
+    return mode.summary
   }
 
   private async execute(mode: ScenarioMode<T>, reporter: Reporter): Promise<ScenarioMode<T>> {
@@ -217,7 +196,7 @@ class RunnableScenario<T> implements Scenario {
     }
   }
 
-  async skip(reporter: Reporter): Promise<ScenarioResult> {
+  async skip(reporter: Reporter): Promise<Summary> {
     writeComment(reporter, this.plan.description)
 
     const steps = this.plan.conditions.concat(this.plan.observations)

@@ -1,7 +1,7 @@
 import { Observation } from "./Observation"
 import { Context, Plan, Scenario, ScenarioKind } from "./Scenario"
-import { ConsoleReporter, Reporter, startReport, writeResults } from "./Reporter"
-import { Document, DocumentCollection, ScenarioDocument } from "./Document"
+import { ConsoleReporter, Reporter, startReport, writeSummary } from "./Reporter"
+import { Document, DocumentCollection } from "./Document"
 
 export interface RunnerOptions {
   reporter?: Reporter
@@ -15,11 +15,11 @@ export async function runDocs<T>(docs: Array<Document>, options: RunnerOptions =
   const docCollection = new DocumentCollection(docs)
   const results = await docCollection.run(reporter)
 
-  writeResults(reporter, results)
+  writeSummary(reporter, results)
 }
 
 export function document(description: string, scenarios: Array<Scenario>): Document {
-  return new ScenarioDocument(description, scenarios)
+  return new Document(description, scenarios)
 }
 
 export function context<T>(generator: () => T | Promise<T>): Context<T> {
