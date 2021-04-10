@@ -1,4 +1,4 @@
-import { Failure, Reporter } from "./Reporter"
+import { Failure } from "./Reporter"
 import { waitFor } from "./waitFor"
 
 export interface ScenarioStep<T> {
@@ -6,34 +6,35 @@ export interface ScenarioStep<T> {
   run(context: T): void | Promise<void>
 }
 
-export interface ValidStep {
-  type: "Valid"
+export interface StepResultMapper<S> {
+  valid(): S
+  invalid(error: Failure): S
 }
 
-function validStep(): ValidStep {
-  return { type: "Valid" }
+export class ValidStep {
+  public type = "Valid"
+
+  map<S>(mapper: StepResultMapper<S>): S {
+    return mapper.valid()
+  }
 }
 
-export interface InvalidStep {
-  type: "Invalid"
-  error: Failure
-}
+export class InvalidStep {
+  public type = "Invalid"
+  constructor (public error: Failure) {}
 
-function invalidStep(error: Failure): InvalidStep {
-  return { type: "Invalid", error }
+  map<S>(mapper: StepResultMapper<S>): S {
+    return mapper.invalid(this.error)
+  }
 }
 
 export type StepResult = ValidStep | InvalidStep
 
-export class StepRunner<T> {
-  constructor(private step: ScenarioStep<T>, private reporter: Reporter) {}
-
-  async run(context: T): Promise<StepResult> {
-    try {
-      await waitFor(this.step.run(context))
-      return validStep()
-    } catch (err) {
-      return invalidStep(err)
-    }
+export async function runStep<T>(step: ScenarioStep<T>, context: T): Promise<StepResult> {
+  try {
+    await waitFor(step.run(context))
+    return new ValidStep()
+  } catch (err) {
+    return new InvalidStep(err)
   }
 }

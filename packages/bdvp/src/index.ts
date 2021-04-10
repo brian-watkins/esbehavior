@@ -1,5 +1,5 @@
 import { Observation } from "./Observation"
-import { Context, Plan, Scenario, ScenarioKind, ScenarioPlan } from "./Scenario"
+import { Context, Plan, Scenario, ScenarioKind } from "./Scenario"
 import { ConsoleReporter, Reporter, startReport, writeResults } from "./Reporter"
 import { Document, DocumentCollection, ScenarioDocument } from "./Document"
 
@@ -31,18 +31,18 @@ export function context<T>(generator: () => T | Promise<T>): Context<T> {
 const voidContext: Context<any> = context(() => {})
 
 export function scenario<T = void>(description: string, context: Context<T> = voidContext): Plan<T> {
-  return new ScenarioPlan(description, ScenarioKind.Normal, context)
+  return new Plan(description, ScenarioKind.Normal, context)
 }
 
 export const skip = {
   scenario<T = void>(description: string, context: Context<T> = voidContext): Plan<T> {
-    return new ScenarioPlan(description, ScenarioKind.Skipped, context)
+    return new Plan(description, ScenarioKind.Skipped, context)
   }
 }
 
 export const pick = {
   scenario<T = void>(description: string, context: Context<T> = voidContext): Plan<T> {
-    return new ScenarioPlan(description, ScenarioKind.Picked, context)
+    return new Plan(description, ScenarioKind.Picked, context)
   }
 }
 

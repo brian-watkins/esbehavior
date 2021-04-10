@@ -1,8 +1,8 @@
 import { test } from 'uvu'
-import { document, scenario, runDocs } from '../src/index'
-import { docReport, failingCondition, FakeReporter, scenarioReport } from './helpers/FakeReporter'
+import { document, scenario, it, runDocs } from '../src/index'
+import { docReport, failingCondition, FakeReporter, scenarioReport, skippedCondition, skippedObservation } from './helpers/FakeReporter'
 
-test("it runs multiple describes", async () => {
+test("failing condition", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
@@ -16,7 +16,10 @@ test("it runs multiple describes", async () => {
           error.stack = "funny stack"
           throw error
         })
-        .observeThat([])
+        .when("there is another condition", () => {})
+        .observeThat([
+          it("does something that will get skipped", () => {})
+        ])
     ])
   ], { reporter })
 
@@ -26,9 +29,12 @@ test("it runs multiple describes", async () => {
         failingCondition("something throws an error", {
           operator: "equals", expected: "something", actual: "nothing", stack: "funny stack"
         }),
-      ], [])
+        skippedCondition("there is another condition")
+      ], [
+        skippedObservation("does something that will get skipped")
+      ])
     ])
-  ], "it prints a failure for the action")
+  ], "it prints a failure for the condition")
 })
 
 test.run()
