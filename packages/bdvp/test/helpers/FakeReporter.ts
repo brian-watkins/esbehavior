@@ -11,15 +11,18 @@ export class FakeReporter implements Reporter {
   expectTestReportWith(docs: Array<TestDoc>, message: string) {
     const results = docs.reduce(sumResults, emptyResults)
 
+    const total = results.valid + results.invalid + results.skipped;
+
     const expected = [
       "TAP version 13"
     ]
       .concat(docs.reduce((lines: Array<string>, doc) => lines.concat(doc.lines()), []))
       .concat([
-        `1..${results.valid + results.invalid + results.skipped}`,
-        `# valid observations: ${results.valid}`,
-        `# invalid observations: ${results.invalid}`,
-        `# skipped: ${results.skipped}`
+        `1..${total}`,
+        `# tests ${total}`,
+        `# pass ${results.valid}`,
+        `# fail ${results.invalid}`,
+        `# skip ${results.skipped}`
       ])
 
     assert.equal(this.logLines, expected, message)

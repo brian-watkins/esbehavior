@@ -45,8 +45,10 @@ export function writeTestSkip(reporter: Reporter, description: string) {
 }
 
 export function writeSummary(reporter: Reporter, summary: Summary) {
-  reporter.writeLine(`1..${summary.valid + summary.invalid + summary.skipped}`)
-  writeComment(reporter, `valid observations: ${summary.valid}`)
-  writeComment(reporter, `invalid observations: ${summary.invalid}`)
-  writeComment(reporter, `skipped: ${summary.skipped}`)
+  const total = summary.valid + summary.invalid + summary.skipped
+  reporter.writeLine(`1..${total}`)
+  writeComment(reporter, `tests ${total}`)
+  writeComment(reporter, `pass ${summary.valid}`)
+  writeComment(reporter, `fail ${summary.invalid}`)
+  writeComment(reporter, `skip ${summary.skipped}`)
 }
