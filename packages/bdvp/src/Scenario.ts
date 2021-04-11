@@ -1,9 +1,9 @@
 import { Condition } from "./Condition"
 import { firstOf } from "./Maybe"
 import { Observation } from "./Observation"
-import { Reporter, writeComment, writeTestFailure, writeTestPass, writeTestSkip } from "./Reporter"
+import { Reporter, writeComment } from "./Reporter"
 import { addInvalid, addSkipped, addValid, emptySummary, Summary } from "./Summary"
-import { runStep, ScenarioStep } from "./ScenarioStep"
+import { runStep, ScenarioStep, skipStep } from "./ScenarioStep"
 import { waitFor } from "./waitFor"
 
 export interface Scenario {
@@ -43,19 +43,27 @@ interface Skip<T> {
   steps: Array<ScenarioStep<T>>
 }
 
-function skip<T>(current: Verify<T>, observations: Array<ScenarioStep<T>>, resultsGenerator: (results: Summary) => Summary): Skip<T> {
+function skipAll<T>(steps: Array<ScenarioStep<T>>): Skip<T> {
   return {
     type: "Skip",
-    steps: [ ...current.steps.slice(1), ...observations ],
-    summary: resultsGenerator(current.summary)
+    steps: steps,
+    summary: emptySummary()
   }
 }
 
-function skipRemaining<T>(current: Observe<T> | Skip<T>, resultsGenerator: (results: Summary) => Summary): Skip<T> {
+function skipRemainingSteps<T>(current: Verify<T>, observations: Array<ScenarioStep<T>>): Skip<T> {
+  return {
+    type: "Skip",
+    steps: [ ...current.steps.slice(1), ...observations ],
+    summary: current.summary
+  }
+}
+
+function skipRemaining<T>(current: Observe<T> | Skip<T>): Skip<T> {
   return {
     type: "Skip",
     steps: current.steps.slice(1),
-    summary: resultsGenerator(current.summary)
+    summary: current.summary
   }
 }
 
@@ -66,12 +74,12 @@ interface Verify<T> {
   steps: Array<ScenarioStep<T>>
 }
 
-function remainingConditions<T>(current: Verify<T>, resultsGenerator: (results: Summary) => Summary): Verify<T> {
+function remainingConditions<T>(current: Verify<T>): Verify<T> {
   return {
     type: "Verify",
     context: current.context,
     steps: current.steps.slice(1),
-    summary: resultsGenerator(current.summary)
+    summary: current.summary
   }
 }
 
@@ -82,7 +90,7 @@ interface Observe<T> {
   steps: Array<ScenarioStep<T>>
 }
 
-function observations<T>(current: Verify<T>, observations: Array<ScenarioStep<T>>): Observe<T> {
+function allObservations<T>(current: Verify<T>, observations: Array<ScenarioStep<T>>): Observe<T> {
   return {
     type: "Observe",
     steps: observations,
@@ -91,12 +99,12 @@ function observations<T>(current: Verify<T>, observations: Array<ScenarioStep<T>
   }
 }
 
-function remainingObservations<T>(current: Observe<T>, resultsGenerator: (results: Summary) => Summary): Observe<T> {
+function remainingObservations<T>(current: Observe<T>): Observe<T> {
   return {
     type: "Observe",
     steps: current.steps.slice(1),
     context: current.context,
-    summary: resultsGenerator(current.summary)
+    summary: current.summary
   }
 }
 
@@ -105,15 +113,19 @@ interface Complete {
   summary: Summary
 }
 
-function complete<T>(mode: ScenarioMode<T>): Complete {
+function complete<T>(mode: ScenarioState<T>): Complete {
   return { type: "Complete", summary: mode.summary }
 }
 
-type ScenarioMode<T>
+type ScenarioState<T>
   = Skip<T>
   | Verify<T>
   | Observe<T>
   | Complete
+
+function summarize<T extends { summary: Summary }>(summarizable: T, summarizer: (summary: Summary) => Summary): T {
+  return { ...summarizable, summary: summarizer(summarizable.summary) }
+}
 
 class RunnableScenario<T> implements Scenario {
   constructor(private plan: Plan<T>) { }
@@ -122,7 +134,7 @@ class RunnableScenario<T> implements Scenario {
     return this.plan.kind
   }
 
-  private async initScenario(): Promise<ScenarioMode<T>> {
+  private async init(): Promise<ScenarioState<T>> {
     return {
       type: "Verify",
       context: await waitFor(this.plan.context.generator()),
@@ -134,80 +146,76 @@ class RunnableScenario<T> implements Scenario {
   async run(reporter: Reporter): Promise<Summary> {
     writeComment(reporter, this.plan.description)
 
-    const initialMode = await this.initScenario()
+    const initialState = await this.init()
 
-    const mode = await this.execute(initialMode, reporter)
+    const state = await this.execute(initialState, reporter)
 
-    return mode.summary
+    return state.summary
   }
 
-  private async execute(mode: ScenarioMode<T>, reporter: Reporter): Promise<ScenarioMode<T>> {
-    switch (mode.type) {
+  private async execute(state: ScenarioState<T>, reporter: Reporter): Promise<ScenarioState<T>> {
+    switch (state.type) {
       case "Verify":
-        return firstOf(mode.steps).map({
+        return firstOf(state.steps).map({
           nothing: () => {
-            return this.execute(observations(mode, this.plan.observations), reporter)
+            return this.execute(allObservations(state, this.plan.observations), reporter)
           },
           something: async (condition) => {
-            const stepResult = await runStep(condition, mode.context)
+            const stepResult = await runStep(condition, state.context, reporter)
             return stepResult.map({
               valid: () => {
-                writeTestPass(reporter, condition.description)
-                return this.execute(remainingConditions(mode, addValid), reporter)
+                const updated = summarize(state, addValid)
+                return this.execute(remainingConditions(updated), reporter)
               },
-              invalid: (error) => {
-                writeTestFailure(reporter, condition.description, error)
-                return this.execute(skip(mode, this.plan.observations, addInvalid), reporter)
+              invalid: () => {
+                const updated = summarize(state, addInvalid)
+                return this.execute(skipRemainingSteps(updated, this.plan.observations), reporter)
               }
             })
           }
         })
       case "Observe":
-        return firstOf(mode.steps).map({
+        return firstOf(state.steps).map({
           nothing: () => {
-            return this.execute(complete(mode), reporter)
+            return this.execute(complete(state), reporter)
           },
           something: async (observation) => {
-            const observationResult = await runStep(observation, mode.context)
+            const observationResult = await runStep(observation, state.context, reporter)
             return observationResult.map({
               valid: () => {
-                writeTestPass(reporter, observation.description)
-                return this.execute(remainingObservations(mode, addValid), reporter)
+                const updated = summarize(state, addValid)
+                return this.execute(remainingObservations(updated), reporter)
               },
-              invalid: (error) => {
-                writeTestFailure(reporter, observation.description, error)
-                return this.execute(remainingObservations(mode, addInvalid), reporter)
+              invalid: () => {
+                const updated = summarize(state, addInvalid)
+                return this.execute(remainingObservations(updated), reporter)
               }
             })
           }
         })
       case "Skip":
-        return firstOf(mode.steps).map({
+        return firstOf(state.steps).map({
           nothing: () => {
-            return this.execute(complete(mode), reporter)
+            return this.execute(complete(state), reporter)
           },
           something: (step) => {
-            writeTestSkip(reporter, step.description)
-            return this.execute(skipRemaining(mode, addSkipped), reporter)
+            skipStep(step, reporter)
+            const updated = summarize(state, addSkipped)
+            return this.execute(skipRemaining(updated), reporter)
           }
         })
       case "Complete":
-        return mode
+        return state
     }
   }
 
   async skip(reporter: Reporter): Promise<Summary> {
     writeComment(reporter, this.plan.description)
 
-    const steps = this.plan.conditions.concat(this.plan.observations)
-    for (const step of steps) {
-      writeTestSkip(reporter, step.description)
-    }
+    const initialState = skipAll([...this.plan.conditions, ...this.plan.observations])
+    
+    const state = await this.execute(initialState, reporter)
 
-    return {
-      invalid: 0,
-      valid: 0,
-      skipped: steps.length
-    }
+    return state.summary
   }
 }

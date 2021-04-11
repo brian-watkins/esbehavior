@@ -1,4 +1,4 @@
-import { Failure } from "./Reporter"
+import { Failure, Reporter, writeTestFailure, writeTestPass, writeTestSkip } from "./Reporter"
 import { waitFor } from "./waitFor"
 
 export interface ScenarioStep<T> {
@@ -30,11 +30,17 @@ export class InvalidStep {
 
 export type StepResult = ValidStep | InvalidStep
 
-export async function runStep<T>(step: ScenarioStep<T>, context: T): Promise<StepResult> {
+export async function runStep<T>(step: ScenarioStep<T>, context: T, reporter: Reporter): Promise<StepResult> {
   try {
     await waitFor(step.run(context))
+    writeTestPass(reporter, step.description)
     return new ValidStep()
-  } catch (err) {
-    return new InvalidStep(err)
+  } catch (error) {
+    writeTestFailure(reporter, step.description, error)
+    return new InvalidStep(error)
   }
+}
+
+export function skipStep<T>(step: ScenarioStep<T>, reporter: Reporter) {
+  writeTestSkip(reporter, step.description)
 }
