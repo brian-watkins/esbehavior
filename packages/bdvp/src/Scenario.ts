@@ -5,8 +5,8 @@ import { runStep, ScenarioStep, skipStep } from "./ScenarioStep"
 import { waitFor } from "./waitFor"
 import { Fact } from "./Fact"
 
-export interface Scenario {
-  kind: ScenarioKind
+export interface Example {
+  runMode: RunMode
   run(reporter: Reporter): Promise<Summary>
   skip(reporter: Reporter): Promise<Summary>
 }
@@ -15,7 +15,7 @@ export interface Context<T> {
   generator: () => T | Promise<T>
 }
 
-export enum ScenarioKind {
+export enum RunMode {
   Normal, Skipped, Picked
 }
 
@@ -23,16 +23,16 @@ export class Plan<T> {
   public _conditions: Array<Fact<T>> = []
   public _observations: Array<Fact<T>> = []
 
-  constructor(public description: string, public kind: ScenarioKind, public context: Context<T>) { }
+  constructor(public description: string, public runMode: RunMode, public context: Context<T>) { }
 
   conditions(facts: Array<Fact<T>>): Plan<T> {
     this._conditions = facts
     return this
   }
 
-  observations(facts: Array<Fact<T>>): Scenario {
+  observations(facts: Array<Fact<T>>): Example {
     this._observations = facts
-    return new RunnableScenario(this)
+    return new RunnableExample(this)
   }
 }
 
@@ -126,11 +126,11 @@ function summarize<T extends { summary: Summary }>(summarizable: T, summarizer: 
   return { ...summarizable, summary: summarizer(summarizable.summary) }
 }
 
-class RunnableScenario<T> implements Scenario {
+class RunnableExample<T> implements Example {
   constructor(private plan: Plan<T>) { }
 
-  get kind(): ScenarioKind {
-    return this.plan.kind
+  get runMode(): RunMode {
+    return this.plan.runMode
   }
 
   private async init(): Promise<ScenarioState<T>> {
@@ -146,6 +146,16 @@ class RunnableScenario<T> implements Scenario {
     writeComment(reporter, this.plan.description)
 
     const initialState = await this.init()
+
+    const state = await this.execute(initialState, reporter)
+
+    return state.summary
+  }
+
+  async skip(reporter: Reporter): Promise<Summary> {
+    writeComment(reporter, this.plan.description)
+
+    const initialState = skipAll([...this.plan._conditions, ...this.plan._observations])
 
     const state = await this.execute(initialState, reporter)
 
@@ -206,15 +216,5 @@ class RunnableScenario<T> implements Scenario {
       case "Complete":
         return state
     }
-  }
-
-  async skip(reporter: Reporter): Promise<Summary> {
-    writeComment(reporter, this.plan.description)
-
-    const initialState = skipAll([...this.plan._conditions, ...this.plan._observations])
-    
-    const state = await this.execute(initialState, reporter)
-
-    return state.summary
   }
 }

@@ -1,4 +1,4 @@
-import { Context, Plan, Scenario, ScenarioKind } from "./Scenario"
+import { Context, Plan, Example, RunMode } from "./Scenario"
 import { ConsoleReporter, Reporter, startReport, writeSummary } from "./Reporter"
 import { Document, DocumentCollection } from "./Document"
 import { Fact } from "./Fact"
@@ -18,8 +18,8 @@ export async function runDocs<T>(docs: Array<Document>, options: RunnerOptions =
   writeSummary(reporter, results)
 }
 
-export function document(description: string, scenarios: Array<Scenario>): Document {
-  return new Document(description, scenarios)
+export function document(description: string, examples: Array<Example>): Document {
+  return new Document(description, examples)
 }
 
 export function context<T>(generator: () => T | Promise<T>): Context<T> {
@@ -31,18 +31,18 @@ export function context<T>(generator: () => T | Promise<T>): Context<T> {
 const voidContext: Context<any> = context(() => {})
 
 export function example<T = void>(description: string, context: Context<T> = voidContext): Plan<T> {
-  return new Plan(description, ScenarioKind.Normal, context)
+  return new Plan(description, RunMode.Normal, context)
 }
 
 export const skip = {
   example<T = void>(description: string, context: Context<T> = voidContext): Plan<T> {
-    return new Plan(description, ScenarioKind.Skipped, context)
+    return new Plan(description, RunMode.Skipped, context)
   }
 }
 
 export const pick = {
   example<T = void>(description: string, context: Context<T> = voidContext): Plan<T> {
-    return new Plan(description, ScenarioKind.Picked, context)
+    return new Plan(description, RunMode.Picked, context)
   }
 }
 

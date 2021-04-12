@@ -1,4 +1,4 @@
-import { Scenario, ScenarioKind } from "./Scenario";
+import { Example, RunMode } from "./Scenario";
 import { Reporter, writeComment } from "./Reporter";
 import { addSummary, emptySummary, Summary } from "./Summary";
 
@@ -30,32 +30,32 @@ export class DocumentCollection {
 export class Document {
   public hasPickedScenario: boolean
 
-  constructor(public description: string, public scenarios: Array<Scenario>) {
-    this.hasPickedScenario = this.scenarios.find(scenario => scenario.kind === ScenarioKind.Picked) !== undefined
+  constructor(public description: string, public examples: Array<Example>) {
+    this.hasPickedScenario = this.examples.find(example => example.runMode === RunMode.Picked) !== undefined
   }
 
   async runPicked(reporter: Reporter): Promise<Summary> {
-    return this.execute((scenario) => scenario.kind === ScenarioKind.Picked, reporter)
+    return this.execute((example) => example.runMode === RunMode.Picked, reporter)
   }
 
   async run(reporter: Reporter): Promise<Summary> {
-    return this.execute((scenario) => scenario.kind !== ScenarioKind.Skipped, reporter)
+    return this.execute((example) => example.runMode !== RunMode.Skipped, reporter)
   }
 
-  private async execute(shouldRun: (scenario: Scenario) => boolean, reporter: Reporter): Promise<Summary> {
+  private async execute(shouldRun: (example: Example) => boolean, reporter: Reporter): Promise<Summary> {
     writeComment(reporter, this.description)
 
     let summary = emptySummary()
 
-    for (const scenario of this.scenarios) {
-      let scenarioSummary: Summary
-      if (shouldRun(scenario)) {
-        scenarioSummary = await scenario.run(reporter)
+    for (const example of this.examples) {
+      let exampleSummary: Summary
+      if (shouldRun(example)) {
+        exampleSummary = await example.run(reporter)
       } else {
-        scenarioSummary = await scenario.skip(reporter)
+        exampleSummary = await example.skip(reporter)
       }
 
-      summary = addSummary(summary, scenarioSummary)
+      summary = addSummary(summary, exampleSummary)
     }
 
     return summary
