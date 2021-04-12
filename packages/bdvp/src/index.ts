@@ -1,7 +1,7 @@
-import { Observation } from "./Observation"
 import { Context, Plan, Scenario, ScenarioKind } from "./Scenario"
 import { ConsoleReporter, Reporter, startReport, writeSummary } from "./Reporter"
 import { Document, DocumentCollection } from "./Document"
+import { Fact } from "./Fact"
 
 export interface RunnerOptions {
   reporter?: Reporter
@@ -30,22 +30,22 @@ export function context<T>(generator: () => T | Promise<T>): Context<T> {
 
 const voidContext: Context<any> = context(() => {})
 
-export function scenario<T = void>(description: string, context: Context<T> = voidContext): Plan<T> {
+export function example<T = void>(description: string, context: Context<T> = voidContext): Plan<T> {
   return new Plan(description, ScenarioKind.Normal, context)
 }
 
 export const skip = {
-  scenario<T = void>(description: string, context: Context<T> = voidContext): Plan<T> {
+  example<T = void>(description: string, context: Context<T> = voidContext): Plan<T> {
     return new Plan(description, ScenarioKind.Skipped, context)
   }
 }
 
 export const pick = {
-  scenario<T = void>(description: string, context: Context<T> = voidContext): Plan<T> {
+  example<T = void>(description: string, context: Context<T> = voidContext): Plan<T> {
     return new Plan(description, ScenarioKind.Picked, context)
   }
 }
 
-export function it<T>(description: string, observer: (context: T) => void | Promise<void>): Observation<T> {
-  return new Observation(description, observer)
+export function fact<T>(description: string, run: (context: T) => void | Promise<void>): Fact<T> {
+  return new Fact(description, run)
 }

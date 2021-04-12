@@ -1,10 +1,9 @@
-import { Condition } from "./Condition"
 import { firstOf } from "./Maybe"
-import { Observation } from "./Observation"
 import { Reporter, writeComment } from "./Reporter"
 import { addInvalid, addSkipped, addValid, emptySummary, Summary } from "./Summary"
 import { runStep, ScenarioStep, skipStep } from "./ScenarioStep"
 import { waitFor } from "./waitFor"
+import { Fact } from "./Fact"
 
 export interface Scenario {
   kind: ScenarioKind
@@ -21,18 +20,18 @@ export enum ScenarioKind {
 }
 
 export class Plan<T> {
-  public conditions: Array<Condition<T>> = []
-  public observations: Array<Observation<T>> = []
+  public _conditions: Array<Fact<T>> = []
+  public _observations: Array<Fact<T>> = []
 
   constructor(public description: string, public kind: ScenarioKind, public context: Context<T>) { }
 
-  when(description: string, run: (context: T) => void | Promise<void>): Plan<T> {
-    this.conditions.push(new Condition(description, run))
+  conditions(facts: Array<Fact<T>>): Plan<T> {
+    this._conditions = facts
     return this
   }
 
-  observeThat(observations: Observation<T>[]): Scenario {
-    this.observations = observations
+  observations(facts: Array<Fact<T>>): Scenario {
+    this._observations = facts
     return new RunnableScenario(this)
   }
 }
@@ -138,7 +137,7 @@ class RunnableScenario<T> implements Scenario {
     return {
       type: "Verify",
       context: await waitFor(this.plan.context.generator()),
-      steps: this.plan.conditions,
+      steps: this.plan._conditions,
       summary: emptySummary()
     }
   }
@@ -158,7 +157,7 @@ class RunnableScenario<T> implements Scenario {
       case "Verify":
         return firstOf(state.steps).map({
           nothing: () => {
-            return this.execute(allObservations(state, this.plan.observations), reporter)
+            return this.execute(allObservations(state, this.plan._observations), reporter)
           },
           something: async (condition) => {
             const stepResult = await runStep(condition, state.context, reporter)
@@ -169,7 +168,7 @@ class RunnableScenario<T> implements Scenario {
               },
               invalid: () => {
                 const updated = summarize(state, addInvalid)
-                return this.execute(skipRemainingSteps(updated, this.plan.observations), reporter)
+                return this.execute(skipRemainingSteps(updated, this.plan._observations), reporter)
               }
             })
           }
@@ -212,7 +211,7 @@ class RunnableScenario<T> implements Scenario {
   async skip(reporter: Reporter): Promise<Summary> {
     writeComment(reporter, this.plan.description)
 
-    const initialState = skipAll([...this.plan.conditions, ...this.plan.observations])
+    const initialState = skipAll([...this.plan._conditions, ...this.plan._observations])
     
     const state = await this.execute(initialState, reporter)
 

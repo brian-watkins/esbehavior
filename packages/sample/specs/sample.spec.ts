@@ -1,22 +1,24 @@
-import proclaim from 'proclaim'
-import { context, document, it, runDocs, scenario, skip } from 'bdvp'
+import assert from 'proclaim'
+import { context, document, example, fact, runDocs, skip } from 'bdvp'
 
 const spec = document("a sample spec", [
-  scenario("comparing some numbers", context(() => 7))
-    .when("something happens", () => {})
-    .when("something else happens", () => {})
-    .observeThat([
-      it("compares two numbers", (context) => {
-        proclaim.equal(context, 7)
+  example("comparing some numbers", context(() => 7))
+    .conditions([
+      fact("something happens", () => {}),
+      fact("something else happens", () => {})
+    ])
+    .observations([
+      fact("compares two numbers", (context) => {
+        assert.equal(context, 7)
       }),
-      it("does something that fails", (context) => {
-        proclaim.equal(context, 8)
+      fact("does something that fails", (context) => {
+        assert.equal(context, 8)
       })
     ]),
-  skip.scenario("some boring scenario")
-    .observeThat([
-      it("never runs this", () => {
-        proclaim.equal(7, 5)
+  skip.example("some boring example")
+    .observations([
+      fact("never runs this", () => {
+        assert.equal(7, 5)
       })
     ])
 ])

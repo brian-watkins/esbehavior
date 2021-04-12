@@ -1,7 +1,7 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { docReport, FakeReporter, invalidObservation, passingCondition, scenarioReport, validObservation } from './helpers/FakeReporter'
-import { document, scenario, it, runDocs, context } from '../src/index'
+import { document, runDocs, context, example, fact } from '../src/index'
 import { expect } from 'chai'
 
 test("it runs a scenario with an async given", async () => {
@@ -9,13 +9,13 @@ test("it runs a scenario with an async given", async () => {
 
   await runDocs([
     document("a single test", [
-      scenario("async given", context(() => {
+      example("async given", context(() => {
         return new Promise(resolve => {
           setTimeout(() => resolve(7), 150)
         })
       }))
-        .observeThat([
-          it("compares the right numbers", (actual) => {
+        .observations([
+          fact("compares the right numbers", (actual) => {
             assert.equal(actual, 7, "it does the thing")
           })
         ])
@@ -36,13 +36,13 @@ test("it runs a scenario with an async given and async observation", async () =>
 
   await runDocs([
     document("a single test", [
-      scenario("async given and observation", context(() => {
+      example("async given and observation", context(() => {
         return new Promise<number>(resolve => {
           setTimeout(() => resolve(7), 150)
         })
       }))
-        .observeThat([
-          it("async compares the right numbers", async (actual) => {
+        .observations([
+          fact("async compares the right numbers", async (actual) => {
             const fetchedValue = await new Promise(resolve => {
               setTimeout(() => resolve(actual + 5), 100)
             })
@@ -53,7 +53,7 @@ test("it runs a scenario with an async given and async observation", async () =>
               throw err
             }
           }),
-          it("does something sync", (actual) => {
+          fact("does something sync", (actual) => {
             assert.equal(actual, 7)
           })
         ])
@@ -80,19 +80,21 @@ test("it runs async when blocks", async () => {
 
   await runDocs([
     document("a single test", [
-      scenario("multiple when blocks", context(() => ({ val: 7 })))
-        .when("the value is incremented", (context) => { context.val++ })
-        .when("the value is incremented asynchronously", (context) => {
-          return new Promise(resolve => {
-            setTimeout(() => {
-              context.val++
-              resolve()
-            }, 150)
-          })
-        })
-        .when("the value is incremented", (context) => { context.val++ })
-        .observeThat([
-          it("compares the correct number", (context) => {
+      example("multiple when blocks", context(() => ({ val: 7 })))
+        .conditions([
+          fact("the value is incremented", (context) => { context.val++ }),
+          fact("the value is incremented asynchronously", (context) => {
+            return new Promise(resolve => {
+              setTimeout(() => {
+                context.val++
+                resolve()
+              }, 150)
+            })
+          }),
+          fact("the value is incremented", (context) => { context.val++ })
+        ])
+        .observations([
+          fact("compares the correct number", (context) => {
             expect(context.val).to.equal(10)
           })
         ])

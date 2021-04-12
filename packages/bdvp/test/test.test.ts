@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, scenario, it, runDocs, context } from '../src/index'
+import { document, example, fact, runDocs, context } from '../src/index'
 import { passingCondition, docReport, FakeReporter, invalidObservation, scenarioReport, validObservation } from './helpers/FakeReporter'
 
 test("it runs a single passing test", async () => {
@@ -8,9 +8,9 @@ test("it runs a single passing test", async () => {
 
   await runDocs([
     document("a single test", [
-      scenario("my first test")
-        .observeThat([
-          it("does something cool", (something) => {
+      example("my first test")
+        .observations([
+          fact("does something cool", (something) => {
             // nothing
           })
         ])
@@ -31,12 +31,12 @@ test("it runs more than one passing test", async () => {
 
   await runDocs([
     document("a single test", [
-      scenario("several observations")
-        .observeThat([
-          it("does something cool", () => {
+      example("several observations")
+        .observations([
+          fact("does something cool", () => {
             // nothing
           }),
-          it("does something else cool", () => {
+          fact("does something else cool", () => {
             // nothing
           })
         ])
@@ -58,9 +58,9 @@ test("it runs a failing test", async () => {
 
   await runDocs([
     document("a single test", [
-      scenario("failing observation")
-        .observeThat([
-          it("does something that fails", () => {
+      example("failing observation")
+        .observations([
+          fact("does something that fails", () => {
             const testFailure: any = new Error()
             testFailure.expected = "something"
             testFailure.actual = "nothing"
@@ -68,7 +68,7 @@ test("it runs a failing test", async () => {
             testFailure.stack = "fake stack"
             throw testFailure
           }),
-          it("passes", () => { })
+          fact("passes", () => { })
         ])
     ])
   ], { reporter })
@@ -90,12 +90,14 @@ test("it runs when blocks", async () => {
 
   await runDocs([
     document("a single test", [
-      scenario("multiple when blocks", context(() => ({ val: 7 })))
-        .when("the value is incremented", (context) => { context.val++ })
-        .when("the value is incremented", (context) => { context.val++ })
-        .when("the value is incremented", (context) => { context.val++ })
-        .observeThat([
-          it("compares the correct number", (context) => {
+      example("multiple when blocks", context(() => ({ val: 7 })))
+        .conditions([
+          fact("the value is incremented", (context) => { context.val++ }),  
+          fact("the value is incremented", (context) => { context.val++ }),  
+          fact("the value is incremented", (context) => { context.val++ }),  
+        ])
+        .observations([
+          fact("it compares the correct number", (context) => {
             expect(context.val).to.equal(10)
           })
         ])
@@ -109,7 +111,7 @@ test("it runs when blocks", async () => {
         passingCondition("the value is incremented"),
         passingCondition("the value is incremented")
       ], [
-        validObservation("compares the correct number")
+        validObservation("it compares the correct number")
       ])
     ])
   ], "it prints the expected output for a scenario with multiple when blocks")

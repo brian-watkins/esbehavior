@@ -1,30 +1,32 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, scenario, it, runDocs, skip, context } from '../src/index'
-import { passingCondition, docReport, FakeReporter, scenarioReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter'
+import { document, runDocs, skip, context, fact, example } from '../src/index'
+import { docReport, FakeReporter, scenarioReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter'
 
 test("it skips a scenario", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
     document("something", [
-      skip.scenario("not important", context(() => {
+      skip.example("not important", context(() => {
         throw new Error("BAD GIVEN!!")
       }))
-        .when("it does something bad", () => {
-          throw new Error("BAD WHEN!!")
-        })
-        .observeThat([
-          it("will never run this", () => {
+        .conditions([
+          fact("it does something bad", () => {
+            throw new Error("BAD WHEN!!")
+          })
+        ])
+        .observations([
+          fact("will never run this", () => {
             expect(7).to.equal(5)
           }),
-          it("or this", () => {
+          fact("or this", () => {
             expect(9).to.equal(1)
           })
         ]),
-      scenario("important")
-        .observeThat([
-          it("will run this", () => {
+      example("important")
+        .observations([
+          fact("will run this", () => {
             expect(7).to.equal(7)
           })
         ])

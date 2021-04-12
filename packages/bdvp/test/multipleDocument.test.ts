@@ -1,5 +1,5 @@
 import { test } from 'uvu'
-import { document, scenario, it, runDocs, context } from '../src/index'
+import { document, runDocs, context, example, fact } from '../src/index'
 import { docReport, FakeReporter, scenarioReport, validObservation } from './helpers/FakeReporter'
 import { expect } from 'chai'
 
@@ -8,17 +8,17 @@ test("it runs multiple describes", async () => {
 
   await runDocs([
     document("a single test", [
-      scenario("just a test", context(() => 7))
-        .observeThat([
-          it("compares the correct number", (actual) => {
+      example("just a test", context(() => 7))
+        .observations([
+          fact("compares the correct number", (actual) => {
             expect(actual).to.equal(7)
           })
         ])
     ]),
     document("another test", [
-      scenario("just another test", context(() => 18))
-        .observeThat([
-          it("compares another correct number", (actual) => {
+      example("just another test", context(() => 18))
+        .observations([
+          fact("compares another correct number", (actual) => {
             expect(actual).to.equal(18)
           })
         ])

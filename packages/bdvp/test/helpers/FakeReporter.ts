@@ -92,7 +92,7 @@ export function passingCondition(description: string): TestCondition {
   return {
     type: ConditionType.Valid,
     lines: () => {
-      return [`ok when ${description}`]
+      return [`ok ${description}`]
     }
   }
 }
@@ -101,7 +101,7 @@ export function failingCondition(description: string, details: FailureDetails): 
   return {
     type: ConditionType.Invalid,
     lines: () => [
-      `not ok when ${description}`,
+      `not ok ${description}`,
       "  ---",
       `  operator: ${details.operator}`,
       `  expected: ${details.expected}`,
@@ -117,7 +117,7 @@ export function skippedCondition(description: string): TestCondition {
   return {
     type: ConditionType.Skipped,
     lines: () => [
-      `ok when ${description} # SKIP`
+      `ok ${description} # SKIP`
     ]
   }
 }
@@ -150,7 +150,7 @@ export function validObservation(description: string): TestObservation {
   return {
     type: ObservationType.Valid,
     lines: () => [
-      `ok it ${description}`,
+      `ok ${description}`,
     ]
   }
 }
@@ -166,7 +166,7 @@ export function invalidObservation(description: string, details: FailureDetails)
   return {
     type: ObservationType.Invalid,
     lines: () => [
-      `not ok it ${description}`,
+      `not ok ${description}`,
       "  ---",
       `  operator: ${details.operator}`,
       `  expected: ${details.expected}`,
@@ -182,7 +182,7 @@ export function skippedObservation(description: string): TestObservation {
   return {
     type: ObservationType.Skipped,
     lines: () => [
-      `ok it ${description} # SKIP`
+      `ok ${description} # SKIP`
     ]
   }
 }
