@@ -11,6 +11,11 @@ export interface Example {
   skip(reporter: Reporter): Promise<Summary>
 }
 
+export interface Plan<T> {
+  conditions(facts: Array<Fact<T>>): Plan<T>
+  observations(facts: Array<Fact<T>>): Example
+}
+
 export interface Context<T> {
   generator: () => T | Promise<T>
 }
@@ -19,12 +24,12 @@ export enum RunMode {
   Normal, Skipped, Picked
 }
 
-export class Plan<T> {
-  public _conditions: Array<Fact<T>> = []
-  public _observations: Array<Fact<T>> = []
+export class BDVPExample<T> implements Plan<T>, Example {
+  private _conditions: Array<Fact<T>> = []
+  private _observations: Array<Fact<T>> = []
 
   constructor(public description: string, public runMode: RunMode, public context: Context<T>) { }
-
+  
   conditions(facts: Array<Fact<T>>): Plan<T> {
     this._conditions = facts
     return this
@@ -32,9 +37,100 @@ export class Plan<T> {
 
   observations(facts: Array<Fact<T>>): Example {
     this._observations = facts
-    return new RunnableExample(this)
+    return this
+  }
+
+  private async init(): Promise<ExampleState<T>> {
+    return {
+      type: "Verify",
+      context: await waitFor(this.context.generator()),
+      steps: this._conditions,
+      summary: emptySummary()
+    }
+  }
+
+  async run(reporter: Reporter): Promise<Summary> {
+    writeComment(reporter, this.description)
+
+    const initialState = await this.init()
+
+    const state = await this.execute(initialState, reporter)
+
+    return state.summary
+  }
+
+  async skip(reporter: Reporter): Promise<Summary> {
+    writeComment(reporter, this.description)
+
+    const initialState = skipAll([...this._conditions, ...this._observations])
+
+    const state = await this.execute(initialState, reporter)
+
+    return state.summary
+  }
+
+  private async execute(state: ExampleState<T>, reporter: Reporter): Promise<ExampleState<T>> {
+    switch (state.type) {
+      case "Verify":
+        return firstOf(state.steps).map({
+          nothing: () => {
+            return this.execute(allObservations(state, this._observations), reporter)
+          },
+          something: async (condition) => {
+            const stepResult = await runStep(condition, state.context, reporter)
+            return stepResult.map({
+              valid: () => {
+                const updated = summarize(state, addValid)
+                return this.execute(remainingConditions(updated), reporter)
+              },
+              invalid: () => {
+                const updated = summarize(state, addInvalid)
+                return this.execute(skipRemainingSteps(updated, this._observations), reporter)
+              }
+            })
+          }
+        })
+      case "Observe":
+        return firstOf(state.steps).map({
+          nothing: () => {
+            return this.execute(complete(state), reporter)
+          },
+          something: async (observation) => {
+            const observationResult = await runStep(observation, state.context, reporter)
+            return observationResult.map({
+              valid: () => {
+                const updated = summarize(state, addValid)
+                return this.execute(remainingObservations(updated), reporter)
+              },
+              invalid: () => {
+                const updated = summarize(state, addInvalid)
+                return this.execute(remainingObservations(updated), reporter)
+              }
+            })
+          }
+        })
+      case "Skip":
+        return firstOf(state.steps).map({
+          nothing: () => {
+            return this.execute(complete(state), reporter)
+          },
+          something: (step) => {
+            skipStep(step, reporter)
+            const updated = summarize(state, addSkipped)
+            return this.execute(skipRemaining(updated), reporter)
+          }
+        })
+      case "Complete":
+        return state
+    }
   }
 }
+
+type ExampleState<T>
+  = Skip<T>
+  | Verify<T>
+  | Observe<T>
+  | Complete
 
 interface Skip<T> {
   type: "Skip",
@@ -112,109 +208,10 @@ interface Complete {
   summary: Summary
 }
 
-function complete<T>(mode: ScenarioState<T>): Complete {
-  return { type: "Complete", summary: mode.summary }
+function complete<T>(model: ExampleState<T>): Complete {
+  return { type: "Complete", summary: model.summary }
 }
-
-type ScenarioState<T>
-  = Skip<T>
-  | Verify<T>
-  | Observe<T>
-  | Complete
 
 function summarize<T extends { summary: Summary }>(summarizable: T, summarizer: (summary: Summary) => Summary): T {
   return { ...summarizable, summary: summarizer(summarizable.summary) }
-}
-
-class RunnableExample<T> implements Example {
-  constructor(private plan: Plan<T>) { }
-
-  get runMode(): RunMode {
-    return this.plan.runMode
-  }
-
-  private async init(): Promise<ScenarioState<T>> {
-    return {
-      type: "Verify",
-      context: await waitFor(this.plan.context.generator()),
-      steps: this.plan._conditions,
-      summary: emptySummary()
-    }
-  }
-
-  async run(reporter: Reporter): Promise<Summary> {
-    writeComment(reporter, this.plan.description)
-
-    const initialState = await this.init()
-
-    const state = await this.execute(initialState, reporter)
-
-    return state.summary
-  }
-
-  async skip(reporter: Reporter): Promise<Summary> {
-    writeComment(reporter, this.plan.description)
-
-    const initialState = skipAll([...this.plan._conditions, ...this.plan._observations])
-
-    const state = await this.execute(initialState, reporter)
-
-    return state.summary
-  }
-
-  private async execute(state: ScenarioState<T>, reporter: Reporter): Promise<ScenarioState<T>> {
-    switch (state.type) {
-      case "Verify":
-        return firstOf(state.steps).map({
-          nothing: () => {
-            return this.execute(allObservations(state, this.plan._observations), reporter)
-          },
-          something: async (condition) => {
-            const stepResult = await runStep(condition, state.context, reporter)
-            return stepResult.map({
-              valid: () => {
-                const updated = summarize(state, addValid)
-                return this.execute(remainingConditions(updated), reporter)
-              },
-              invalid: () => {
-                const updated = summarize(state, addInvalid)
-                return this.execute(skipRemainingSteps(updated, this.plan._observations), reporter)
-              }
-            })
-          }
-        })
-      case "Observe":
-        return firstOf(state.steps).map({
-          nothing: () => {
-            return this.execute(complete(state), reporter)
-          },
-          something: async (observation) => {
-            const observationResult = await runStep(observation, state.context, reporter)
-            return observationResult.map({
-              valid: () => {
-                const updated = summarize(state, addValid)
-                return this.execute(remainingObservations(updated), reporter)
-              },
-              invalid: () => {
-                const updated = summarize(state, addInvalid)
-                return this.execute(remainingObservations(updated), reporter)
-              }
-            })
-          }
-        })
-      case "Skip":
-        return firstOf(state.steps).map({
-          nothing: () => {
-            return this.execute(complete(state), reporter)
-          },
-          something: (step) => {
-            skipStep(step, reporter)
-            const updated = summarize(state, addSkipped)
-            return this.execute(skipRemaining(updated), reporter)
-          }
-        })
-      case "Complete":
-        return state
-    }
-  }
 }
