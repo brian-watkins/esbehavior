@@ -1,4 +1,4 @@
-import { Context, Plan, Example, RunMode, BDVPExample } from "./Scenario"
+import { Context, Plan, Example, RunMode, BDVPExample } from "./Example"
 import { ConsoleReporter, Reporter, startReport, writeSummary } from "./Reporter"
 import { Document, DocumentCollection } from "./Document"
 import { Fact } from "./Fact"

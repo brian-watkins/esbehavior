@@ -1,4 +1,4 @@
-import { Example, RunMode } from "./Scenario";
+import { Example, RunMode } from "./Example";
 import { Reporter, writeComment } from "./Reporter";
 import { addSummary, emptySummary, Summary } from "./Summary";
 
