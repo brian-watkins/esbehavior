@@ -94,7 +94,7 @@ test("it runs conditions", async () => {
         .require([
           condition("the value is incremented", (context) => { context.val++ }),
           condition("the value is incremented", (context) => { context.val++ }),
-          condition("the value is incremented", (context) => { context.val++ }),
+          condition("the value is incremented", (context) => { context.val++ })
         ])
         .observe([
           effect("it compares the correct number", (context) => {
