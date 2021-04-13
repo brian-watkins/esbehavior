@@ -1,10 +1,10 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { docReport, FakeReporter, invalidObservation, passingCondition, scenarioReport, validObservation } from './helpers/FakeReporter'
-import { document, runDocs, context, example, fact } from '../src/index'
+import { docReport, FakeReporter, invalidObservation, passingCondition, exampleReport, validObservation } from './helpers/FakeReporter'
+import { document, runDocs, context, example, effect, condition } from '../src/index'
 import { expect } from 'chai'
 
-test("it runs a scenario with an async given", async () => {
+test("it runs an example with an async given", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
@@ -14,8 +14,8 @@ test("it runs a scenario with an async given", async () => {
           setTimeout(() => resolve(7), 150)
         })
       }))
-        .observations([
-          fact("compares the right numbers", (actual) => {
+        .observe([
+          effect("compares the right numbers", (actual) => {
             assert.equal(actual, 7, "it does the thing")
           })
         ])
@@ -24,14 +24,14 @@ test("it runs a scenario with an async given", async () => {
 
   reporter.expectTestReportWith([
     docReport("a single test", [
-      scenarioReport("async given", [], [
+      exampleReport("async given", [], [
         validObservation("compares the right numbers")
       ])
     ])
-  ], "it prints the expected output for a scenario with an async given")
+  ], "it prints the expected output for an example with an async given")
 })
 
-test("it runs a scenario with an async given and async observation", async () => {
+test("it runs an example with an async given and async observation", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
@@ -41,8 +41,8 @@ test("it runs a scenario with an async given and async observation", async () =>
           setTimeout(() => resolve(7), 150)
         })
       }))
-        .observations([
-          fact("async compares the right numbers", async (actual) => {
+        .observe([
+          effect("async compares the right numbers", async (actual) => {
             const fetchedValue = await new Promise(resolve => {
               setTimeout(() => resolve(actual + 5), 100)
             })
@@ -53,7 +53,7 @@ test("it runs a scenario with an async given and async observation", async () =>
               throw err
             }
           }),
-          fact("does something sync", (actual) => {
+          effect("does something sync", (actual) => {
             assert.equal(actual, 7)
           })
         ])
@@ -62,7 +62,7 @@ test("it runs a scenario with an async given and async observation", async () =>
 
   reporter.expectTestReportWith([
     docReport("a single test", [
-      scenarioReport("async given and observation", [], [
+      exampleReport("async given and observation", [], [
         invalidObservation("async compares the right numbers", {
           operator: "strictEqual",
           expected: "15",
@@ -72,18 +72,18 @@ test("it runs a scenario with an async given and async observation", async () =>
         validObservation("does something sync")
       ])
     ])
-  ], "it prints the expected output for a scenario with an async given and async observation")
+  ], "it prints the expected output for an example with an async given and async observation")
 })
 
-test("it runs async when blocks", async () => {
+test("it runs async conditions", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
     document("a single test", [
-      example("multiple when blocks", context(() => ({ val: 7 })))
-        .conditions([
-          fact("the value is incremented", (context) => { context.val++ }),
-          fact("the value is incremented asynchronously", (context) => {
+      example("multiple conditions", context(() => ({ val: 7 })))
+        .require([
+          condition("the value is incremented", (context) => { context.val++ }),
+          condition("the value is incremented asynchronously", (context) => {
             return new Promise(resolve => {
               setTimeout(() => {
                 context.val++
@@ -91,10 +91,10 @@ test("it runs async when blocks", async () => {
               }, 150)
             })
           }),
-          fact("the value is incremented", (context) => { context.val++ })
+          condition("the value is incremented", (context) => { context.val++ })
         ])
-        .observations([
-          fact("compares the correct number", (context) => {
+        .observe([
+          effect("compares the correct number", (context) => {
             expect(context.val).to.equal(10)
           })
         ])
@@ -103,7 +103,7 @@ test("it runs async when blocks", async () => {
 
   reporter.expectTestReportWith([
     docReport("a single test", [
-      scenarioReport("multiple when blocks", [
+      exampleReport("multiple conditions", [
         passingCondition("the value is incremented"),
         passingCondition("the value is incremented asynchronously"),
         passingCondition("the value is incremented")
@@ -111,7 +111,7 @@ test("it runs async when blocks", async () => {
         validObservation("compares the correct number")
       ])
     ])
-  ], "it prints the expected output for a scenario with multiple when blocks")
+  ], "it prints the expected output for an example with multiple conditions")
 })
 
 test.run()

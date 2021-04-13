@@ -1,9 +1,10 @@
 import { firstOf } from "./Maybe"
 import { Reporter, writeComment } from "./Reporter"
 import { addInvalid, addSkipped, addValid, emptySummary, Summary } from "./Summary"
-import { runStep, ScenarioStep, skipStep } from "./ScenarioStep"
+import { validate, Claim, ignore } from "./Claim"
 import { waitFor } from "./waitFor"
-import { Fact } from "./Fact"
+import { Effect } from "./Effect"
+import { Condition } from "./Condition"
 
 export interface Example {
   runMode: RunMode
@@ -12,8 +13,8 @@ export interface Example {
 }
 
 export interface Plan<T> {
-  conditions(facts: Array<Fact<T>>): Plan<T>
-  observations(facts: Array<Fact<T>>): Example
+  require(conditions: Array<Condition<T>>): Plan<T>
+  observe(effects: Array<Effect<T>>): Example
 }
 
 export interface Context<T> {
@@ -25,18 +26,18 @@ export enum RunMode {
 }
 
 export class BDVPExample<T> implements Plan<T>, Example {
-  private _conditions: Array<Fact<T>> = []
-  private _observations: Array<Fact<T>> = []
+  private _conditions: Array<Condition<T>> = []
+  private _effects: Array<Effect<T>> = []
 
   constructor(public description: string, public runMode: RunMode, public context: Context<T>) { }
   
-  conditions(facts: Array<Fact<T>>): Plan<T> {
-    this._conditions = facts
+  require(conditions: Array<Condition<T>>): Plan<T> {
+    this._conditions = conditions
     return this
   }
 
-  observations(facts: Array<Fact<T>>): Example {
-    this._observations = facts
+  observe(effects: Array<Effect<T>>): Example {
+    this._effects = effects
     return this
   }
 
@@ -62,7 +63,7 @@ export class BDVPExample<T> implements Plan<T>, Example {
   async skip(reporter: Reporter): Promise<Summary> {
     writeComment(reporter, this.description)
 
-    const initialState = skipAll([...this._conditions, ...this._observations])
+    const initialState = skipAll([...this._conditions, ...this._effects])
 
     const state = await this.execute(initialState, reporter)
 
@@ -74,10 +75,10 @@ export class BDVPExample<T> implements Plan<T>, Example {
       case "Verify":
         return firstOf(state.steps).map({
           nothing: () => {
-            return this.execute(allObservations(state, this._observations), reporter)
+            return this.execute(allObservations(state, this._effects), reporter)
           },
           something: async (condition) => {
-            const stepResult = await runStep(condition, state.context, reporter)
+            const stepResult = await validate(condition, state.context, reporter)
             return stepResult.map({
               valid: () => {
                 const updated = summarize(state, addValid)
@@ -85,7 +86,7 @@ export class BDVPExample<T> implements Plan<T>, Example {
               },
               invalid: () => {
                 const updated = summarize(state, addInvalid)
-                return this.execute(skipRemainingSteps(updated, this._observations), reporter)
+                return this.execute(skipRemainingClaims(updated, this._effects), reporter)
               }
             })
           }
@@ -96,7 +97,7 @@ export class BDVPExample<T> implements Plan<T>, Example {
             return this.execute(complete(state), reporter)
           },
           something: async (observation) => {
-            const observationResult = await runStep(observation, state.context, reporter)
+            const observationResult = await validate(observation, state.context, reporter)
             return observationResult.map({
               valid: () => {
                 const updated = summarize(state, addValid)
@@ -115,7 +116,7 @@ export class BDVPExample<T> implements Plan<T>, Example {
             return this.execute(complete(state), reporter)
           },
           something: (step) => {
-            skipStep(step, reporter)
+            ignore(step, reporter)
             const updated = summarize(state, addSkipped)
             return this.execute(skipRemaining(updated), reporter)
           }
@@ -135,10 +136,10 @@ type ExampleState<T>
 interface Skip<T> {
   type: "Skip",
   summary: Summary,
-  steps: Array<ScenarioStep<T>>
+  steps: Array<Claim<T>>
 }
 
-function skipAll<T>(steps: Array<ScenarioStep<T>>): Skip<T> {
+function skipAll<T>(steps: Array<Claim<T>>): Skip<T> {
   return {
     type: "Skip",
     steps: steps,
@@ -146,7 +147,7 @@ function skipAll<T>(steps: Array<ScenarioStep<T>>): Skip<T> {
   }
 }
 
-function skipRemainingSteps<T>(current: Verify<T>, observations: Array<ScenarioStep<T>>): Skip<T> {
+function skipRemainingClaims<T>(current: Verify<T>, observations: Array<Claim<T>>): Skip<T> {
   return {
     type: "Skip",
     steps: [ ...current.steps.slice(1), ...observations ],
@@ -166,7 +167,7 @@ interface Verify<T> {
   type: "Verify"
   context: T,
   summary: Summary,
-  steps: Array<ScenarioStep<T>>
+  steps: Array<Claim<T>>
 }
 
 function remainingConditions<T>(current: Verify<T>): Verify<T> {
@@ -182,10 +183,10 @@ interface Observe<T> {
   type: "Observe"
   context: T,
   summary: Summary,
-  steps: Array<ScenarioStep<T>>
+  steps: Array<Claim<T>>
 }
 
-function allObservations<T>(current: Verify<T>, observations: Array<ScenarioStep<T>>): Observe<T> {
+function allObservations<T>(current: Verify<T>, observations: Array<Claim<T>>): Observe<T> {
   return {
     type: "Observe",
     steps: observations,

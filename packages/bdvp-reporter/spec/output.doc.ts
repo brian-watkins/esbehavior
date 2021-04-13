@@ -1,4 +1,4 @@
-import { document, context, fact, example } from 'bdvp'
+import { document, context, example, condition, effect } from 'bdvp'
 import expect from 'proclaim'
 import { TestableApp } from './TestableApp'
 
@@ -16,16 +16,16 @@ ok it compares two numbers
 
 const standardScenario =
   example("standard document with scenario and observations", context(() => new TestableApp()))
-    .conditions([
-      fact("a document is executed", async (testableApp) => {
+    .require([
+      condition("a document is executed", async (testableApp) => {
         await testableApp.executeDoc(standardDocument)
       })
     ])  
-    .observations([
-      fact("the report includes the name of the document", (testableApp) => {
+    .observe([
+      effect("the report includes the name of the document", (testableApp) => {
         expect.include(testableApp.output, "a sample spec")
       }),
-      fact("the report includes the name of the example", (testableApp) => {
+      effect("the report includes the name of the example", (testableApp) => {
         expect.include(testableApp.output, "comparing some numbers")
       })
     ])

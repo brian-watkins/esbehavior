@@ -1,7 +1,8 @@
 import { Context, Plan, Example, RunMode, BDVPExample } from "./Example"
 import { ConsoleReporter, Reporter, startReport, writeSummary } from "./Reporter"
 import { Document, DocumentCollection } from "./Document"
-import { Fact } from "./Fact"
+import { Effect } from "./Effect"
+import { Condition } from "./Condition"
 
 export interface RunnerOptions {
   reporter?: Reporter
@@ -46,6 +47,10 @@ export const pick = {
   }
 }
 
-export function fact<T>(description: string, run: (context: T) => void | Promise<void>): Fact<T> {
-  return new Fact(description, run)
+export function condition<T>(description: string, validate: (context: T) => void | Promise<void>): Condition<T> {
+  return new Condition(description, validate)
+}
+
+export function effect<T>(description: string, validate: (context: T) => void | Promise<void>): Effect<T> {
+  return new Effect(description, validate)
 }

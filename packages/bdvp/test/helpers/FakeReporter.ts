@@ -123,7 +123,7 @@ export function skippedCondition(description: string): TestCondition {
 }
 
 
-export function scenarioReport(description: string, conditions: Array<TestCondition>, observations: Array<TestObservation>): TestScenario {
+export function exampleReport(description: string, conditions: Array<TestCondition>, observations: Array<TestObservation>): TestScenario {
   return {
     lines: () => {
       return [`# ${description}`]

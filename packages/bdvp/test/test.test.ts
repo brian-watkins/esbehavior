@@ -1,16 +1,16 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, example, fact, runDocs, context } from '../src/index'
-import { passingCondition, docReport, FakeReporter, invalidObservation, scenarioReport, validObservation } from './helpers/FakeReporter'
+import { document, example, runDocs, context, effect, condition } from '../src/index'
+import { passingCondition, docReport, FakeReporter, invalidObservation, exampleReport, validObservation } from './helpers/FakeReporter'
 
-test("it runs a single passing test", async () => {
+test("it runs a single passing claim", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
     document("a single test", [
       example("my first test")
-        .observations([
-          fact("does something cool", (something) => {
+        .observe([
+          effect("does something cool", (something) => {
             // nothing
           })
         ])
@@ -19,24 +19,24 @@ test("it runs a single passing test", async () => {
 
   reporter.expectTestReportWith([
     docReport("a single test", [
-      scenarioReport("my first test", [], [
+      exampleReport("my first test", [], [
         validObservation("does something cool")
       ])
     ])
-  ], "it prints the expected output for a scenario with a single valid observation")
+  ], "it prints the expected output for an example with a single valid observation")
 })
 
-test("it runs more than one passing test", async () => {
+test("it runs more than one passing claim", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
     document("a single test", [
       example("several observations")
-        .observations([
-          fact("does something cool", () => {
+        .observe([
+          effect("does something cool", () => {
             // nothing
           }),
-          fact("does something else cool", () => {
+          effect("does something else cool", () => {
             // nothing
           })
         ])
@@ -45,12 +45,12 @@ test("it runs more than one passing test", async () => {
 
   reporter.expectTestReportWith([
     docReport("a single test", [
-      scenarioReport("several observations", [], [
+      exampleReport("several observations", [], [
         validObservation("does something cool"),
         validObservation("does something else cool")
       ])
     ])
-  ], "it prints the expected output for a scenarion with multiple valid observations")
+  ], "it prints the expected output for an example with multiple valid observations")
 })
 
 test("it runs a failing test", async () => {
@@ -59,8 +59,8 @@ test("it runs a failing test", async () => {
   await runDocs([
     document("a single test", [
       example("failing observation")
-        .observations([
-          fact("does something that fails", () => {
+        .observe([
+          effect("does something that fails", () => {
             const testFailure: any = new Error()
             testFailure.expected = "something"
             testFailure.actual = "nothing"
@@ -68,36 +68,36 @@ test("it runs a failing test", async () => {
             testFailure.stack = "fake stack"
             throw testFailure
           }),
-          fact("passes", () => { })
+          effect("passes", () => { })
         ])
     ])
   ], { reporter })
 
   reporter.expectTestReportWith([
     docReport("a single test", [
-      scenarioReport("failing observation", [], [
+      exampleReport("failing observation", [], [
         invalidObservation("does something that fails", {
           operator: "equals", expected: "something", actual: "nothing", stack: "fake stack"
         }),
         validObservation("passes")
       ])
     ])
-  ], "it prints the expected output for a scenario with an observation that throws an AssertionError")
+  ], "it prints the expected output for an example with an observation that throws an AssertionError")
 })
 
-test("it runs when blocks", async () => {
+test("it runs conditions", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
     document("a single test", [
-      example("multiple when blocks", context(() => ({ val: 7 })))
-        .conditions([
-          fact("the value is incremented", (context) => { context.val++ }),  
-          fact("the value is incremented", (context) => { context.val++ }),  
-          fact("the value is incremented", (context) => { context.val++ }),  
+      example("multiple conditions", context(() => ({ val: 7 })))
+        .require([
+          condition("the value is incremented", (context) => { context.val++ }),
+          condition("the value is incremented", (context) => { context.val++ }),
+          condition("the value is incremented", (context) => { context.val++ }),
         ])
-        .observations([
-          fact("it compares the correct number", (context) => {
+        .observe([
+          effect("it compares the correct number", (context) => {
             expect(context.val).to.equal(10)
           })
         ])
@@ -106,7 +106,7 @@ test("it runs when blocks", async () => {
 
   reporter.expectTestReportWith([
     docReport("a single test", [
-      scenarioReport("multiple when blocks", [
+      exampleReport("multiple conditions", [
         passingCondition("the value is incremented"),
         passingCondition("the value is incremented"),
         passingCondition("the value is incremented")
@@ -114,7 +114,7 @@ test("it runs when blocks", async () => {
         validObservation("it compares the correct number")
       ])
     ])
-  ], "it prints the expected output for a scenario with multiple when blocks")
+  ], "it prints the expected output for an example with multiple conditions")
 })
 
 test.run()

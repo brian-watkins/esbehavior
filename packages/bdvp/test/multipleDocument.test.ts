@@ -1,24 +1,24 @@
 import { test } from 'uvu'
-import { document, runDocs, context, example, fact } from '../src/index'
-import { docReport, FakeReporter, scenarioReport, validObservation } from './helpers/FakeReporter'
+import { document, runDocs, context, example, effect } from '../src/index'
+import { docReport, FakeReporter, exampleReport, validObservation } from './helpers/FakeReporter'
 import { expect } from 'chai'
 
-test("it runs multiple describes", async () => {
+test("it runs multiple documents", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
-    document("a single test", [
-      example("just a test", context(() => 7))
-        .observations([
-          fact("compares the correct number", (actual) => {
+    document("a single claim", [
+      example("just a claim", context(() => 7))
+        .observe([
+          effect("compares the correct number", (actual) => {
             expect(actual).to.equal(7)
           })
         ])
     ]),
-    document("another test", [
-      example("just another test", context(() => 18))
-        .observations([
-          fact("compares another correct number", (actual) => {
+    document("another claim", [
+      example("just another claim", context(() => 18))
+        .observe([
+          effect("compares another correct number", (actual) => {
             expect(actual).to.equal(18)
           })
         ])
@@ -26,17 +26,17 @@ test("it runs multiple describes", async () => {
   ], { reporter })
 
   reporter.expectTestReportWith([
-    docReport("a single test", [
-      scenarioReport("just a test", [], [
+    docReport("a single claim", [
+      exampleReport("just a claim", [], [
         validObservation("compares the correct number")
       ])
     ]),
-    docReport("another test", [
-      scenarioReport("just another test", [], [
+    docReport("another claim", [
+      exampleReport("just another claim", [], [
         validObservation("compares another correct number")
       ])
     ])
-  ], "it prints the expected output for multiple describes")
+  ], "it prints the expected output for multiple documents")
 })
 
 test.run()

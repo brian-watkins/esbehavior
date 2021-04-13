@@ -1,9 +1,9 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, runDocs, pick, context, example, fact } from '../src/index'
-import { docReport, FakeReporter, scenarioReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter'
+import { document, runDocs, pick, context, example, effect, condition } from '../src/index'
+import { docReport, FakeReporter, exampleReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter'
 
-test("it only runs the picked scenario", async () => {
+test("it only runs the picked example", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
@@ -11,22 +11,22 @@ test("it only runs the picked scenario", async () => {
       example("not important", context(() => {
         throw new Error("BAD GIVEN!!")
       }))
-        .conditions([
-          fact("it does something bad", () => {
+        .require([
+          condition("it does something bad", () => {
             throw new Error("BAD WHEN!!")
           })
         ])
-        .observations([
-          fact("will never run this", () => {
+        .observe([
+          effect("will never run this", () => {
             expect(7).to.equal(5)
           }),
-          fact("or this", () => {
+          effect("or this", () => {
             expect(9).to.equal(1)
           })
         ]),
       pick.example("important")
-        .observations([
-          fact("will run this", () => {
+        .observe([
+          effect("will run this", () => {
             expect(7).to.equal(7)
           })
         ])
@@ -35,13 +35,13 @@ test("it only runs the picked scenario", async () => {
       example("should be skipped", context(() => {
         throw new Error("BAD SO BAD")
       }))
-        .conditions([
-          fact("it does something that it shouldn't", () => {
+        .require([
+          condition("it does something that it shouldn't", () => {
             throw new Error("BAD!")
           })
         ])
-        .observations([
-          fact("just won't", () => {
+        .observe([
+          effect("just won't", () => {
             expect(7).to.equal(4)
           })
         ])
@@ -50,24 +50,24 @@ test("it only runs the picked scenario", async () => {
 
   reporter.expectTestReportWith([
     docReport("something", [
-      scenarioReport("not important", [
+      exampleReport("not important", [
         skippedCondition("it does something bad")
       ], [
         skippedObservation("will never run this"),
         skippedObservation("or this")
       ]),
-      scenarioReport("important", [], [
+      exampleReport("important", [], [
         validObservation("will run this")
       ])
     ]),
     docReport("another", [
-      scenarioReport("should be skipped", [
+      exampleReport("should be skipped", [
         skippedCondition("it does something that it shouldn't")
       ], [
         skippedObservation("just won't")
       ])
     ])
-  ], "it only runs the picked scenario")
+  ], "it only runs the picked example")
 })
 
 test.run()

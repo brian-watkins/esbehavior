@@ -1,6 +1,6 @@
 import { test } from 'uvu'
-import { document, example, fact, runDocs } from '../src/index'
-import { docReport, failingCondition, FakeReporter, scenarioReport, skippedCondition, skippedObservation } from './helpers/FakeReporter'
+import { document, example, effect, condition, runDocs } from '../src/index'
+import { docReport, failingCondition, FakeReporter, exampleReport, skippedCondition, skippedObservation } from './helpers/FakeReporter'
 
 test("failing condition", async () => {
   const reporter = new FakeReporter()
@@ -8,8 +8,8 @@ test("failing condition", async () => {
   await runDocs([
     document("document", [
       example("failing condition")
-        .conditions([
-          fact("something throws an error", () => {
+        .require([
+          condition("something throws an error", () => {
             const error: any = new Error()
             error.expected = "something"
             error.actual = "nothing"
@@ -17,17 +17,17 @@ test("failing condition", async () => {
             error.stack = "funny stack"
             throw error
           }),
-          fact("there is another condition", () => {})
+          condition("there is another condition", () => {})
         ])
-        .observations([
-          fact("does something that will get skipped", () => {})
+        .observe([
+          effect("does something that will get skipped", () => {})
         ])
     ])
   ], { reporter })
 
   reporter.expectTestReportWith([
     docReport("document", [
-      scenarioReport("failing condition", [
+      exampleReport("failing condition", [
         failingCondition("something throws an error", {
           operator: "equals", expected: "something", actual: "nothing", stack: "funny stack"
         }),

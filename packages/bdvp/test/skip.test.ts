@@ -1,9 +1,9 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, runDocs, skip, context, fact, example } from '../src/index'
-import { docReport, FakeReporter, scenarioReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter'
+import { document, runDocs, skip, context, effect, example, condition } from '../src/index'
+import { docReport, FakeReporter, exampleReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter'
 
-test("it skips a scenario", async () => {
+test("it skips an example", async () => {
   const reporter = new FakeReporter()
 
   await runDocs([
@@ -11,22 +11,22 @@ test("it skips a scenario", async () => {
       skip.example("not important", context(() => {
         throw new Error("BAD GIVEN!!")
       }))
-        .conditions([
-          fact("it does something bad", () => {
+        .require([
+          condition("it does something bad", () => {
             throw new Error("BAD WHEN!!")
           })
         ])
-        .observations([
-          fact("will never run this", () => {
+        .observe([
+          effect("will never run this", () => {
             expect(7).to.equal(5)
           }),
-          fact("or this", () => {
+          effect("or this", () => {
             expect(9).to.equal(1)
           })
         ]),
       example("important")
-        .observations([
-          fact("will run this", () => {
+        .observe([
+          effect("will run this", () => {
             expect(7).to.equal(7)
           })
         ])
@@ -35,17 +35,17 @@ test("it skips a scenario", async () => {
 
   reporter.expectTestReportWith([
     docReport("something", [
-      scenarioReport("not important", [
+      exampleReport("not important", [
         skippedCondition("it does something bad")
       ], [
         skippedObservation("will never run this"),
         skippedObservation("or this")
       ]),
-      scenarioReport("important", [], [
+      exampleReport("important", [], [
         validObservation("will run this")
       ])
     ])
-  ], "it skips all observations when a scenario is skipped")
+  ], "it skips all observations when an example is skipped")
 })
 
 test.run()
