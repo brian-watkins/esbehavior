@@ -19,6 +19,7 @@ export interface Plan<T> {
 
 export interface Context<T> {
   generator: () => T | Promise<T>
+  teardown?: (context: T) => void
 }
 
 export enum RunMode {
@@ -41,21 +42,16 @@ export class BDVPExample<T> implements Plan<T>, Example {
     return this
   }
 
-  private async init(): Promise<ExampleState<T>> {
-    return {
-      type: "Verify",
-      context: await waitFor(this.context.generator()),
-      steps: this._conditions,
-      summary: emptySummary()
-    }
-  }
-
   async run(reporter: Reporter): Promise<Summary> {
     writeComment(reporter, this.description)
 
-    const initialState = await this.init()
+    const context = await waitFor(this.context.generator())
+
+    const initialState = verifyConditions(context, this._conditions)
 
     const state = await this.execute(initialState, reporter)
+
+    this.context.teardown?.(context)
 
     return state.summary
   }
@@ -168,6 +164,15 @@ interface Verify<T> {
   context: T,
   summary: Summary,
   steps: Array<Claim<T>>
+}
+
+function verifyConditions<T>(context: T, conditions: Array<Condition<T>>): Verify<T> {
+  return {
+    type: "Verify",
+    context: context,
+    steps: conditions,
+    summary: emptySummary()
+  }
 }
 
 function remainingConditions<T>(current: Verify<T>): Verify<T> {

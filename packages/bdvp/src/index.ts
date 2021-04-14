@@ -23,9 +23,10 @@ export function document(description: string, examples: Array<Example>): Documen
   return new Document(description, examples)
 }
 
-export function context<T>(generator: () => T | Promise<T>): Context<T> {
+export function context<T>(generator: () => T | Promise<T>, teardown?: (context: T) => void): Context<T> {
   return {
-    generator
+    generator,
+    teardown
   }
 }
 
