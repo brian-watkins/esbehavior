@@ -11,7 +11,7 @@ test("it runs an example with an async given", async () => {
     document("a single test", [
       example("async given", context(() => {
         return new Promise(resolve => {
-          setTimeout(() => resolve(7), 150)
+          setTimeout(() => resolve(7), 30)
         })
       }))
         .observe([
@@ -31,20 +31,29 @@ test("it runs an example with an async given", async () => {
   ], "it prints the expected output for an example with an async given")
 })
 
-test("it runs an example with an async given and async observation", async () => {
+test("it runs an example with an async context generator and async observation", async () => {
   const reporter = new FakeReporter()
+
+  let teardownValue = 0
 
   await runDocs([
     document("a single test", [
-      example("async given and observation", context(() => {
+      example("async context and observation", context(() => {
         return new Promise<number>(resolve => {
-          setTimeout(() => resolve(7), 150)
+          setTimeout(() => resolve(7), 30)
+        })
+      }, async (context) => {
+        await new Promise<void>(resolve => {
+          setTimeout(() => {
+            teardownValue = context + 2
+            resolve()
+          }, 30)
         })
       }))
         .observe([
           effect("async compares the right numbers", async (actual) => {
             const fetchedValue = await new Promise(resolve => {
-              setTimeout(() => resolve(actual + 5), 100)
+              setTimeout(() => resolve(actual + 5), 30)
             })
             try {
               expect(fetchedValue).to.equal(15)
@@ -60,9 +69,11 @@ test("it runs an example with an async given and async observation", async () =>
     ])
   ], { reporter })
 
+  assert.equal(teardownValue, 9, "it executes the async teardown function on the context")
+
   reporter.expectTestReportWith([
     docReport("a single test", [
-      exampleReport("async given and observation", [], [
+      exampleReport("async context and observation", [], [
         invalidObservation("async compares the right numbers", {
           operator: "strictEqual",
           expected: "15",
@@ -72,7 +83,7 @@ test("it runs an example with an async given and async observation", async () =>
         validObservation("does something sync")
       ])
     ])
-  ], "it prints the expected output for an example with an async given and async observation")
+  ], "it prints the expected output for an example with an async context generator and teardown and async observation")
 })
 
 test("it runs async conditions", async () => {
@@ -88,7 +99,7 @@ test("it runs async conditions", async () => {
               setTimeout(() => {
                 context.val++
                 resolve()
-              }, 150)
+              }, 30)
             })
           }),
           condition("the value is incremented", (context) => { context.val++ })

@@ -19,7 +19,7 @@ export interface Plan<T> {
 
 export interface Context<T> {
   generator: () => T | Promise<T>
-  teardown?: (context: T) => void
+  teardown?: (context: T) => void | Promise<void>
 }
 
 export enum RunMode {
@@ -51,7 +51,7 @@ export class BDVPExample<T> implements Plan<T>, Example {
 
     const state = await this.execute(initialState, reporter)
 
-    this.context.teardown?.(context)
+    await waitFor(this.context.teardown?.(context))
 
     return state.summary
   }
