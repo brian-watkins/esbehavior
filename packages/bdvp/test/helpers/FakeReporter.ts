@@ -131,22 +131,6 @@ export function skippedCondition(description: string): TestCondition {
   }
 }
 
-export function exampleThatBails(description: string, reason: string): TestExample {
-  return {
-    lines: () => {
-      return [
-        `# ${description}`,
-        `Bail out! ${reason}`
-      ]
-    },
-    results: () => ({
-      valid: 0,
-      invalid: 0,
-      skipped: 0
-    })
-  }
-}
-
 export function exampleReport(description: string, conditions: Array<TestCondition>, observations: Array<TestObservation>): TestExample {
   return {
     lines: () => {
@@ -159,6 +143,13 @@ export function exampleReport(description: string, conditions: Array<TestConditi
       invalid: conditionsMatching(conditions, ConditionType.Invalid) + observationsMatching(observations, ObservationType.Invalid),
       skipped: conditionsMatching(conditions, ConditionType.Skipped) + observationsMatching(observations, ObservationType.Skipped)
     })
+  }
+}
+
+export function failureReport(failureReason: string): TestExample {
+  return {
+    lines: () => [ `Bail out! ${failureReason}` ],
+    results: () => emptyResults
   }
 }
 
