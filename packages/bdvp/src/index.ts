@@ -1,5 +1,5 @@
 import { Context, Plan, Example, RunMode, BDVPExample } from "./Example"
-import { ConsoleReporter, Reporter, startReport, writeSummary } from "./Reporter"
+import { ConsoleReporter, Reporter, startReport, writeSummary, terminateReport } from "./Reporter"
 import { Document, DocumentCollection } from "./Document"
 import { Effect } from "./Effect"
 import { Condition } from "./Condition"
@@ -14,9 +14,13 @@ export async function runDocs<T>(docs: Array<Document>, options: RunnerOptions =
   startReport(reporter)
 
   const docCollection = new DocumentCollection(docs)
-  const results = await docCollection.run(reporter)
 
-  writeSummary(reporter, results)
+  try {
+    const results = await docCollection.run(reporter)
+    writeSummary(reporter, results)
+  } catch (err) {
+    terminateReport(reporter, err)
+  }
 }
 
 export function document(description: string, examples: Array<Example>): Document {

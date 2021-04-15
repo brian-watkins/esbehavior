@@ -1,8 +1,8 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { document, runDocs, pick, context, example, effect, condition } from '../src/index'
-import { docReport, FakeReporter, exampleReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter'
+import { document, runDocs, context, example, effect, condition } from '../src/index'
+import { FakeReporter } from './helpers/FakeReporter'
 
 test("it tears down the context", async () => {
   const reporter = new FakeReporter()

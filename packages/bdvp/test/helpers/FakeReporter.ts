@@ -27,6 +27,15 @@ export class FakeReporter implements Reporter {
 
     assert.equal(this.logLines, expected, message)
   }
+
+  expectTestReportThatBails(docs: Array<TestDoc>, message: string) {
+    const expected = [
+      "TAP version 13"
+    ]
+      .concat(docs.reduce((lines: Array<string>, doc) => lines.concat(doc.lines()), []))
+
+    assert.equal(this.logLines, expected, message)
+  }
 }
 
 interface Observable {
@@ -43,7 +52,7 @@ interface ObservationResults {
   skipped: number
 }
 
-export interface TestScenario extends Observable {
+export interface TestExample extends Observable {
   lines(): Array<string>
 }
 
@@ -60,7 +69,7 @@ export interface TestObservation {
   lines(): Array<string>
 }
 
-export function docReport(description: string, scenarios: Array<TestScenario>): TestDoc {
+export function docReport(description: string, scenarios: Array<TestExample>): TestDoc {
   return {
     lines: () => {
       return [`# ${description}`]
@@ -74,7 +83,7 @@ export function docReport(description: string, scenarios: Array<TestScenario>): 
 
 const emptyResults = { valid: 0, invalid: 0, skipped: 0 }
 
-function sumResults(total: ObservationResults, scenario: TestScenario) {
+function sumResults(total: ObservationResults, scenario: TestExample) {
   const results = scenario.results()
   return {
     valid: total.valid + results.valid,
@@ -122,8 +131,23 @@ export function skippedCondition(description: string): TestCondition {
   }
 }
 
+export function exampleThatBails(description: string, reason: string): TestExample {
+  return {
+    lines: () => {
+      return [
+        `# ${description}`,
+        `Bail out! ${reason}`
+      ]
+    },
+    results: () => ({
+      valid: 0,
+      invalid: 0,
+      skipped: 0
+    })
+  }
+}
 
-export function exampleReport(description: string, conditions: Array<TestCondition>, observations: Array<TestObservation>): TestScenario {
+export function exampleReport(description: string, conditions: Array<TestCondition>, observations: Array<TestObservation>): TestExample {
   return {
     lines: () => {
       return [`# ${description}`]

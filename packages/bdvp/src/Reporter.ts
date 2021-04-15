@@ -52,3 +52,7 @@ export function writeSummary(reporter: Reporter, summary: Summary) {
   writeComment(reporter, `fail ${summary.invalid}`)
   writeComment(reporter, `skip ${summary.skipped}`)
 }
+
+export function terminateReport(reporter: Reporter, err: Failure) {
+  reporter.writeLine(`Bail out! ${err.stack}`)
+}
