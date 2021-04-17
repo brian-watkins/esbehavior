@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, runDocs, context, example, effect, condition } from '../src/index'
+import { document, runDocs, example, effect, condition } from '../src/index'
 import { docReport, exampleReport, failureReport, FakeReporter, passingCondition, validObservation } from './helpers/FakeReporter'
 
 test("failing context generator function", async () => {
@@ -8,11 +8,13 @@ test("failing context generator function", async () => {
 
   await runDocs([
     document("failing context generator", [
-      example("context generator throws exception", context(() => {
-        const error: any = new Error()
-        error.stack = "funny stack"
-        throw error
-      }))
+      example("context generator throws exception", {
+        subject: () => {
+          const error: any = new Error()
+          error.stack = "funny stack"
+          throw error
+        }
+      })
         .require([
           condition("it does nothing", (context) => { })
         ])
@@ -37,11 +39,14 @@ test("failing context teardown function", async () => {
 
   await runDocs([
     document("failing context teardown", [
-      example("context teardown throws exception", context(() => 7, () => {
-        const error: any = new Error()
-        error.stack = "awesome stack"
-        throw error
-      }))
+      example("context teardown throws exception", {
+        subject: () => 7,
+        teardown: () => {
+          const error: any = new Error()
+          error.stack = "awesome stack"
+          throw error
+        }
+      })
         .require([
           condition("it does nothing", (context) => { })
         ])

@@ -27,14 +27,7 @@ export function document(description: string, examples: Array<Example>): Documen
   return new Document(description, examples)
 }
 
-export function context<T>(generator: () => T | Promise<T>, teardown?: (context: T) => void | Promise<void>): Context<T> {
-  return {
-    generator,
-    teardown
-  }
-}
-
-const voidContext: Context<any> = context(() => {})
+const voidContext: Context<any> = { subject: () => {} }
 
 export function example<T = void>(description: string, context: Context<T> = voidContext): Plan<T> {
   return new BDVPExample(description, RunMode.Normal, context)

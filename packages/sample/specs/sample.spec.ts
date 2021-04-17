@@ -1,8 +1,8 @@
 import assert from 'proclaim'
-import { condition, context, document, effect, example, runDocs, skip } from 'bdvp'
+import { condition, document, effect, example, runDocs, skip } from 'bdvp'
 
 const spec = document("a sample spec", [
-  example("comparing some numbers", context(() => 7))
+  example("comparing some numbers", { subject: () => 7 })
     .require([
       condition("something happens", () => {}),
       condition("something else happens", () => {})

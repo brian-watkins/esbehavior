@@ -18,8 +18,8 @@ export interface Plan<T> {
 }
 
 export interface Context<T> {
-  generator: () => T | Promise<T>
-  teardown?: (context: T) => void | Promise<void>
+  subject: () => T | Promise<T>
+  teardown?: (subject: T) => void | Promise<void>
 }
 
 export enum RunMode {
@@ -45,13 +45,13 @@ export class BDVPExample<T> implements Plan<T>, Example {
   async run(reporter: Reporter): Promise<Summary> {
     writeComment(reporter, this.description)
 
-    const context = await waitFor(this.context.generator())
+    const subject = await waitFor(this.context.subject())
 
-    const initialState = verifyConditions(context, this._conditions)
+    const initialState = verifyConditions(subject, this._conditions)
 
     const state = await this.execute(initialState, reporter)
 
-    await waitFor(this.context.teardown?.(context))
+    await waitFor(this.context.teardown?.(subject))
 
     return state.summary
   }
@@ -74,7 +74,7 @@ export class BDVPExample<T> implements Plan<T>, Example {
             return this.execute(allObservations(state, this._effects), reporter)
           },
           something: async (condition) => {
-            const stepResult = await validate(condition, state.context, reporter)
+            const stepResult = await validate(condition, state.subject, reporter)
             return stepResult.map({
               valid: () => {
                 const updated = summarize(state, addValid)
@@ -93,7 +93,7 @@ export class BDVPExample<T> implements Plan<T>, Example {
             return this.execute(complete(state), reporter)
           },
           something: async (observation) => {
-            const observationResult = await validate(observation, state.context, reporter)
+            const observationResult = await validate(observation, state.subject, reporter)
             return observationResult.map({
               valid: () => {
                 const updated = summarize(state, addValid)
@@ -161,15 +161,15 @@ function skipRemaining<T>(current: Observe<T> | Skip<T>): Skip<T> {
 
 interface Verify<T> {
   type: "Verify"
-  context: T,
+  subject: T,
   summary: Summary,
   steps: Array<Claim<T>>
 }
 
-function verifyConditions<T>(context: T, conditions: Array<Condition<T>>): Verify<T> {
+function verifyConditions<T>(subject: T, conditions: Array<Condition<T>>): Verify<T> {
   return {
     type: "Verify",
-    context: context,
+    subject: subject,
     steps: conditions,
     summary: emptySummary()
   }
@@ -178,7 +178,7 @@ function verifyConditions<T>(context: T, conditions: Array<Condition<T>>): Verif
 function remainingConditions<T>(current: Verify<T>): Verify<T> {
   return {
     type: "Verify",
-    context: current.context,
+    subject: current.subject,
     steps: current.steps.slice(1),
     summary: current.summary
   }
@@ -186,7 +186,7 @@ function remainingConditions<T>(current: Verify<T>): Verify<T> {
 
 interface Observe<T> {
   type: "Observe"
-  context: T,
+  subject: T,
   summary: Summary,
   steps: Array<Claim<T>>
 }
@@ -195,7 +195,7 @@ function allObservations<T>(current: Verify<T>, observations: Array<Claim<T>>): 
   return {
     type: "Observe",
     steps: observations,
-    context: current.context,
+    subject: current.subject,
     summary: current.summary
   }
 }
@@ -204,7 +204,7 @@ function remainingObservations<T>(current: Observe<T>): Observe<T> {
   return {
     type: "Observe",
     steps: current.steps.slice(1),
-    context: current.context,
+    subject: current.subject,
     summary: current.summary
   }
 }

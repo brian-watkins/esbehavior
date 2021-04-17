@@ -1,4 +1,4 @@
-import { document, context, example, condition, effect } from 'bdvp'
+import { document, example, condition, effect } from 'bdvp'
 import expect from 'proclaim'
 import { TestableApp } from './TestableApp'
 
@@ -14,8 +14,10 @@ ok it compares two numbers
 # skipped: 0
 `
 
+const testableAppSubject = { subject: () => new TestableApp() }
+
 const standardScenario =
-  example("standard document with scenario and observations", context(() => new TestableApp()))
+  example("standard document with scenario and observations", testableAppSubject)
     .require([
       condition("a document is executed", async (testableApp) => {
         await testableApp.executeDoc(standardDocument)

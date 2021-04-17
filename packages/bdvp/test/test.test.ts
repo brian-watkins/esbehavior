@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, example, runDocs, context, effect, condition } from '../src/index'
+import { document, example, runDocs, effect, condition } from '../src/index'
 import { passingCondition, docReport, FakeReporter, invalidObservation, exampleReport, validObservation } from './helpers/FakeReporter'
 
 test("it runs a single passing claim", async () => {
@@ -90,7 +90,7 @@ test("it runs conditions", async () => {
 
   await runDocs([
     document("a single test", [
-      example("multiple conditions", context(() => ({ val: 7 })))
+      example("multiple conditions", { subject: () => ({ val: 7 }) })
         .require([
           condition("the value is incremented", (context) => { context.val++ }),
           condition("the value is incremented", (context) => { context.val++ }),

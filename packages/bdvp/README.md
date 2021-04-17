@@ -20,7 +20,7 @@ Here's an example:
 
 ```
 document("some behavior", [
-  example("the app shows things", context(() => new TestApp()))
+  example("the app shows things", { subject: () => new TestApp() })
     .require([
       condition("the app loads", (app) => await app.start())
     ])

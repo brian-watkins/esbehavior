@@ -1,5 +1,5 @@
 import { test } from 'uvu'
-import { document, runDocs, context, example, effect } from '../src/index'
+import { document, runDocs, example, effect } from '../src/index'
 import { docReport, FakeReporter, exampleReport, validObservation } from './helpers/FakeReporter'
 import { expect } from 'chai'
 
@@ -8,7 +8,7 @@ test("it runs multiple documents", async () => {
 
   await runDocs([
     document("a single claim", [
-      example("just a claim", context(() => 7))
+      example("just a claim", { subject: () => 7 })
         .observe([
           effect("compares the correct number", (actual) => {
             expect(actual).to.equal(7)
@@ -16,7 +16,7 @@ test("it runs multiple documents", async () => {
         ])
     ]),
     document("another claim", [
-      example("just another claim", context(() => 18))
+      example("just another claim", { subject: () => 18 })
         .observe([
           effect("compares another correct number", (actual) => {
             expect(actual).to.equal(18)

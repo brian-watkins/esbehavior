@@ -1,7 +1,7 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { docReport, FakeReporter, invalidObservation, passingCondition, exampleReport, validObservation } from './helpers/FakeReporter'
-import { document, runDocs, context, example, effect, condition } from '../src/index'
+import { document, runDocs, example, effect, condition } from '../src/index'
 import { expect } from 'chai'
 
 test("it runs an example with an async given", async () => {
@@ -9,11 +9,13 @@ test("it runs an example with an async given", async () => {
 
   await runDocs([
     document("a single test", [
-      example("async given", context(() => {
-        return new Promise(resolve => {
-          setTimeout(() => resolve(7), 30)
-        })
-      }))
+      example("async given", {
+        subject: () => {
+          return new Promise(resolve => {
+            setTimeout(() => resolve(7), 30)
+          })
+        }
+      })
         .observe([
           effect("compares the right numbers", (actual) => {
             assert.equal(actual, 7, "it does the thing")
@@ -38,18 +40,21 @@ test("it runs an example with an async context generator and async observation",
 
   await runDocs([
     document("a single test", [
-      example("async context and observation", context(() => {
-        return new Promise<number>(resolve => {
-          setTimeout(() => resolve(7), 30)
-        })
-      }, async (context) => {
-        await new Promise<void>(resolve => {
-          setTimeout(() => {
-            teardownValue = context + 2
-            resolve()
-          }, 30)
-        })
-      }))
+      example("async context and observation", {
+        subject: () => {
+          return new Promise<number>(resolve => {
+            setTimeout(() => resolve(7), 30)
+          })
+        },
+        teardown: async (context) => {
+          await new Promise<void>(resolve => {
+            setTimeout(() => {
+              teardownValue = context + 2
+              resolve()
+            }, 30)
+          })
+        }
+      })
         .observe([
           effect("async compares the right numbers", async (actual) => {
             const fetchedValue = await new Promise(resolve => {
@@ -91,7 +96,9 @@ test("it runs async conditions", async () => {
 
   await runDocs([
     document("a single test", [
-      example("multiple conditions", context(() => ({ val: 7 })))
+      example("multiple conditions", {
+        subject: () => ({ val: 7 })
+      })
         .require([
           condition("the value is incremented", (context) => { context.val++ }),
           condition("the value is incremented asynchronously", (context) => {

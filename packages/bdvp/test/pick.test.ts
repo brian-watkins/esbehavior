@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, runDocs, pick, context, example, effect, condition } from '../src/index'
+import { document, runDocs, pick, example, effect, condition } from '../src/index'
 import { docReport, FakeReporter, exampleReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter'
 
 test("it only runs the picked example", async () => {
@@ -8,9 +8,11 @@ test("it only runs the picked example", async () => {
 
   await runDocs([
     document("something", [
-      example("not important", context(() => {
-        throw new Error("BAD GIVEN!!")
-      }))
+      example("not important", {
+        subject: () => {
+          throw new Error("BAD GIVEN!!")
+        }
+      })
         .require([
           condition("it does something bad", () => {
             throw new Error("BAD WHEN!!")
@@ -32,9 +34,11 @@ test("it only runs the picked example", async () => {
         ])
     ]),
     document("another", [
-      example("should be skipped", context(() => {
-        throw new Error("BAD SO BAD")
-      }))
+      example("should be skipped", {
+        subject: () => {
+          throw new Error("BAD SO BAD")
+        }
+      })
         .require([
           condition("it does something that it shouldn't", () => {
             throw new Error("BAD!")
