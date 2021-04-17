@@ -3,10 +3,10 @@
 BDVP is a framework for producing documentation that works. 
 
 Use BDVP to write *documents* that describe the expected behaviors of your program. 
-Each document consists of one or more *scenarios* that together illustrate the behavior
-you want to describe. Each scenario consists of some initial state, some actions, and
-some observations. BDVP runs each scenario and generates a report that indicates which
-scenarios were successful and which failed.
+Each document consists of one or more *examples* that together illustrate the behavior
+you want to describe. Each example consists of some *conditions* and
+some *effects*. BDVP runs each example and generates a report that indicates which
+example were valid and which were invalid.
 
 ### BDVP sounds like a test framework. Why do we need another test framework?
 
@@ -20,10 +20,12 @@ Here's an example:
 
 ```
 document("some behavior", [
-  scenario("the app shows things", context(() => new TestApp()))
-    .when("the app loads", (app) => await app.start())
-    .observeThat([
-      it("shows things", (app) => {
+  example("the app shows things", context(() => new TestApp()))
+    .require([
+      condition("the app loads", (app) => await app.start())
+    ])
+    .observe([
+      effect("things are shown", (app) => {
         expect(app.display.things).to.equal(expectedThings)
       })
     ])
