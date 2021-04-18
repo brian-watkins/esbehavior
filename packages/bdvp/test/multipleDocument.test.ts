@@ -1,12 +1,12 @@
 import { test } from 'uvu'
-import { document, runDocs, example, effect } from '../src/index'
+import { document, validate, example, effect } from '../src/index'
 import { docReport, FakeReporter, exampleReport, validObservation } from './helpers/FakeReporter'
 import { expect } from 'chai'
 
 test("it runs multiple documents", async () => {
   const reporter = new FakeReporter()
 
-  await runDocs([
+  await validate([
     document("a single claim", [
       example("just a claim", { subject: () => 7 })
         .observe([

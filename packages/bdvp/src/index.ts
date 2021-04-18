@@ -4,11 +4,11 @@ import { Document, DocumentCollection } from "./Document"
 import { Effect } from "./Effect"
 import { Condition } from "./Condition"
 
-export interface RunnerOptions {
+export interface ValidationOptions {
   reporter?: Reporter
 }
 
-export async function runDocs<T>(docs: Array<Document>, options: RunnerOptions = {}): Promise<void> {
+export async function validate<T>(docs: Array<Document>, options: ValidationOptions = {}): Promise<void> {
   const reporter = options.reporter || new ConsoleReporter()
 
   startReport(reporter)

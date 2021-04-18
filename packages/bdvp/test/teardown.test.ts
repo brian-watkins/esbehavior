@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { document, runDocs, example, effect, condition } from '../src/index'
+import { document, validate, example, effect, condition } from '../src/index'
 import { FakeReporter } from './helpers/FakeReporter'
 
 test("it tears down the context", async () => {
@@ -11,7 +11,7 @@ test("it tears down the context", async () => {
     touched: 0
   }
 
-  await runDocs([
+  await validate([
     document("context with teardown", [
       example("teardown context", {
         subject: () => {

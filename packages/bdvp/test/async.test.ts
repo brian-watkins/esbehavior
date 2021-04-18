@@ -1,13 +1,13 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { docReport, FakeReporter, invalidObservation, passingCondition, exampleReport, validObservation } from './helpers/FakeReporter'
-import { document, runDocs, example, effect, condition } from '../src/index'
+import { document, validate, example, effect, condition } from '../src/index'
 import { expect } from 'chai'
 
 test("it runs an example with an async given", async () => {
   const reporter = new FakeReporter()
 
-  await runDocs([
+  await validate([
     document("a single test", [
       example("async given", {
         subject: () => {
@@ -38,7 +38,7 @@ test("it runs an example with an async context generator and async observation",
 
   let teardownValue = 0
 
-  await runDocs([
+  await validate([
     document("a single test", [
       example("async context and observation", {
         subject: () => {
@@ -94,7 +94,7 @@ test("it runs an example with an async context generator and async observation",
 test("it runs async conditions", async () => {
   const reporter = new FakeReporter()
 
-  await runDocs([
+  await validate([
     document("a single test", [
       example("multiple conditions", {
         subject: () => ({ val: 7 })

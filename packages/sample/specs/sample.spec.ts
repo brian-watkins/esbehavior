@@ -1,5 +1,5 @@
 import assert from 'proclaim'
-import { condition, document, effect, example, runDocs, skip } from 'bdvp'
+import { condition, document, effect, example, validate, skip } from 'bdvp'
 
 const spec = document("a sample spec", [
   example("comparing some numbers", { subject: () => 7 })
@@ -23,4 +23,4 @@ const spec = document("a sample spec", [
     ])
 ])
 
-runDocs([spec])
+validate([spec])

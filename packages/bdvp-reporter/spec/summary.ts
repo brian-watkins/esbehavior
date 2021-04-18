@@ -1,6 +1,6 @@
-import { runDocs } from "bdvp";
+import { validate } from "bdvp";
 import Output from "./output.doc"
 
-runDocs([
+validate([
   Output
 ])

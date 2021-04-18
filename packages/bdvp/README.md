@@ -19,17 +19,20 @@ by anyone interested in understanding the expected behaviors of the program.
 Here's an example:
 
 ```
-document("some behavior", [
-  example("the app shows things", { subject: () => new TestApp() })
-    .require([
-      condition("the app loads", (app) => await app.start())
-    ])
-    .observe([
-      effect("things are shown", (app) => {
-        expect(app.display.things).to.equal(expectedThings)
-      })
-    ])
-])
+const doc =
+  document("some behavior", [
+    example("the app shows things", { subject: () => new TestApp() })
+      .require([
+        condition("the app loads", (app) => await app.start())
+      ])
+      .observe([
+        effect("things are shown", (app) => {
+          expect(app.display.things).to.equal(expectedThings)
+        })
+      ])
+  ])
+
+validate([doc])
 ```
 
 Some notes:

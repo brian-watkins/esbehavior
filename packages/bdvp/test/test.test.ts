@@ -1,12 +1,12 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, example, runDocs, effect, condition } from '../src/index'
+import { document, example, validate, effect, condition } from '../src/index'
 import { passingCondition, docReport, FakeReporter, invalidObservation, exampleReport, validObservation } from './helpers/FakeReporter'
 
 test("it runs a single passing claim", async () => {
   const reporter = new FakeReporter()
 
-  await runDocs([
+  await validate([
     document("a single test", [
       example("my first test")
         .observe([
@@ -29,7 +29,7 @@ test("it runs a single passing claim", async () => {
 test("it runs more than one passing claim", async () => {
   const reporter = new FakeReporter()
 
-  await runDocs([
+  await validate([
     document("a single test", [
       example("several observations")
         .observe([
@@ -56,7 +56,7 @@ test("it runs more than one passing claim", async () => {
 test("it runs a failing test", async () => {
   const reporter = new FakeReporter()
 
-  await runDocs([
+  await validate([
     document("a single test", [
       example("failing observation")
         .observe([
@@ -88,7 +88,7 @@ test("it runs a failing test", async () => {
 test("it runs conditions", async () => {
   const reporter = new FakeReporter()
 
-  await runDocs([
+  await validate([
     document("a single test", [
       example("multiple conditions", { subject: () => ({ val: 7 }) })
         .require([

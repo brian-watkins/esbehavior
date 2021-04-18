@@ -1,11 +1,11 @@
 import { test } from 'uvu'
-import { document, example, effect, condition, runDocs } from '../src/index'
+import { document, example, effect, condition, validate } from '../src/index'
 import { docReport, failingCondition, FakeReporter, exampleReport, skippedCondition, skippedObservation } from './helpers/FakeReporter'
 
 test("failing condition", async () => {
   const reporter = new FakeReporter()
 
-  await runDocs([
+  await validate([
     document("document", [
       example("failing condition")
         .require([

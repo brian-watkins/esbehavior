@@ -1,12 +1,12 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, runDocs, pick, example, effect, condition } from '../src/index'
+import { document, validate, pick, example, effect, condition } from '../src/index'
 import { docReport, FakeReporter, exampleReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter'
 
 test("it only runs the picked example", async () => {
   const reporter = new FakeReporter()
 
-  await runDocs([
+  await validate([
     document("something", [
       example("not important", {
         subject: () => {

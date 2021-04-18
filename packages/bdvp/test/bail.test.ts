@@ -1,12 +1,12 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, runDocs, example, effect, condition } from '../src/index'
+import { document, validate, example, effect, condition } from '../src/index'
 import { docReport, exampleReport, failureReport, FakeReporter, passingCondition, validObservation } from './helpers/FakeReporter'
 
 test("failing context generator function", async () => {
   const reporter = new FakeReporter()
 
-  await runDocs([
+  await validate([
     document("failing context generator", [
       example("context generator throws exception", {
         subject: () => {
@@ -37,7 +37,7 @@ test("failing context generator function", async () => {
 test("failing context teardown function", async () => {
   const reporter = new FakeReporter()
 
-  await runDocs([
+  await validate([
     document("failing context teardown", [
       example("context teardown throws exception", {
         subject: () => 7,
