@@ -7,7 +7,7 @@
   "scripts": {
     "prepublish": "npm run build",
     "build": "rm -rf ./dist && tsc",
-    "test": "uvu -r ts-node/register -i sample -i helpers"
+    "test": "uvu test -r ts-node/register -i helpers"
   },
   "author": "Brian Watkins",
   "license": "MIT",
