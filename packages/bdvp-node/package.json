@@ -22,7 +22,8 @@
   "dependencies": {
     "bdvp": "^1.0.0",
     "commander": "^7.2.0",
-    "globby": "^11.0.3"
+    "globby": "^11.0.3",
+    "resolve": "^1.20.0"
   },
   "devDependencies": {
     "esbuild-register": "^2.5.0",

@@ -1,8 +1,11 @@
 const { program } = require("commander")
 const globby = require("globby")
 const { validate } = require("bdvp")
+const resolveModule = require("resolve").sync
 
 async function validator() {
+  var resolveOptions  = { basedir: process.cwd(), extensions: Object.keys(require.extensions) };
+
   program.version("1.0.0")
     .name("bdvp-node")
     .usage("<documents> [options]")
@@ -13,7 +16,7 @@ async function validator() {
     .option("-r, --require [require...]", "module(s) to require")
     .action(async (documents, options) => {    
       for (const module of options.require) {
-        require(module)
+        require(resolveModule(module, resolveOptions))
       }
     
       const paths = await globby(documents, { absolute: true })
