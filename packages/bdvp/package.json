@@ -4,6 +4,7 @@
   "description": "behavior documentation and verification program",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "type": "module",
   "scripts": {
     "prepublish": "npm run build",
     "build": "rm -rf ./dist && tsc",
