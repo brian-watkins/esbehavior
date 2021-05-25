@@ -29,6 +29,32 @@ test("it runs a single passing claim", async () => {
   ], "it prints the expected output for an example with a single valid observation")
 })
 
+test("it runs an example with no description", async () => {
+  const reporter = new FakeReporter()
+
+  await validate([
+    document("a single example; no description", [
+      example()
+        .script({
+          observe: [
+            effect("does something cool", () => {
+              // nothing
+            })
+          ]
+        })
+    ])
+  ], { reporter })
+
+  reporter.expectTestReportWith([
+    docReport("a single example; no description", [
+      exampleReport(null, [], [
+        validObservation("does something cool")
+      ])
+    ])
+  ], "it prints the expected output for an example with a single valid observation")
+})
+
+
 test("it runs more than one passing claim", async () => {
   const reporter = new FakeReporter()
 

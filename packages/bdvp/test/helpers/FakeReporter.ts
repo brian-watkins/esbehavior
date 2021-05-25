@@ -131,10 +131,10 @@ export function skippedCondition(description: string): TestCondition {
   }
 }
 
-export function exampleReport(description: string, conditions: Array<TestCondition>, observations: Array<TestObservation>): TestExample {
+export function exampleReport(description: string | null, conditions: Array<TestCondition>, observations: Array<TestObservation>): TestExample {
   return {
     lines: () => {
-      return [`# ${description}`]
+      return (description ? [`# ${description}`] : [])
         .concat(conditions.reduce((lines: Array<string>, action) => lines.concat(action.lines()), []))
         .concat(observations.reduce((lines: Array<string>, observation) => lines.concat(observation.lines()), []))
     },
