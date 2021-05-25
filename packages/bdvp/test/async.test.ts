@@ -9,18 +9,21 @@ test("it runs an example with an async given", async () => {
 
   await validate([
     document("a single test", [
-      example("async given", {
+      example({
         subject: () => {
           return new Promise(resolve => {
             setTimeout(() => resolve(7), 30)
           })
         }
       })
-        .observe([
-          effect("compares the right numbers", (actual) => {
-            assert.equal(actual, 7, "it does the thing")
-          })
-        ])
+        .description("async given")
+        .script({
+          observe: [
+            effect("compares the right numbers", (actual) => {
+              assert.equal(actual, 7, "it does the thing")
+            })
+          ]
+        })
     ])
   ], { reporter })
 
@@ -40,7 +43,7 @@ test("it runs an example with an async context generator and async observation",
 
   await validate([
     document("a single test", [
-      example("async context and observation", {
+      example({
         subject: () => {
           return new Promise<number>(resolve => {
             setTimeout(() => resolve(7), 30)
@@ -55,22 +58,25 @@ test("it runs an example with an async context generator and async observation",
           })
         }
       })
-        .observe([
-          effect("async compares the right numbers", async (actual) => {
-            const fetchedValue = await new Promise(resolve => {
-              setTimeout(() => resolve(actual + 5), 30)
+        .description("async context and observation")
+        .script({
+          observe: [
+            effect("async compares the right numbers", async (actual) => {
+              const fetchedValue = await new Promise(resolve => {
+                setTimeout(() => resolve(actual + 5), 30)
+              })
+              try {
+                expect(fetchedValue).to.equal(15)
+              } catch (err) {
+                err.stack = "fake stack"
+                throw err
+              }
+            }),
+            effect("does something sync", (actual) => {
+              assert.equal(actual, 7)
             })
-            try {
-              expect(fetchedValue).to.equal(15)
-            } catch (err) {
-              err.stack = "fake stack"
-              throw err
-            }
-          }),
-          effect("does something sync", (actual) => {
-            assert.equal(actual, 7)
-          })
-        ])
+          ]
+        })
     ])
   ], { reporter })
 
@@ -96,26 +102,29 @@ test("it runs async conditions", async () => {
 
   await validate([
     document("a single test", [
-      example("multiple conditions", {
+      example({
         subject: () => ({ val: 7 })
       })
-        .require([
-          condition("the value is incremented", (context) => { context.val++ }),
-          condition("the value is incremented asynchronously", (context) => {
-            return new Promise(resolve => {
-              setTimeout(() => {
-                context.val++
-                resolve()
-              }, 30)
+        .description("multiple conditions")
+        .script({
+          assume: [
+            condition("the value is incremented", (context) => { context.val++ }),
+            condition("the value is incremented asynchronously", (context) => {
+              return new Promise(resolve => {
+                setTimeout(() => {
+                  context.val++
+                  resolve()
+                }, 30)
+              })
+            }),
+            condition("the value is incremented", (context) => { context.val++ })
+          ],
+          observe: [
+            effect("compares the correct number", (context) => {
+              expect(context.val).to.equal(10)
             })
-          }),
-          condition("the value is incremented", (context) => { context.val++ })
-        ])
-        .observe([
-          effect("compares the correct number", (context) => {
-            expect(context.val).to.equal(10)
-          })
-        ])
+          ]
+        })
     ])
   ], { reporter })
 

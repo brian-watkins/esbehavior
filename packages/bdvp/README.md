@@ -21,15 +21,18 @@ Here's an example:
 ```
 const doc =
   document("some behavior", [
-    example("the app shows things", { subject: () => new TestApp() })
-      .require([
-        condition("the app loads", (app) => await app.start())
-      ])
-      .observe([
-        effect("things are shown", (app) => {
-          expect(app.display.things).to.equal(expectedThings)
-        })
-      ])
+    example({ subject: () => new TestApp() })
+      .description("the app shows things")
+      .script({
+        assume: [
+          condition("the app loads", (app) => await app.start())
+        ],
+        observe: [
+          effect("things are shown", (app) => {
+            expect(app.display.things).to.equal(expectedThings)
+          })
+        ]
+      })
   ])
 
 validate([doc])

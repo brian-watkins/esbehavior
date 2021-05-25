@@ -8,30 +8,37 @@ test("it skips an example", async () => {
 
   await validate([
     document("something", [
-      skip.example("not important", {
+      skip.example({
         subject: () => {
-          throw new Error("BAD GIVEN!!")
+          expect(7).to.equal(5)
+          return "blah"
         }
       })
-        .require([
-          condition("it does something bad", () => {
-            throw new Error("BAD WHEN!!")
-          })
-        ])
-        .observe([
-          effect("will never run this", () => {
-            expect(7).to.equal(5)
-          }),
-          effect("or this", () => {
-            expect(9).to.equal(1)
-          })
-        ]),
-      example("important")
-        .observe([
-          effect("will run this", () => {
-            expect(7).to.equal(7)
-          })
-        ])
+        .description("not important")
+        .script({
+          assume: [
+            condition("it does something bad", () => {
+              throw new Error("BAD WHEN!!")
+            })
+          ],
+          observe: [
+            effect("will never run this", () => {
+              expect(7).to.equal(5)
+            }),
+            effect("or this", () => {
+              expect(9).to.equal(1)
+            })
+          ]
+        }),
+      example({ subject: () => "blah" })
+        .description("important")
+        .script({
+          observe: [
+            effect("will run this", () => {
+              expect(7).to.equal(7)
+            })
+          ]
+        })
     ])
   ], { reporter })
 

@@ -8,20 +8,26 @@ test("it runs multiple documents", async () => {
 
   await validate([
     document("a single claim", [
-      example("just a claim", { subject: () => 7 })
-        .observe([
-          effect("compares the correct number", (actual) => {
-            expect(actual).to.equal(7)
-          })
-        ])
+      example({ subject: () => 7 })
+        .description("just a claim")
+        .script({
+          observe: [
+            effect("compares the correct number", (actual) => {
+              expect(actual).to.equal(7)
+            })
+          ]
+        })
     ]),
     document("another claim", [
-      example("just another claim", { subject: () => 18 })
-        .observe([
-          effect("compares another correct number", (actual) => {
-            expect(actual).to.equal(18)
-          })
-        ])
+      example({ subject: () => 18 })
+        .description("just another claim")
+        .script({
+          observe: [
+            effect("compares another correct number", (actual) => {
+              expect(actual).to.equal(18)
+            })
+          ]
+        })
     ])
   ], { reporter })
 

@@ -17,20 +17,23 @@ ok it compares two numbers
 const testableAppSubject = { subject: () => new TestableApp() }
 
 const standardScenario =
-  example("standard document with scenario and observations", testableAppSubject)
-    .require([
-      condition("a document is executed", async (testableApp) => {
-        await testableApp.executeDoc(standardDocument)
-      })
-    ])  
-    .observe([
-      effect("the report includes the name of the document", (testableApp) => {
-        expect.include(testableApp.output, "a sample spec")
-      }),
-      effect("the report includes the name of the example", (testableApp) => {
-        expect.include(testableApp.output, "comparing some numbers")
-      })
-    ])
+  example(testableAppSubject)
+    .description("standard document with scenario and observations")
+    .script({
+      assume: [
+        condition("a document is executed", async (testableApp) => {
+          await testableApp.executeDoc(standardDocument)
+        })
+      ],
+      observe: [
+        effect("the report includes the name of the document", (testableApp) => {
+          expect.include(testableApp.output, "a sample spec")
+        }),
+        effect("the report includes the name of the example", (testableApp) => {
+          expect.include(testableApp.output, "comparing some numbers")
+        })
+      ]
+    })
 
 export default document("document report", [
   standardScenario

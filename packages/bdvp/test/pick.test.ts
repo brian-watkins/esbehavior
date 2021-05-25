@@ -8,47 +8,52 @@ test("it only runs the picked example", async () => {
 
   await validate([
     document("something", [
-      example("not important", {
-        subject: () => {
-          throw new Error("BAD GIVEN!!")
-        }
-      })
-        .require([
-          condition("it does something bad", () => {
-            throw new Error("BAD WHEN!!")
-          })
-        ])
-        .observe([
-          effect("will never run this", () => {
-            expect(7).to.equal(5)
-          }),
-          effect("or this", () => {
-            expect(9).to.equal(1)
-          })
-        ]),
-      pick.example("important")
-        .observe([
-          effect("will run this", () => {
-            expect(7).to.equal(7)
-          })
-        ])
+      example()
+        .description("not important")
+        .script({
+          assume: [
+            condition("it does something bad", () => {
+              throw new Error("BAD WHEN!!")
+            })
+          ],
+          observe: [
+            effect("will never run this", () => {
+              expect(7).to.equal(5)
+            }),
+            effect("or this", () => {
+              expect(9).to.equal(1)
+            })
+          ]
+        }),
+      pick.example()
+        .description("important")
+        .script({
+          observe: [
+            effect("will run this", () => {
+              expect(7).to.equal(7)
+            })
+          ]
+        })
     ]),
     document("another", [
-      example("should be skipped", {
+      example({
         subject: () => {
           throw new Error("BAD SO BAD")
         }
       })
-        .require([
-          condition("it does something that it shouldn't", () => {
-            throw new Error("BAD!")
-          })
-        ])
-        .observe([
-          effect("just won't", () => {
-            expect(7).to.equal(4)
-          })
-        ])
+        .description("should be skipped")
+        .script({
+          assume: [
+            condition("it does something that it shouldn't", () => {
+              throw new Error("BAD!")
+            })
+          ],
+          observe: [
+            effect("just won't", () => {
+              expect(7).to.equal(4)
+            })
+          ]
+        })
     ])
   ], { reporter })
 

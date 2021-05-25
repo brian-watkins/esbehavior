@@ -8,21 +8,24 @@ test("failing context generator function", async () => {
 
   await validate([
     document("failing context generator", [
-      example("context generator throws exception", {
+      example({
         subject: () => {
           const error: any = new Error()
           error.stack = "funny stack"
           throw error
         }
       })
-        .require([
-          condition("it does nothing", (context) => { })
-        ])
-        .observe([
-          effect("it works", (context) => {
-            expect(3).to.equal(2)
-          })
-        ])
+        .description("context generator throws exception")
+        .script({
+          assume: [
+            condition("it does nothing", (context) => { })
+          ],
+          observe: [
+            effect("it works", (context) => {
+              expect(3).to.equal(2)
+            })
+          ]
+        })
     ])
   ], { reporter })
 
@@ -39,7 +42,7 @@ test("failing context teardown function", async () => {
 
   await validate([
     document("failing context teardown", [
-      example("context teardown throws exception", {
+      example({
         subject: () => 7,
         teardown: () => {
           const error: any = new Error()
@@ -47,20 +50,26 @@ test("failing context teardown function", async () => {
           throw error
         }
       })
-        .require([
-          condition("it does nothing", (context) => { })
-        ])
-        .observe([
-          effect("it works", (context) => {
-            expect(context).to.equal(7)
-          })
-        ]),
-      example("another example")
-        .observe([
-          effect("will never run", () => {
-            expect(7).to.equal(5)
-          })
-        ])
+        .description("context teardown throws exception")
+        .script({
+          assume: [
+            condition("it does nothing", (context) => { })
+          ],
+          observe: [
+            effect("it works", (context) => {
+              expect(context).to.equal(7)
+            })
+          ]
+        }),
+      example({ subject: () => 7 })
+        .description("another example")
+        .script({
+          observe: [
+            effect("will never run", () => {
+              expect(7).to.equal(5)
+            })
+          ]
+        })
     ])
   ], { reporter })
 

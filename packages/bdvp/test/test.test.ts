@@ -8,12 +8,15 @@ test("it runs a single passing claim", async () => {
 
   await validate([
     document("a single test", [
-      example("my first test")
-        .observe([
-          effect("does something cool", (something) => {
-            // nothing
-          })
-        ])
+      example()
+        .description("my first test")
+        .script({
+          observe: [
+            effect("does something cool", () => {
+              // nothing
+            })
+          ]
+        })
     ])
   ], { reporter })
 
@@ -31,15 +34,18 @@ test("it runs more than one passing claim", async () => {
 
   await validate([
     document("a single test", [
-      example("several observations")
-        .observe([
-          effect("does something cool", () => {
-            // nothing
-          }),
-          effect("does something else cool", () => {
-            // nothing
-          })
-        ])
+      example()
+        .description("several observations")
+        .script({
+          observe: [
+            effect("does something cool", () => {
+              // nothing
+            }),
+            effect("does something else cool", () => {
+              // nothing
+            })
+          ]
+        })
     ])
   ], { reporter })
 
@@ -58,18 +64,21 @@ test("it runs a failing test", async () => {
 
   await validate([
     document("a single test", [
-      example("failing observation")
-        .observe([
-          effect("does something that fails", () => {
-            const testFailure: any = new Error()
-            testFailure.expected = "something"
-            testFailure.actual = "nothing"
-            testFailure.operator = "equals"
-            testFailure.stack = "fake stack"
-            throw testFailure
-          }),
-          effect("passes", () => { })
-        ])
+      example()
+        .description("failing observation")
+        .script({
+          observe: [
+            effect("does something that fails", () => {
+              const testFailure: any = new Error()
+              testFailure.expected = "something"
+              testFailure.actual = "nothing"
+              testFailure.operator = "equals"
+              testFailure.stack = "fake stack"
+              throw testFailure
+            }),
+            effect("passes", () => { })
+          ]
+        })
     ])
   ], { reporter })
 
@@ -90,17 +99,20 @@ test("it runs conditions", async () => {
 
   await validate([
     document("a single test", [
-      example("multiple conditions", { subject: () => ({ val: 7 }) })
-        .require([
-          condition("the value is incremented", (context) => { context.val++ }),
-          condition("the value is incremented", (context) => { context.val++ }),
-          condition("the value is incremented", (context) => { context.val++ })
-        ])
-        .observe([
-          effect("it compares the correct number", (context) => {
-            expect(context.val).to.equal(10)
-          })
-        ])
+      example({ subject: () => ({ val: 7 }) })
+        .description("multiple conditions")
+        .script({
+          assume: [
+            condition("the value is incremented", (context) => { context.val++ }),
+            condition("the value is incremented", (context) => { context.val++ }),
+            condition("the value is incremented", (context) => { context.val++ })
+          ],
+          observe: [
+            effect("it compares the correct number", (context) => {
+              expect(context.val).to.equal(10)
+            })
+          ]
+        })
     ])
   ], { reporter })
 

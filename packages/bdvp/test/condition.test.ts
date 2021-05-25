@@ -7,21 +7,24 @@ test("failing condition", async () => {
 
   await validate([
     document("document", [
-      example("failing condition")
-        .require([
-          condition("something throws an error", () => {
-            const error: any = new Error()
-            error.expected = "something"
-            error.actual = "nothing"
-            error.operator = "equals"
-            error.stack = "funny stack"
-            throw error
-          }),
-          condition("there is another condition", () => {})
-        ])
-        .observe([
-          effect("does something that will get skipped", () => {})
-        ])
+      example()
+        .description("failing condition")
+        .script({
+          assume: [
+            condition("something throws an error", () => {
+              const error: any = new Error()
+              error.expected = "something"
+              error.actual = "nothing"
+              error.operator = "equals"
+              error.stack = "funny stack"
+              throw error
+            }),
+            condition("there is another condition", () => { })
+          ],
+          observe: [
+            effect("does something that will get skipped", () => { })
+          ]
+        })
     ])
   ], { reporter })
 

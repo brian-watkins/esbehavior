@@ -13,8 +13,8 @@ export interface Example {
 }
 
 export interface Plan<T> {
-  require(conditions: Array<Condition<T>>): Plan<T>
-  observe(effects: Array<Effect<T>>): Example
+  conditions: Array<Condition<T>>
+  effects: Array<Effect<T>>
 }
 
 export interface Context<T> {
@@ -26,28 +26,50 @@ export enum RunMode {
   Normal, Skipped, Picked
 }
 
-export class BDVPExample<T> implements Plan<T>, Example {
-  private _conditions: Array<Condition<T>> = []
-  private _effects: Array<Effect<T>> = []
+export class ExampleBuilder<T> {
+  private example: BDVPExample<T>
 
-  constructor(public description: string, public runMode: RunMode, public context: Context<T>) { }
-  
-  require(conditions: Array<Condition<T>>): Plan<T> {
-    this._conditions = conditions
+  constructor (public runMode: RunMode, context: Context<T>) {
+    this.example = new BDVPExample(runMode, context)
+  }
+
+  description(description: string): ExampleBuilder<T> {
+    this.example.setDescription(description)
     return this
   }
 
-  observe(effects: Array<Effect<T>>): Example {
-    this._effects = effects
+  script({ assume = [], observe }: { assume?: Array<Condition<T>>, observe: Array<Effect<T>> }): ExampleBuilder<T> {
+    this.example.setPlan({ conditions: assume, effects: observe })
     return this
+  }
+
+  build(): Example {
+    return this.example
+  }
+}
+
+export class BDVPExample<T> implements Example {
+  private _description?: string
+  private plans: Array<Plan<T>> = []
+
+  constructor(public runMode: RunMode, public context: Context<T>) { }
+
+  setDescription(description: string) {
+    this._description = description
+  }
+
+  setPlan(plan: Plan<T>) {
+    this.plans = [ plan ]
   }
 
   async run(reporter: Reporter): Promise<Summary> {
-    writeComment(reporter, this.description)
+    if (this._description) {
+      writeComment(reporter, this._description)
+    }
 
     const subject = await waitFor(this.context.subject())
 
-    const initialState = verifyConditions(subject, this._conditions)
+    const initialState = verifyConditions(subject, this.plans[0].conditions)
 
     const state = await this.execute(initialState, reporter)
 
@@ -57,9 +79,11 @@ export class BDVPExample<T> implements Plan<T>, Example {
   }
 
   async skip(reporter: Reporter): Promise<Summary> {
-    writeComment(reporter, this.description)
+    if (this._description) {
+      writeComment(reporter, this._description)
+    }
 
-    const initialState = skipAll([...this._conditions, ...this._effects])
+    const initialState = skipAll([...this.plans[0].conditions, ...this.plans[0].effects])
 
     const state = await this.execute(initialState, reporter)
 
@@ -71,7 +95,7 @@ export class BDVPExample<T> implements Plan<T>, Example {
       case "Verify":
         return firstOf(state.steps).map({
           nothing: () => {
-            return this.execute(allObservations(state, this._effects), reporter)
+            return this.execute(allObservations(state, this.plans[0].effects), reporter)
           },
           something: async (condition) => {
             const stepResult = await validate(condition, state.subject, reporter)
@@ -82,7 +106,7 @@ export class BDVPExample<T> implements Plan<T>, Example {
               },
               invalid: () => {
                 const updated = summarize(state, addInvalid)
-                return this.execute(skipRemainingClaims(updated, this._effects), reporter)
+                return this.execute(skipRemainingClaims(updated, this.plans[0].effects), reporter)
               }
             })
           }

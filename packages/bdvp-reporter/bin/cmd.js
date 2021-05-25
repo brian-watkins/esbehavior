@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const { BDVPReporter } = require("../dist/BDVPReporter")
-const process = require("process")
+import { BDVPReporter } from "../dist/BDVPReporter.js"
+import process from "process"
 
 const reporter = new BDVPReporter()
 

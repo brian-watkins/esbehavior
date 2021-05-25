@@ -13,7 +13,7 @@ test("it tears down the context", async () => {
 
   await validate([
     document("context with teardown", [
-      example("teardown context", {
+      example({
         subject: () => {
           testContext.touched++
           return testContext
@@ -22,15 +22,18 @@ test("it tears down the context", async () => {
           context.touched++
         }
       })
-      .require([
-        condition("it touches the context", (context) => { context.touched++ })
-      ])
-      .observe([
-        effect("it works", (context) => {
-          expect(context.touched).to.equal(2)
+        .description("teardown context")
+        .script({
+          assume: [
+            condition("it touches the context", (context) => { context.touched++ })
+          ],
+          observe: [
+            effect("it works", (context) => {
+              expect(context.touched).to.equal(2)
+            })
+          ]
         })
-      ])
-  ])
+    ])
   ], { reporter })
 
   assert.equal(testContext.touched, 3, "it runs the teardown function on the context value")
