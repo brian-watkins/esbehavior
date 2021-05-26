@@ -1,4 +1,4 @@
-import { Claim } from "./Claim";
+import { Claim } from "./Claim.js";
 
 export class Effect<T> implements Claim<T> {
   private type: "Effect" = "Effect"

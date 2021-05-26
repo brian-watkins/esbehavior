@@ -7,7 +7,7 @@
   "scripts": {
     "test:browser": "./browserSpecs/runner.mjs | tap-spec",
     "test:browser:watch": "WATCH_MODE=true npm run test:browser",
-    "test:raw": "node --loader ts-node/esm --no-warnings --experimental-specifier-resolution=node ./specs/sample.spec.ts",
+    "test:raw": "node --loader ts-node/esm --no-warnings ./specs/sample.spec.ts",
     "test:tap": "npm run test:raw | tap-spec",
     "test": "npm run test:raw | bdvp-reporter"
   },

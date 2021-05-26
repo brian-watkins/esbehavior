@@ -1,8 +1,8 @@
-import { Context, RunMode, ExampleBuilder } from "./Example"
-import { ConsoleReporter, Reporter, startReport, writeSummary, terminateReport } from "./Reporter"
-import { Document, DocumentCollection } from "./Document"
-import { Effect } from "./Effect"
-import { Condition } from "./Condition"
+import { Context, RunMode, ExampleBuilder } from "./Example.js"
+import { ConsoleReporter, Reporter, startReport, writeSummary, terminateReport } from "./Reporter.js"
+import { Document, DocumentCollection } from "./Document.js"
+import { Effect } from "./Effect.js"
+import { Condition } from "./Condition.js"
 
 export interface ValidationOptions {
   reporter?: Reporter

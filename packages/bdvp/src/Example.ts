@@ -1,10 +1,10 @@
-import { firstOf } from "./Maybe"
-import { Reporter, writeComment } from "./Reporter"
-import { addInvalid, addSkipped, addValid, emptySummary, Summary } from "./Summary"
-import { validate, Claim, ignore } from "./Claim"
-import { waitFor } from "./waitFor"
-import { Effect } from "./Effect"
-import { Condition } from "./Condition"
+import { firstOf } from "./Maybe.js"
+import { Reporter, writeComment } from "./Reporter.js"
+import { addInvalid, addSkipped, addValid, emptySummary, Summary } from "./Summary.js"
+import { validate, Claim, ignore } from "./Claim.js"
+import { waitFor } from "./waitFor.js"
+import { Effect } from "./Effect.js"
+import { Condition } from "./Condition.js"
 
 export interface Example {
   runMode: RunMode

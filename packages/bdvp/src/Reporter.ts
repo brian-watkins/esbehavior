@@ -1,4 +1,4 @@
-import { Summary } from "./Summary"
+import { Summary } from "./Summary.js"
 
 export interface Reporter {
   writeLine(message: string): void

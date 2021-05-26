@@ -1,5 +1,5 @@
-import { Failure, Reporter, writeTestFailure, writeTestPass, writeTestSkip } from "./Reporter"
-import { waitFor } from "./waitFor"
+import { Failure, Reporter, writeTestFailure, writeTestPass, writeTestSkip } from "./Reporter.js"
+import { waitFor } from "./waitFor.js"
 
 export interface Claim<T> {
   description: string

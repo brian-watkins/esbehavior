@@ -1,6 +1,6 @@
-import { Example, RunMode } from "./Example";
-import { Reporter, writeComment } from "./Reporter";
-import { addSummary, emptySummary, Summary } from "./Summary";
+import { Example, RunMode } from "./Example.js";
+import { Reporter, writeComment } from "./Reporter.js";
+import { addSummary, emptySummary, Summary } from "./Summary.js";
 
 export class DocumentCollection {
   private someScenarioIsPicked: boolean
