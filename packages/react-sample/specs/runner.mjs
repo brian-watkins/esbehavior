@@ -28,8 +28,13 @@ page.on("console", console.log)
 page.on("pageerror", console.log)
 
 await page.goto(`http://localhost:${port}/index.html`)
+await page.evaluate("bdvp_run()")
 
-if (mode !== "watch" && mode !== "debug") {
+if (mode === "watch" || mode === "debug") {
+  page.on("load", (page) => {
+    page.evaluate("bdvp_run()")
+  })
+} else {
   await browser.close()
   await server.close()
 }

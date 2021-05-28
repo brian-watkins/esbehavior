@@ -3,11 +3,14 @@
   <head>
     <script type="module">
       import { validate } from 'bdvp'
-      import loadDoc from './load.doc.mjs'
 
-      await validate([
-        loadDoc
-      ])
+      const doc = async (path) => (await import(path)).default
+
+      window.bdvp_run = async () => {
+        await validate([
+          await doc('./load.doc.mjs')
+        ])
+      }
     </script>
   </head>
   <body></body>
