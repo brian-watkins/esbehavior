@@ -1,0 +1,34 @@
+{
+  "name": "react-sample",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "./specs/runner.mjs",
+    "test:watch": "MODE=watch ./specs/runner.mjs",
+    "test:debug": "MODE=debug ./specs/runner.mjs",
+    "start": "webpack-dev-server --mode development --open",
+    "build": "webpack --mode production"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "prop-types": "^15.7.2",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-hot-loader": "^4.13.0"
+  },
+  "devDependencies": {
+    "@neutrinojs/react": "^9.5.0",
+    "@testing-library/react": "^11.2.7",
+    "bdvp": "^1.0.0",
+    "chai": "^4.3.4",
+    "neutrino": "^9.5.0",
+    "playwright": "^1.11.1",
+    "vite": "^2.3.4",
+    "webpack": "^4.46.0",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.2"
+  }
+}
