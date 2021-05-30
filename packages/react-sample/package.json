@@ -24,6 +24,7 @@
     "@testing-library/react": "^11.2.7",
     "bdvp": "^1.0.0",
     "chai": "^4.3.4",
+    "globby": "^11.0.3",
     "neutrino": "^9.5.0",
     "playwright": "^1.11.1",
     "vite": "^2.3.4",

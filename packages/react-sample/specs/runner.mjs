@@ -2,9 +2,16 @@
 
 import { chromium } from 'playwright'
 import { createServer } from 'vite'
+import globby from 'globby'
 
 const mode = process.env["MODE"]
 const port = 9999
+
+
+// Get Test File Paths
+
+const files = await globby("./**/*.doc.mjs", { cwd: "./specs" })
+
 
 // Serve Test Files
 
@@ -17,7 +24,7 @@ const server = await createServer({
 await server.listen()
 
 
-// Run Test Files
+// Validate Test Files
 
 const browser = await chromium.launch({
   headless: mode !== "debug"
@@ -28,11 +35,11 @@ page.on("console", console.log)
 page.on("pageerror", console.log)
 
 await page.goto(`http://localhost:${port}/index.html`)
-await page.evaluate("bdvp_run()")
+await page.evaluate((files) => bdvp_run(files), files)
 
 if (mode === "watch" || mode === "debug") {
   page.on("load", (page) => {
-    page.evaluate("bdvp_run()")
+    page.evaluate((files) => bdvp_run(files), files)
   })
 } else {
   await browser.close()

@@ -4,12 +4,10 @@
     <script type="module">
       import { validate } from 'bdvp'
 
-      const doc = async (path) => (await import(path)).default
+      const load = async (path) => (await import(`./${path}`)).default
 
-      window.bdvp_run = async () => {
-        await validate([
-          await doc('./load.doc.mjs')
-        ])
+      window.bdvp_run = async (files) => {
+        await Promise.all(files.map(load)).then(validate)
       }
     </script>
   </head>
