@@ -1,13 +1,11 @@
 {
-  "name": "sample",
+  "name": "node-sample",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test:browser": "./browserSpecs/runner.mjs | tap-spec",
-    "test:browser:watch": "WATCH_MODE=true npm run test:browser",
-    "test:raw": "node --loader ts-node/esm --no-warnings ./specs/sample.spec.ts",
+    "test:raw": "node --loader ts-node/esm --no-warnings ./specs/runner.ts",
     "test:tap": "npm run test:raw | tap-spec",
     "test": "npm run test:raw | bdvp-reporter"
   },
@@ -15,15 +13,11 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/chai": "^4.2.15",
     "@types/proclaim": "^3.6.2",
     "bdvp": "^1.0.0",
     "bdvp-reporter": "^1.0.0",
-    "chai": "^4.3.4",
-    "esbuild-register": "^2.5.0",
-    "playwright": "^1.11.0",
+    "globby": "^11.0.3",
     "proclaim": "^3.6.0",
-    "snowpack": "^3.4.0",
     "tap-dancer": "^0.3.1",
     "tap-difflet": "^0.7.2",
     "tap-mocha-reporter": "^5.0.1",
