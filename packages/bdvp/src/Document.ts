@@ -20,7 +20,7 @@ export class DocumentCollection {
         documentSummary = await document.run(reporter)
       }
 
-      summary = addSummary(summary, documentSummary)
+      summary = addSummary(summary)(documentSummary)
     }
 
     return summary
@@ -55,7 +55,7 @@ export class Document {
         exampleSummary = await example.skip(reporter)
       }
 
-      summary = addSummary(summary, exampleSummary)
+      summary = addSummary(summary)(exampleSummary)
     }
 
     return summary

@@ -1,7 +1,7 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { docReport, FakeReporter, invalidObservation, passingCondition, exampleReport, validObservation } from './helpers/FakeReporter'
-import { document, validate, example, effect, condition } from '../src/index'
+import { docReport, FakeReporter, invalidObservation, passingCondition, exampleReport, validObservation } from './helpers/FakeReporter.js'
+import { document, validate, example, effect, condition } from '../src/index.js'
 import { expect } from 'chai'
 
 test("it runs an example with an async given", async () => {

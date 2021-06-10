@@ -21,10 +21,10 @@ export function addSkipped(results: Summary): Summary {
   return { ...results, skipped: results.skipped + 1 }
 }
 
-export function addSummary(current: Summary, next: Summary): Summary {
-  return {
+export function addSummary(current: Summary): (next: Summary) => Summary {
+  return (next) => ({
     valid: current.valid + next.valid,
     invalid: current.invalid + next.invalid,
     skipped: current.skipped + next.skipped
-  }
+  })
 }

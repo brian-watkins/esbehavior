@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, validate, example, effect, condition } from '../src/index'
-import { docReport, exampleReport, failureReport, FakeReporter, passingCondition, validObservation } from './helpers/FakeReporter'
+import { document, validate, example, effect, condition } from '../src/index.js'
+import { docReport, exampleReport, failureReport, FakeReporter, passingCondition, validObservation } from './helpers/FakeReporter.js'
 
 test("failing context generator function", async () => {
   const reporter = new FakeReporter()

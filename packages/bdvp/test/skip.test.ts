@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, validate, skip, effect, example, condition } from '../src/index'
-import { docReport, FakeReporter, exampleReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter'
+import { document, validate, skip, effect, example, condition } from '../src/index.js'
+import { docReport, FakeReporter, exampleReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter.js'
 
 test("it skips an example", async () => {
   const reporter = new FakeReporter()

@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, example, validate, effect, condition } from '../src/index'
-import { passingCondition, docReport, FakeReporter, invalidObservation, exampleReport, validObservation } from './helpers/FakeReporter'
+import { document, example, validate, effect, condition } from '../src/index.js'
+import { passingCondition, docReport, FakeReporter, invalidObservation, exampleReport, validObservation } from './helpers/FakeReporter.js'
 
 test("it runs a single passing claim", async () => {
   const reporter = new FakeReporter()

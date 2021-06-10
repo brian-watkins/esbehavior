@@ -1,6 +1,6 @@
 import { test } from 'uvu'
-import { document, example, effect, condition, validate } from '../src/index'
-import { docReport, failingCondition, FakeReporter, exampleReport, skippedCondition, skippedObservation } from './helpers/FakeReporter'
+import { document, example, effect, condition, validate } from '../src/index.js'
+import { docReport, failingCondition, FakeReporter, exampleReport, skippedCondition, skippedObservation } from './helpers/FakeReporter.js'
 
 test("failing condition", async () => {
   const reporter = new FakeReporter()
