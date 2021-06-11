@@ -146,6 +146,10 @@ export function exampleReport(description: string | null, conditions: Array<Test
   }
 }
 
+export function anotherScript(conditions: Array<TestCondition>, observations: Array<TestObservation>): TestExample {
+  return exampleReport(null, conditions, observations)
+}
+
 export function failureReport(failureReason: string): TestExample {
   return {
     lines: () => [ `Bail out! ${failureReason}` ],

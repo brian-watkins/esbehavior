@@ -1,6 +1,6 @@
 import { test } from 'uvu'
-import { document, validate, example, effect } from '../src/index'
-import { docReport, FakeReporter, exampleReport, validObservation } from './helpers/FakeReporter'
+import { document, validate, example, effect } from '../src/index.js'
+import { docReport, FakeReporter, exampleReport, validObservation } from './helpers/FakeReporter.js'
 import { expect } from 'chai'
 
 test("it runs multiple documents", async () => {
