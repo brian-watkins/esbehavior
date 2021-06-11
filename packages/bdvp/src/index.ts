@@ -1,4 +1,4 @@
-import { Context, RunMode, ExampleBuilder } from "./Example.js"
+import { Context, RunMode, ExampleBuilder, BDVPExampleBuilder, ExampleSetupBuilder } from "./Example.js"
 import { ConsoleReporter, Reporter, startReport, writeSummary, terminateReport } from "./Reporter.js"
 import { Document, DocumentCollection } from "./Document.js"
 import { Effect } from "./Effect.js"
@@ -29,19 +29,19 @@ export function document<T>(description: string, examples: Array<ExampleBuilder<
 
 const voidContext: Context<any> = { subject: () => {} }
 
-export function example<T = void>(context: Context<T> = voidContext): ExampleBuilder<T> {
-  return new ExampleBuilder(RunMode.Normal, context)
+export function example<T = void>(context: Context<T> = voidContext): ExampleSetupBuilder<T> {
+  return new BDVPExampleBuilder(RunMode.Normal, context)
 }
 
 export const skip = {
-  example<T = void>(context: Context<T> = voidContext): ExampleBuilder<T> {
-    return new ExampleBuilder(RunMode.Skipped, context)
+  example<T = void>(context: Context<T> = voidContext): ExampleSetupBuilder<T> {
+    return new BDVPExampleBuilder(RunMode.Skipped, context)
   }
 }
 
 export const pick = {
-  example<T = void>(context: Context<T> = voidContext): ExampleBuilder<T> {
-    return new ExampleBuilder(RunMode.Picked, context)
+  example<T = void>(context: Context<T> = voidContext): ExampleSetupBuilder<T> {
+    return new BDVPExampleBuilder(RunMode.Picked, context)
   }
 }
 

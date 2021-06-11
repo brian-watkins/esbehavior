@@ -26,24 +26,41 @@ export enum RunMode {
   Normal, Skipped, Picked
 }
 
-export class ExampleBuilder<T> {
+export interface ExampleBuilder<T> {
+  build(): Example
+}
+
+export interface ExampleSetupBuilder<T> extends ExampleBuilder<T> {
+  description(description: string): ExampleScriptBuilder<T>
+  script({ assume, observe }: { assume?: Array<Condition<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T>
+}
+
+export interface ExampleScriptBuilder<T> extends ExampleBuilder<T> {
+  script({ assume, observe }: { assume?: Array<Condition<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T>
+}
+
+export interface ExampleScriptsBuilder<T> extends ExampleBuilder<T> {
+  andThen({ assume, observe }: { assume?: Array<Condition<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T>
+}
+
+export class BDVPExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetupBuilder<T>, ExampleScriptBuilder<T>, ExampleScriptsBuilder<T> {
   private example: BDVPExample<T>
 
   constructor (public runMode: RunMode, context: Context<T>) {
     this.example = new BDVPExample(runMode, context)
   }
 
-  description(description: string): ExampleBuilder<T> {
+  description(description: string): ExampleScriptBuilder<T> {
     this.example.setDescription(description)
     return this
   }
 
-  script({ assume = [], observe }: { assume?: Array<Condition<T>>, observe: Array<Effect<T>> }): ExampleBuilder<T> {
+  script({ assume = [], observe }: { assume?: Array<Condition<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T> {
     this.example.setPlan({ conditions: assume, effects: observe })
     return this
   }
 
-  andThen({ assume = [], observe }: { assume?: Array<Condition<T>>, observe: Array<Effect<T>> }): ExampleBuilder<T> {
+  andThen({ assume = [], observe }: { assume?: Array<Condition<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T> {
     this.example.addPlan({ conditions: assume, effects: observe })
     return this
   }
