@@ -14,7 +14,7 @@ test("it tears down the context", async () => {
   await validate([
     behavior("context with teardown", [
       example({
-        subject: () => {
+        init: () => {
           testContext.touched++
           return testContext
         },

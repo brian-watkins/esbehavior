@@ -8,7 +8,7 @@ test("it runs multiple scripts in one example", async () => {
 
   await validate([
     behavior("multiple scripts", [
-      example({ subject: () => ({ touched: 0 }) })
+      example({ init: () => ({ touched: 0 }) })
         .description("multiple scripts")
         .script({
           assume: [
@@ -67,7 +67,7 @@ test("it skips all scripts when the example is skipped", async () => {
 
   await validate([
     behavior("example with multiple scripts", [
-      skip.example({ subject: () => ({ touched: 0 }) })
+      skip.example({ init: () => ({ touched: 0 }) })
         .description("example is skipped")
         .script({
           assume: [
@@ -116,7 +116,7 @@ test("it skips remaining plans if any observations fail", async () => {
 
   await validate([
     behavior("multiple scripts", [
-      example({ subject: () => ({ touched: 0 }) })
+      example({ init: () => ({ touched: 0 }) })
         .description("first script fails")
         .script({
           assume: [

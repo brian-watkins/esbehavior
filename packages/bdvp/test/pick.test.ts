@@ -37,7 +37,7 @@ test("it only runs the picked example", async () => {
     ]),
     behavior("another", [
       example({
-        subject: () => {
+        init: () => {
           throw new Error("BAD SO BAD")
         }
       })

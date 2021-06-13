@@ -8,7 +8,7 @@ test("it runs multiple behaviors", async () => {
 
   await validate([
     behavior("a single claim", [
-      example({ subject: () => 7 })
+      example({ init: () => 7 })
         .description("just a claim")
         .script({
           observe: [
@@ -19,7 +19,7 @@ test("it runs multiple behaviors", async () => {
         })
     ]),
     behavior("another claim", [
-      example({ subject: () => 18 })
+      example({ init: () => 18 })
         .description("just another claim")
         .script({
           observe: [

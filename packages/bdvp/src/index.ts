@@ -27,7 +27,7 @@ export function behavior<T>(description: string, examples: Array<ExampleBuilder<
   return new Behavior(description, examples.map(builder => builder.build()))
 }
 
-const voidContext: Context<any> = { subject: () => {} }
+const voidContext: Context<any> = { init: () => {} }
 
 export function example<T = void>(context: Context<T> = voidContext): ExampleSetupBuilder<T> {
   return new BDVPExampleBuilder(RunMode.Normal, context)

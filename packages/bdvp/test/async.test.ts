@@ -10,7 +10,7 @@ test("it runs an example with an async given", async () => {
   await validate([
     behavior("a single test", [
       example({
-        subject: () => {
+        init: () => {
           return new Promise(resolve => {
             setTimeout(() => resolve(7), 30)
           })
@@ -44,7 +44,7 @@ test("it runs an example with an async context generator and async observation",
   await validate([
     behavior("a single test", [
       example({
-        subject: () => {
+        init: () => {
           return new Promise<number>(resolve => {
             setTimeout(() => resolve(7), 30)
           })
@@ -103,7 +103,7 @@ test("it runs async conditions", async () => {
   await validate([
     behavior("a single test", [
       example({
-        subject: () => ({ val: 7 })
+        init: () => ({ val: 7 })
       })
         .description("multiple conditions")
         .script({

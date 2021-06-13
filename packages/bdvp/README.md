@@ -21,7 +21,7 @@ Here's an example:
 ```
 const appBehavior =
   behavior("the app shows things", [
-    example({ subject: () => new TestApp() })
+    example({ init: () => new TestApp() })
       .description("a particular case")
       .script({
         assume: [

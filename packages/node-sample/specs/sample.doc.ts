@@ -4,7 +4,7 @@ import { Thing } from '../src/Thing.js'
 
 export default
   behavior("a sample spec", [
-    example({ subject: () => new Thing() })
+    example({ init: () => new Thing() })
       .description("comparing some numbers")
       .script({
         assume: [
@@ -20,7 +20,7 @@ export default
           })
         ]
       }),
-    skip.example({ subject: () => new Thing() })
+    skip.example({ init: () => new Thing() })
       .description("some boring example")
       .script({
         observe: [

@@ -4,7 +4,7 @@ import { expect } from 'chai'
 import App from '../src/App'
 
 export const testableApp = {
-  subject: () => {
+  init: () => {
     render(<App />)
     return new Testable()
   },

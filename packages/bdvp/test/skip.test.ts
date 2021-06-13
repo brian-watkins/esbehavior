@@ -9,7 +9,7 @@ test("it skips an example", async () => {
   await validate([
     behavior("something", [
       skip.example({
-        subject: () => {
+        init: () => {
           expect(7).to.equal(5)
           return "blah"
         }
@@ -30,7 +30,7 @@ test("it skips an example", async () => {
             })
           ]
         }),
-      example({ subject: () => "blah" })
+      example({ init: () => "blah" })
         .description("important")
         .script({
           observe: [

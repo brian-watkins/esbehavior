@@ -18,7 +18,7 @@ export interface Plan<T> {
 }
 
 export interface Context<T> {
-  subject: () => T | Promise<T>
+  init: () => T | Promise<T>
   teardown?: (subject: T) => void | Promise<void>
 }
 
@@ -93,7 +93,7 @@ export class BDVPExample<T> implements Example {
       writeComment(reporter, this._description)
     }
 
-    const subject = await waitFor(this.context.subject())
+    const subject = await waitFor(this.context.init())
 
     const state = await this.execute(runNext(subject, this.plans), reporter)
 

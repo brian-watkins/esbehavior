@@ -125,7 +125,7 @@ test("it runs conditions", async () => {
 
   await validate([
     behavior("a single test", [
-      example({ subject: () => ({ val: 7 }) })
+      example({ init: () => ({ val: 7 }) })
         .description("multiple conditions")
         .script({
           assume: [

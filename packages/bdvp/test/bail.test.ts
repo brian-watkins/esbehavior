@@ -9,7 +9,7 @@ test("failing context generator function", async () => {
   await validate([
     behavior("failing context generator", [
       example({
-        subject: () => {
+        init: () => {
           const error: any = new Error()
           error.stack = "funny stack"
           throw error
@@ -43,7 +43,7 @@ test("failing context teardown function", async () => {
   await validate([
     behavior("failing context teardown", [
       example({
-        subject: () => 7,
+        init: () => 7,
         teardown: () => {
           const error: any = new Error()
           error.stack = "awesome stack"
@@ -61,7 +61,7 @@ test("failing context teardown function", async () => {
             })
           ]
         }),
-      example({ subject: () => 7 })
+      example({ init: () => 7 })
         .description("another example")
         .script({
           observe: [

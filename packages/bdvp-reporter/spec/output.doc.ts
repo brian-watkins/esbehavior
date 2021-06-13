@@ -14,7 +14,7 @@ ok it compares two numbers
 # skipped: 0
 `
 
-const testableAppSubject = { subject: () => new TestableApp() }
+const testableAppSubject = { init: () => new TestableApp() }
 
 const standardScenario =
   example(testableAppSubject)
