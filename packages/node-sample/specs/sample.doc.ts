@@ -1,9 +1,9 @@
 import assert from 'proclaim'
-import { condition, document, effect, example, skip } from 'bdvp'
+import { behavior, condition, effect, example, skip } from 'bdvp'
 import { Thing } from '../src/Thing.js'
 
 export default
-  document("a sample spec", [
+  behavior("a sample spec", [
     example({ subject: () => new Thing() })
       .description("comparing some numbers")
       .script({

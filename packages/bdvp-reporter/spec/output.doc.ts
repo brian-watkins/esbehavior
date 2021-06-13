@@ -1,4 +1,4 @@
-import { document, example, condition, effect } from 'bdvp'
+import { example, condition, effect, behavior } from 'bdvp'
 import expect from 'proclaim'
 import { TestableApp } from './TestableApp'
 
@@ -35,6 +35,6 @@ const standardScenario =
       ]
     })
 
-export default document("document report", [
+export default behavior("printing a report", [
   standardScenario
 ])

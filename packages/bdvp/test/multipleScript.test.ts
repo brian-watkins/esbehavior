@@ -1,13 +1,13 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, validate, example, effect, condition, skip } from '../src/index.js'
-import { anotherScript, docReport, exampleReport, FakeReporter, invalidObservation, passingCondition, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter.js'
+import { validate, example, effect, condition, skip, behavior } from '../src/index.js'
+import { anotherScript, behaviorReport, exampleReport, FakeReporter, invalidObservation, passingCondition, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter.js'
 
 test("it runs multiple scripts in one example", async () => {
   const reporter = new FakeReporter()
 
   await validate([
-    document("multiple scripts", [
+    behavior("multiple scripts", [
       example({ subject: () => ({ touched: 0 }) })
         .description("multiple scripts")
         .script({
@@ -43,7 +43,7 @@ test("it runs multiple scripts in one example", async () => {
   ], { reporter })
 
   reporter.expectTestReportWith([
-    docReport("multiple scripts", [
+    behaviorReport("multiple scripts", [
       exampleReport("multiple scripts", [
         passingCondition("it touches the context"),
       ], [
@@ -66,7 +66,7 @@ test("it skips all scripts when the example is skipped", async () => {
   const reporter = new FakeReporter()
 
   await validate([
-    document("example with multiple scripts", [
+    behavior("example with multiple scripts", [
       skip.example({ subject: () => ({ touched: 0 }) })
         .description("example is skipped")
         .script({
@@ -94,7 +94,7 @@ test("it skips all scripts when the example is skipped", async () => {
   ], { reporter })
 
   reporter.expectTestReportWith([
-    docReport("example with multiple scripts", [
+    behaviorReport("example with multiple scripts", [
       exampleReport("example is skipped", [
         skippedCondition("it touches the context"),
       ], [
@@ -115,7 +115,7 @@ test("it skips remaining plans if any observations fail", async () => {
   const reporter = new FakeReporter()
 
   await validate([
-    document("multiple scripts", [
+    behavior("multiple scripts", [
       example({ subject: () => ({ touched: 0 }) })
         .description("first script fails")
         .script({
@@ -158,7 +158,7 @@ test("it skips remaining plans if any observations fail", async () => {
   ], { reporter })
 
   reporter.expectTestReportWith([
-    docReport("multiple scripts", [
+    behaviorReport("multiple scripts", [
       exampleReport("first script fails", [
         passingCondition("it touches the context")
       ], [

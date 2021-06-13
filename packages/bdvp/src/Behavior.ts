@@ -2,36 +2,36 @@ import { Example, RunMode } from "./Example.js";
 import { Reporter, writeComment } from "./Reporter.js";
 import { addSummary, emptySummary, Summary } from "./Summary.js";
 
-export class DocumentCollection {
-  private someScenarioIsPicked: boolean
+export class BehaviorCollection {
+  private someExampleIsPicked: boolean
 
-  constructor(private documents: Array<Document>) {
-    this.someScenarioIsPicked = this.documents.find(doc => doc.hasPickedScenario) !== undefined
+  constructor(private behaviors: Array<Behavior>) {
+    this.someExampleIsPicked = this.behaviors.find(behavior => behavior.hasPickedExamples) !== undefined
   }
 
   async run(reporter: Reporter): Promise<Summary> {
     let summary = emptySummary()
 
-    for (const document of this.documents) {
-      let documentSummary: Summary
-      if (this.someScenarioIsPicked) {
-        documentSummary = await document.runPicked(reporter)
+    for (const behavior of this.behaviors) {
+      let behaviorSummary: Summary
+      if (this.someExampleIsPicked) {
+        behaviorSummary = await behavior.runPicked(reporter)
       } else {
-        documentSummary = await document.run(reporter)
+        behaviorSummary = await behavior.run(reporter)
       }
 
-      summary = addSummary(summary)(documentSummary)
+      summary = addSummary(summary)(behaviorSummary)
     }
 
     return summary
   }
 }
 
-export class Document {
-  public hasPickedScenario: boolean
+export class Behavior {
+  public hasPickedExamples: boolean
 
   constructor(public description: string, public examples: Array<Example>) {
-    this.hasPickedScenario = this.examples.find(example => example.runMode === RunMode.Picked) !== undefined
+    this.hasPickedExamples = this.examples.find(example => example.runMode === RunMode.Picked) !== undefined
   }
 
   async runPicked(reporter: Reporter): Promise<Summary> {

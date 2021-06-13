@@ -1,12 +1,12 @@
 import { test } from 'uvu'
-import { document, example, effect, condition, validate } from '../src/index.js'
-import { docReport, failingCondition, FakeReporter, exampleReport, skippedCondition, skippedObservation } from './helpers/FakeReporter.js'
+import { example, effect, condition, validate, behavior } from '../src/index.js'
+import { behaviorReport, failingCondition, FakeReporter, exampleReport, skippedCondition, skippedObservation } from './helpers/FakeReporter.js'
 
 test("failing condition", async () => {
   const reporter = new FakeReporter()
 
   await validate([
-    document("document", [
+    behavior("behavior", [
       example()
         .description("failing condition")
         .script({
@@ -29,7 +29,7 @@ test("failing condition", async () => {
   ], { reporter })
 
   reporter.expectTestReportWith([
-    docReport("document", [
+    behaviorReport("behavior", [
       exampleReport("failing condition", [
         failingCondition("something throws an error", {
           operator: "equals", expected: "something", actual: "nothing", stack: "funny stack"

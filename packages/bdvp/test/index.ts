@@ -1,7 +1,7 @@
 import "./async.test.js"
 import "./bail.test.js"
 import "./condition.test.js"
-import "./multipleDocument.test.js"
+import "./multipleBehavior.test.js"
 import "./multipleScript.test.js"
 import "./pick.test.js"
 import "./skip.test.js"

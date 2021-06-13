@@ -2,11 +2,11 @@
 
 BDVP is a framework for producing documentation that works. 
 
-Use BDVP to write *documents* that describe the expected behaviors of your program. 
-Each document consists of one or more *examples* that together illustrate the behavior
+Use BDVP to describe the *behaviors* of your program.
+Each behavior consists of one or more *examples* that together illustrate what
 you want to describe. Each example consists of some *conditions* and
 some *effects*. BDVP runs each example and generates a report that indicates which
-example were valid and which were invalid.
+examples were valid and which were invalid.
 
 ### BDVP sounds like a test framework. Why do we need another test framework?
 
@@ -19,10 +19,10 @@ by anyone interested in understanding the expected behaviors of the program.
 Here's an example:
 
 ```
-const doc =
-  document("some behavior", [
+const appBehavior =
+  behavior("the app shows things", [
     example({ subject: () => new TestApp() })
-      .description("the app shows things")
+      .description("a particular case")
       .script({
         assume: [
           condition("the app loads", (app) => await app.start())
@@ -35,7 +35,7 @@ const doc =
       })
   ])
 
-validate([doc])
+validate([appBehavior])
 ```
 
 Some notes:

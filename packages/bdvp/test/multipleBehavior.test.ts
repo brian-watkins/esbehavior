@@ -1,13 +1,13 @@
 import { test } from 'uvu'
-import { document, validate, example, effect } from '../src/index.js'
-import { docReport, FakeReporter, exampleReport, validObservation } from './helpers/FakeReporter.js'
+import { validate, example, effect, behavior } from '../src/index.js'
+import { behaviorReport, FakeReporter, exampleReport, validObservation } from './helpers/FakeReporter.js'
 import { expect } from 'chai'
 
-test("it runs multiple documents", async () => {
+test("it runs multiple behaviors", async () => {
   const reporter = new FakeReporter()
 
   await validate([
-    document("a single claim", [
+    behavior("a single claim", [
       example({ subject: () => 7 })
         .description("just a claim")
         .script({
@@ -18,7 +18,7 @@ test("it runs multiple documents", async () => {
           ]
         })
     ]),
-    document("another claim", [
+    behavior("another claim", [
       example({ subject: () => 18 })
         .description("just another claim")
         .script({
@@ -32,17 +32,17 @@ test("it runs multiple documents", async () => {
   ], { reporter })
 
   reporter.expectTestReportWith([
-    docReport("a single claim", [
+    behaviorReport("a single claim", [
       exampleReport("just a claim", [], [
         validObservation("compares the correct number")
       ])
     ]),
-    docReport("another claim", [
+    behaviorReport("another claim", [
       exampleReport("just another claim", [], [
         validObservation("compares another correct number")
       ])
     ])
-  ], "it prints the expected output for multiple documents")
+  ], "it prints the expected output for multiple behaviors")
 })
 
 test.run()

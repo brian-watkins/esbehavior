@@ -1,8 +1,8 @@
-import { document, effect, example } from 'bdvp'
+import { behavior, effect, example } from 'bdvp'
 import { testableApp } from './testableApp.jsx'
 
 export default
-  document("hello", [
+  behavior("hello", [
     example(testableApp)
       .description("the app loaded")
       .script({

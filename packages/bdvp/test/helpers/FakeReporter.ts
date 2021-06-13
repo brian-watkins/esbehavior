@@ -69,7 +69,7 @@ export interface TestObservation {
   lines(): Array<string>
 }
 
-export function docReport(description: string, scenarios: Array<TestExample>): TestDoc {
+export function behaviorReport(description: string, scenarios: Array<TestExample>): TestDoc {
   return {
     lines: () => {
       return [`# ${description}`]

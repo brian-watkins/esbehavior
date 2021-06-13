@@ -1,14 +1,14 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { docReport, FakeReporter, invalidObservation, passingCondition, exampleReport, validObservation } from './helpers/FakeReporter.js'
-import { document, validate, example, effect, condition } from '../src/index.js'
+import { behaviorReport, FakeReporter, invalidObservation, passingCondition, exampleReport, validObservation } from './helpers/FakeReporter.js'
+import { validate, example, effect, condition, behavior } from '../src/index.js'
 import { expect } from 'chai'
 
 test("it runs an example with an async given", async () => {
   const reporter = new FakeReporter()
 
   await validate([
-    document("a single test", [
+    behavior("a single test", [
       example({
         subject: () => {
           return new Promise(resolve => {
@@ -28,7 +28,7 @@ test("it runs an example with an async given", async () => {
   ], { reporter })
 
   reporter.expectTestReportWith([
-    docReport("a single test", [
+    behaviorReport("a single test", [
       exampleReport("async given", [], [
         validObservation("compares the right numbers")
       ])
@@ -42,7 +42,7 @@ test("it runs an example with an async context generator and async observation",
   let teardownValue = 0
 
   await validate([
-    document("a single test", [
+    behavior("a single test", [
       example({
         subject: () => {
           return new Promise<number>(resolve => {
@@ -83,7 +83,7 @@ test("it runs an example with an async context generator and async observation",
   assert.equal(teardownValue, 9, "it executes the async teardown function on the context")
 
   reporter.expectTestReportWith([
-    docReport("a single test", [
+    behaviorReport("a single test", [
       exampleReport("async context and observation", [], [
         invalidObservation("async compares the right numbers", {
           operator: "strictEqual",
@@ -101,7 +101,7 @@ test("it runs async conditions", async () => {
   const reporter = new FakeReporter()
 
   await validate([
-    document("a single test", [
+    behavior("a single test", [
       example({
         subject: () => ({ val: 7 })
       })
@@ -129,7 +129,7 @@ test("it runs async conditions", async () => {
   ], { reporter })
 
   reporter.expectTestReportWith([
-    docReport("a single test", [
+    behaviorReport("a single test", [
       exampleReport("multiple conditions", [
         passingCondition("the value is incremented"),
         passingCondition("the value is incremented asynchronously"),

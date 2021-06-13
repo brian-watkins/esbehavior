@@ -1,13 +1,13 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { document, validate, pick, example, effect, condition } from '../src/index.js'
-import { docReport, FakeReporter, exampleReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter.js'
+import { validate, pick, example, effect, condition, behavior } from '../src/index.js'
+import { behaviorReport, FakeReporter, exampleReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter.js'
 
 test("it only runs the picked example", async () => {
   const reporter = new FakeReporter()
 
   await validate([
-    document("something", [
+    behavior("something", [
       example()
         .description("not important")
         .script({
@@ -35,7 +35,7 @@ test("it only runs the picked example", async () => {
           ]
         })
     ]),
-    document("another", [
+    behavior("another", [
       example({
         subject: () => {
           throw new Error("BAD SO BAD")
@@ -58,7 +58,7 @@ test("it only runs the picked example", async () => {
   ], { reporter })
 
   reporter.expectTestReportWith([
-    docReport("something", [
+    behaviorReport("something", [
       exampleReport("not important", [
         skippedCondition("it does something bad")
       ], [
@@ -69,7 +69,7 @@ test("it only runs the picked example", async () => {
         validObservation("will run this")
       ])
     ]),
-    docReport("another", [
+    behaviorReport("another", [
       exampleReport("should be skipped", [
         skippedCondition("it does something that it shouldn't")
       ], [
