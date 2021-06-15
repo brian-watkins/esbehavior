@@ -19,7 +19,7 @@ export interface Plan<T> {
 
 export interface Context<T> {
   init: () => T | Promise<T>
-  teardown?: (subject: T) => void | Promise<void>
+  teardown?: (context: T) => void | Promise<void>
 }
 
 export enum RunMode {
@@ -93,11 +93,11 @@ export class BDVPExample<T> implements Example {
       writeComment(reporter, this._description)
     }
 
-    const subject = await waitFor(this.context.init())
+    const context = await waitFor(this.context.init())
 
-    const state = await this.execute(runNext(subject, this.plans), reporter)
+    const state = await this.execute(runNext(context, this.plans), reporter)
 
-    await waitFor(this.context.teardown?.(subject))
+    await waitFor(this.context.teardown?.(context))
 
     return state.summary
   }
@@ -120,7 +120,7 @@ export class BDVPExample<T> implements Example {
             return finish(state)
           },
           something: async (plan) => {
-            const initialState = verifyConditions(state.subject, plan)
+            const initialState = verifyConditions(state.context, plan)
             const planResult = await this.executePlan(initialState, reporter)
 
             const updated = summarize(state, addSummary(planResult.summary))
@@ -159,7 +159,7 @@ export class BDVPExample<T> implements Example {
             return this.executePlan(allObservations(state), reporter)
           },
           something: async (condition) => {
-            const stepResult = await condition.validate(state.subject)
+            const stepResult = await condition.validate(state.context)
             return stepResult.on({
               valid: () => {
                 const updated = summarize(state, addValid)
@@ -180,7 +180,7 @@ export class BDVPExample<T> implements Example {
             return this.executePlan(complete(state), reporter)
           },
           something: async (effect) => {
-            const observationResult = await effect.validate(state.subject)
+            const observationResult = await effect.validate(state.context)
             return observationResult.on({
               valid: () => {
                 const updated = summarize(state, addValid)
@@ -231,15 +231,15 @@ function finish<T>(state: ExampleState<T>): Finish {
 
 interface RunNext<T> {
   type: "RunNext",
-  subject: T,
+  context: T,
   plans: Array<Plan<T>>
   summary: Summary
 }
 
-function runNext<T>(subject: T, plans: Array<Plan<T>>): RunNext<T> {
+function runNext<T>(context: T, plans: Array<Plan<T>>): RunNext<T> {
   return {
     type: "RunNext",
-    subject,
+    context,
     plans,
     summary: emptySummary()
   }
@@ -248,7 +248,7 @@ function runNext<T>(subject: T, plans: Array<Plan<T>>): RunNext<T> {
 function runRemaining<T>(state: RunNext<T>): RunNext<T> {
   return {
     type: "RunNext",
-    subject: state.subject,
+    context: state.context,
     plans: state.plans.slice(1),
     summary: state.summary
   }
@@ -314,16 +314,16 @@ function skipRemaining<T>(current: Skip<T>): Skip<T> {
 
 interface Verify<T> {
   type: "Verify"
-  subject: T,
+  context: T,
   plan: Plan<T>,
   summary: Summary,
   conditions: Array<Claim<T>>
 }
 
-function verifyConditions<T>(subject: T, plan: Plan<T>): Verify<T> {
+function verifyConditions<T>(context: T, plan: Plan<T>): Verify<T> {
   return {
     type: "Verify",
-    subject: subject,
+    context: context,
     plan: plan,
     conditions: plan.conditions,
     summary: emptySummary()
@@ -333,7 +333,7 @@ function verifyConditions<T>(subject: T, plan: Plan<T>): Verify<T> {
 function remainingConditions<T>(current: Verify<T>): Verify<T> {
   return {
     type: "Verify",
-    subject: current.subject,
+    context: current.context,
     plan: current.plan,
     conditions: current.conditions.slice(1),
     summary: current.summary
@@ -342,7 +342,7 @@ function remainingConditions<T>(current: Verify<T>): Verify<T> {
 
 interface Observe<T> {
   type: "Observe"
-  subject: T,
+  context: T,
   plan: Plan<T>,
   summary: Summary,
   effects: Array<Claim<T>>
@@ -352,7 +352,7 @@ function allObservations<T>(current: Verify<T>): Observe<T> {
   return {
     type: "Observe",
     effects: current.plan.effects,
-    subject: current.subject,
+    context: current.context,
     plan: current.plan,
     summary: current.summary
   }
@@ -362,7 +362,7 @@ function remainingObservations<T>(current: Observe<T>): Observe<T> {
   return {
     type: "Observe",
     effects: current.effects.slice(1),
-    subject: current.subject,
+    context: current.context,
     plan: current.plan,
     summary: current.summary
   }
