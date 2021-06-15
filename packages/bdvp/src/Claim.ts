@@ -1,9 +1,18 @@
-import { Failure, Reporter, writeTestFailure, writeTestPass, writeTestSkip } from "./Reporter.js"
+import { Failure } from "./Reporter.js"
 import { waitFor } from "./waitFor.js"
 
-export interface Claim<T> {
-  description: string
-  validate(context: T): void | Promise<void>
+export class Claim<T> {
+
+  constructor(public description: string, public execute: (context: T) => void | Promise<void>) {}
+  
+  async validate(context: T): Promise<ClaimResult> {
+    try {
+      await waitFor(this.execute(context))
+      return new ValidClaim()
+    } catch (failure) {
+      return new InvalidClaim(failure)
+    }
+  }
 }
 
 export interface ClaimResultHandler<S> {
@@ -29,18 +38,3 @@ export class InvalidClaim {
 }
 
 export type ClaimResult = ValidClaim | InvalidClaim
-
-export async function validate<T>(claim: Claim<T>, context: T, reporter: Reporter): Promise<ClaimResult> {
-  try {
-    await waitFor(claim.validate(context))
-    writeTestPass(reporter, claim.description)
-    return new ValidClaim()
-  } catch (error) {
-    writeTestFailure(reporter, claim.description, error)
-    return new InvalidClaim(error)
-  }
-}
-
-export function ignore<T>(claim: Claim<T>, reporter: Reporter) {
-  writeTestSkip(reporter, claim.description)
-}

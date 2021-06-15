@@ -1,7 +1,7 @@
 import { firstOf } from "./Maybe.js"
-import { Reporter, writeComment } from "./Reporter.js"
+import { Reporter, writeComment, writeTestFailure, writeTestPass, writeTestSkip } from "./Reporter.js"
 import { addInvalid, addSkipped, addSummary, addValid, emptySummary, Summary } from "./Summary.js"
-import { validate, Claim, ignore } from "./Claim.js"
+import { Claim } from "./Claim.js"
 import { waitFor } from "./waitFor.js"
 import { Effect } from "./Effect.js"
 import { Condition } from "./Condition.js"
@@ -159,14 +159,16 @@ export class BDVPExample<T> implements Example {
             return this.executePlan(allObservations(state), reporter)
           },
           something: async (condition) => {
-            const stepResult = await validate(condition, state.subject, reporter)
+            const stepResult = await condition.validate(state.subject)
             return stepResult.on({
               valid: () => {
                 const updated = summarize(state, addValid)
+                writeTestPass(reporter, condition.description)
                 return this.executePlan(remainingConditions(updated), reporter)
               },
-              invalid: () => {
+              invalid: (failure) => {
                 const updated = summarize(state, addInvalid)
+                writeTestFailure(reporter, condition.description, failure)
                 return this.executePlan(skipRemainingClaims(updated), reporter)
               }
             })
@@ -178,14 +180,16 @@ export class BDVPExample<T> implements Example {
             return this.executePlan(complete(state), reporter)
           },
           something: async (effect) => {
-            const observationResult = await validate(effect, state.subject, reporter)
+            const observationResult = await effect.validate(state.subject)
             return observationResult.on({
               valid: () => {
                 const updated = summarize(state, addValid)
+                writeTestPass(reporter, effect.description)
                 return this.executePlan(remainingObservations(updated), reporter)
               },
-              invalid: () => {
+              invalid: (failure) => {
                 const updated = summarize(state, addInvalid)
+                writeTestFailure(reporter, effect.description, failure)
                 return this.executePlan(remainingObservations(updated), reporter)
               }
             })
@@ -196,8 +200,8 @@ export class BDVPExample<T> implements Example {
           nothing: () => {
             return this.executePlan(complete(state), reporter)
           },
-          something: (step) => {
-            ignore(step, reporter)
+          something: (claim) => {
+            writeTestSkip(reporter, claim.description)
             const updated = summarize(state, addSkipped)
             return this.executePlan(skipRemaining(updated), reporter)
           }
