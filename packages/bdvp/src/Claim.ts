@@ -6,7 +6,7 @@ export interface Claim<T> {
   validate(context: T): void | Promise<void>
 }
 
-export interface ClaimResultMapper<S> {
+export interface ClaimResultHandler<S> {
   valid(): S
   invalid(error: Failure): S
 }
@@ -14,8 +14,8 @@ export interface ClaimResultMapper<S> {
 export class ValidClaim {
   public type = "Valid"
 
-  map<S>(mapper: ClaimResultMapper<S>): S {
-    return mapper.valid()
+  on<S>(handler: ClaimResultHandler<S>): S {
+    return handler.valid()
   }
 }
 
@@ -23,8 +23,8 @@ export class InvalidClaim {
   public type = "Invalid"
   constructor (public error: Failure) {}
 
-  map<S>(mapper: ClaimResultMapper<S>): S {
-    return mapper.invalid(this.error)
+  on<S>(handler: ClaimResultHandler<S>): S {
+    return handler.invalid(this.error)
   }
 }
 

@@ -115,7 +115,7 @@ export class BDVPExample<T> implements Example {
   private async execute(state: ExampleState<T>, reporter: Reporter): Promise<ExampleState<T>> {
     switch (state.type) {
       case "RunNext":
-        return firstOf(state.plans).map({
+        return firstOf(state.plans).on({
           nothing: async () => {
             return finish(state)
           },
@@ -133,7 +133,7 @@ export class BDVPExample<T> implements Example {
           }
         })
       case "SkipNext":
-        return firstOf(state.plans).map({
+        return firstOf(state.plans).on({
           nothing: async () => {
             return finish(state)
           },
@@ -154,13 +154,13 @@ export class BDVPExample<T> implements Example {
   private async executePlan(state: PlanState<T>, reporter: Reporter): Promise<PlanState<T>> {
     switch (state.type) {
       case "Verify":
-        return firstOf(state.conditions).map({
+        return firstOf(state.conditions).on({
           nothing: () => {
             return this.executePlan(allObservations(state), reporter)
           },
           something: async (condition) => {
             const stepResult = await validate(condition, state.subject, reporter)
-            return stepResult.map({
+            return stepResult.on({
               valid: () => {
                 const updated = summarize(state, addValid)
                 return this.executePlan(remainingConditions(updated), reporter)
@@ -173,13 +173,13 @@ export class BDVPExample<T> implements Example {
           }
         })
       case "Observe":
-        return firstOf(state.effects).map({
+        return firstOf(state.effects).on({
           nothing: () => {
             return this.executePlan(complete(state), reporter)
           },
           something: async (effect) => {
             const observationResult = await validate(effect, state.subject, reporter)
-            return observationResult.map({
+            return observationResult.on({
               valid: () => {
                 const updated = summarize(state, addValid)
                 return this.executePlan(remainingObservations(updated), reporter)
@@ -192,7 +192,7 @@ export class BDVPExample<T> implements Example {
           }
         })
       case "Skip":
-        return firstOf(state.claims).map({
+        return firstOf(state.claims).on({
           nothing: () => {
             return this.executePlan(complete(state), reporter)
           },

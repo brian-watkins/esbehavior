@@ -1,11 +1,11 @@
-export interface MaybeMapper<T,S> {
+export interface MaybeHandler<T,S> {
   nothing(): S
   something(item: T): S
 }
 
 export class Nothing<T> {
   public type = "Nothing"
-  map<S>(handler: MaybeMapper<T,S>): S {
+  on<S>(handler: MaybeHandler<T,S>): S {
     return handler.nothing()
   }
 }
@@ -15,7 +15,7 @@ export class Something<T> {
   
   constructor (public value: T) {}
 
-  map<S>(handler: MaybeMapper<T,S>): S {
+  on<S>(handler: MaybeHandler<T,S>): S {
     return handler.something(this.value)
   }
 }
