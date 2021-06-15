@@ -12,7 +12,7 @@ export interface Example {
   skip(reporter: Reporter): Promise<Summary>
 }
 
-export interface Plan<T> {
+export interface Script<T> {
   conditions: Array<Condition<T>>
   effects: Array<Effect<T>>
 }
@@ -56,12 +56,12 @@ export class BDVPExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetupBui
   }
 
   script({ assume = [], observe }: { assume?: Array<Condition<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T> {
-    this.example.setPlan({ conditions: assume, effects: observe })
+    this.example.setScript({ conditions: assume, effects: observe })
     return this
   }
 
   andThen({ assume = [], observe }: { assume?: Array<Condition<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T> {
-    this.example.addPlan({ conditions: assume, effects: observe })
+    this.example.addScript({ conditions: assume, effects: observe })
     return this
   }
 
@@ -72,7 +72,7 @@ export class BDVPExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetupBui
 
 export class BDVPExample<T> implements Example {
   private _description?: string
-  private plans: Array<Plan<T>> = []
+  private scripts: Array<Script<T>> = []
 
   constructor(public runMode: RunMode, public context: Context<T>) { }
 
@@ -80,12 +80,12 @@ export class BDVPExample<T> implements Example {
     this._description = description
   }
 
-  setPlan(plan: Plan<T>) {
-    this.plans = [ plan ]
+  setScript(script: Script<T>) {
+    this.scripts = [ script ]
   }
 
-  addPlan(plan: Plan<T>) {
-    this.plans.push(plan)
+  addScript(script: Script<T>) {
+    this.scripts.push(script)
   }
 
   async run(reporter: Reporter): Promise<Summary> {
@@ -95,7 +95,7 @@ export class BDVPExample<T> implements Example {
 
     const context = await waitFor(this.context.init())
 
-    const state = await this.execute(runNext(context, this.plans), reporter)
+    const state = await this.execute(runNext(context, this.scripts), reporter)
 
     await waitFor(this.context.teardown?.(context))
 
@@ -107,7 +107,7 @@ export class BDVPExample<T> implements Example {
       writeComment(reporter, this._description)
     }
 
-    const state = await this.execute(skipNext(this.plans), reporter)
+    const state = await this.execute(skipNext(this.scripts), reporter)
 
     return state.summary
   }
@@ -115,35 +115,35 @@ export class BDVPExample<T> implements Example {
   private async execute(state: ExampleState<T>, reporter: Reporter): Promise<ExampleState<T>> {
     switch (state.type) {
       case "RunNext":
-        return firstOf(state.plans).on({
+        return firstOf(state.scripts).on({
           nothing: async () => {
             return finish(state)
           },
-          something: async (plan) => {
-            const initialState = verifyConditions(state.context, plan)
-            const planResult = await this.executePlan(initialState, reporter)
+          something: async (script) => {
+            const initialState = verifyConditions(state.context, script)
+            const scriptResult = await this.executeScript(initialState, reporter)
 
-            const updated = summarize(state, addSummary(planResult.summary))
+            const updated = summarize(state, addSummary(scriptResult.summary))
 
-            if (planResult.summary.invalid > 0) {
-              return this.execute(skipRemainingPlans(updated), reporter)
+            if (scriptResult.summary.invalid > 0) {
+              return this.execute(skipRemainingScripts(updated), reporter)
             }
 
             return this.execute(runRemaining(updated), reporter)
           }
         })
       case "SkipNext":
-        return firstOf(state.plans).on({
+        return firstOf(state.scripts).on({
           nothing: async () => {
             return finish(state)
           },
-          something: async (plan) => {
-            const initialState = skipAll([...plan.conditions, ...plan.effects])
-            const planResult = await this.executePlan(initialState, reporter)
+          something: async (script) => {
+            const initialState = skipAll([...script.conditions, ...script.effects])
+            const scriptResult = await this.executeScript(initialState, reporter)
 
-            const updated = summarize(state, addSummary(planResult.summary))
+            const updated = summarize(state, addSummary(scriptResult.summary))
 
-            return this.execute(skipRemainingPlans(updated), reporter)
+            return this.execute(skipRemainingScripts(updated), reporter)
           }
         })
       case "Finish":
@@ -151,12 +151,12 @@ export class BDVPExample<T> implements Example {
     }
   }
 
-  private async executePlan(state: PlanState<T>, reporter: Reporter): Promise<PlanState<T>> {
+  private async executeScript(state: ScriptState<T>, reporter: Reporter): Promise<ScriptState<T>> {
     switch (state.type) {
       case "Verify":
         return firstOf(state.conditions).on({
           nothing: () => {
-            return this.executePlan(allObservations(state), reporter)
+            return this.executeScript(allObservations(state), reporter)
           },
           something: async (condition) => {
             const stepResult = await condition.validate(state.context)
@@ -164,12 +164,12 @@ export class BDVPExample<T> implements Example {
               valid: () => {
                 const updated = summarize(state, addValid)
                 writeTestPass(reporter, condition.description)
-                return this.executePlan(remainingConditions(updated), reporter)
+                return this.executeScript(remainingConditions(updated), reporter)
               },
               invalid: (failure) => {
                 const updated = summarize(state, addInvalid)
                 writeTestFailure(reporter, condition.description, failure)
-                return this.executePlan(skipRemainingClaims(updated), reporter)
+                return this.executeScript(skipRemainingClaims(updated), reporter)
               }
             })
           }
@@ -177,7 +177,7 @@ export class BDVPExample<T> implements Example {
       case "Observe":
         return firstOf(state.effects).on({
           nothing: () => {
-            return this.executePlan(complete(state), reporter)
+            return this.executeScript(complete(state), reporter)
           },
           something: async (effect) => {
             const observationResult = await effect.validate(state.context)
@@ -185,12 +185,12 @@ export class BDVPExample<T> implements Example {
               valid: () => {
                 const updated = summarize(state, addValid)
                 writeTestPass(reporter, effect.description)
-                return this.executePlan(remainingObservations(updated), reporter)
+                return this.executeScript(remainingObservations(updated), reporter)
               },
               invalid: (failure) => {
                 const updated = summarize(state, addInvalid)
                 writeTestFailure(reporter, effect.description, failure)
-                return this.executePlan(remainingObservations(updated), reporter)
+                return this.executeScript(remainingObservations(updated), reporter)
               }
             })
           }
@@ -198,12 +198,12 @@ export class BDVPExample<T> implements Example {
       case "Skip":
         return firstOf(state.claims).on({
           nothing: () => {
-            return this.executePlan(complete(state), reporter)
+            return this.executeScript(complete(state), reporter)
           },
           something: (claim) => {
             writeTestSkip(reporter, claim.description)
             const updated = summarize(state, addSkipped)
-            return this.executePlan(skipRemaining(updated), reporter)
+            return this.executeScript(skipRemaining(updated), reporter)
           }
         })
       case "Complete":
@@ -232,15 +232,15 @@ function finish<T>(state: ExampleState<T>): Finish {
 interface RunNext<T> {
   type: "RunNext",
   context: T,
-  plans: Array<Plan<T>>
+  scripts: Array<Script<T>>
   summary: Summary
 }
 
-function runNext<T>(context: T, plans: Array<Plan<T>>): RunNext<T> {
+function runNext<T>(context: T, scripts: Array<Script<T>>): RunNext<T> {
   return {
     type: "RunNext",
     context,
-    plans,
+    scripts,
     summary: emptySummary()
   }
 }
@@ -249,34 +249,34 @@ function runRemaining<T>(state: RunNext<T>): RunNext<T> {
   return {
     type: "RunNext",
     context: state.context,
-    plans: state.plans.slice(1),
+    scripts: state.scripts.slice(1),
     summary: state.summary
   }
 }
 
 interface SkipNext<T> {
   type: "SkipNext",
-  plans: Array<Plan<T>>
+  scripts: Array<Script<T>>
   summary: Summary
 }
 
-function skipNext<T>(plans: Array<Plan<T>>): SkipNext<T> {
+function skipNext<T>(scripts: Array<Script<T>>): SkipNext<T> {
   return {
     type: "SkipNext",
-    plans,
+    scripts,
     summary: emptySummary()
   }
 }
 
-function skipRemainingPlans<T>(state: { plans: Array<Plan<T>>, summary: Summary }): SkipNext<T> {
+function skipRemainingScripts<T>(state: { scripts: Array<Script<T>>, summary: Summary }): SkipNext<T> {
   return {
     type: "SkipNext",
-    plans: state.plans.slice(1),
+    scripts: state.scripts.slice(1),
     summary: state.summary
   }
 }
 
-type PlanState<T>
+type ScriptState<T>
   = Skip<T>
   | Verify<T>
   | Observe<T>
@@ -299,7 +299,7 @@ function skipAll<T>(claims: Array<Claim<T>>): Skip<T> {
 function skipRemainingClaims<T>(current: Verify<T>): Skip<T> {
   return {
     type: "Skip",
-    claims: [ ...current.conditions.slice(1), ...current.plan.effects ],
+    claims: [ ...current.conditions.slice(1), ...current.script.effects ],
     summary: current.summary
   }
 }
@@ -315,17 +315,17 @@ function skipRemaining<T>(current: Skip<T>): Skip<T> {
 interface Verify<T> {
   type: "Verify"
   context: T,
-  plan: Plan<T>,
+  script: Script<T>,
   summary: Summary,
   conditions: Array<Claim<T>>
 }
 
-function verifyConditions<T>(context: T, plan: Plan<T>): Verify<T> {
+function verifyConditions<T>(context: T, script: Script<T>): Verify<T> {
   return {
     type: "Verify",
     context: context,
-    plan: plan,
-    conditions: plan.conditions,
+    script: script,
+    conditions: script.conditions,
     summary: emptySummary()
   }
 }
@@ -334,7 +334,7 @@ function remainingConditions<T>(current: Verify<T>): Verify<T> {
   return {
     type: "Verify",
     context: current.context,
-    plan: current.plan,
+    script: current.script,
     conditions: current.conditions.slice(1),
     summary: current.summary
   }
@@ -343,7 +343,7 @@ function remainingConditions<T>(current: Verify<T>): Verify<T> {
 interface Observe<T> {
   type: "Observe"
   context: T,
-  plan: Plan<T>,
+  script: Script<T>,
   summary: Summary,
   effects: Array<Claim<T>>
 }
@@ -351,9 +351,9 @@ interface Observe<T> {
 function allObservations<T>(current: Verify<T>): Observe<T> {
   return {
     type: "Observe",
-    effects: current.plan.effects,
+    effects: current.script.effects,
     context: current.context,
-    plan: current.plan,
+    script: current.script,
     summary: current.summary
   }
 }
@@ -363,7 +363,7 @@ function remainingObservations<T>(current: Observe<T>): Observe<T> {
     type: "Observe",
     effects: current.effects.slice(1),
     context: current.context,
-    plan: current.plan,
+    script: current.script,
     summary: current.summary
   }
 }
@@ -373,7 +373,7 @@ interface Complete {
   summary: Summary
 }
 
-function complete<T>(model: PlanState<T>): Complete {
+function complete<T>(model: ScriptState<T>): Complete {
   return { type: "Complete", summary: model.summary }
 }
 
