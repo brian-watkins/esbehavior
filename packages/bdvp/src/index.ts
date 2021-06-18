@@ -1,25 +1,27 @@
 import { Context, RunMode, ExampleBuilder, BDVPExampleBuilder, ExampleSetupBuilder } from "./Example.js"
-import { ConsoleReporter, Reporter, startReport, writeSummary, terminateReport } from "./Reporter.js"
+import { ConsoleWriter, Writer } from "./Reporter.js"
 import { Behavior, BehaviorCollection } from "./Behavior.js"
 import { Effect } from "./Effect.js"
 import { Condition } from "./Condition.js"
+import { TAPReporter } from "./TAPReporter.js"
 
 export interface ValidationOptions {
-  reporter?: Reporter
+  writer?: Writer
 }
 
 export async function validate<T>(behaviors: Array<Behavior>, options: ValidationOptions = {}): Promise<void> {
-  const reporter = options.reporter || new ConsoleReporter()
+  const writer = options.writer || new ConsoleWriter()
+  const reporter = new TAPReporter(writer)
 
-  startReport(reporter)
+  reporter.start()
 
   const behaviorCollection = new BehaviorCollection(behaviors)
 
   try {
     const results = await behaviorCollection.run(reporter)
-    writeSummary(reporter, results)
+    reporter.end(results)
   } catch (err) {
-    terminateReport(reporter, err)
+    reporter.terminate(err)
   }
 }
 

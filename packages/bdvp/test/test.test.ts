@@ -1,10 +1,10 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import { example, validate, effect, condition, behavior } from '../src/index.js'
-import { passingCondition, behaviorReport, FakeReporter, invalidObservation, exampleReport, validObservation } from './helpers/FakeReporter.js'
+import { passingCondition, behaviorReport, FakeReportWriter, invalidObservation, exampleReport, validObservation } from './helpers/FakeReportWriter.js'
 
 test("it runs a single passing claim", async () => {
-  const reporter = new FakeReporter()
+  const writer = new FakeReportWriter()
 
   await validate([
     behavior("a single test", [
@@ -18,9 +18,9 @@ test("it runs a single passing claim", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { writer })
 
-  reporter.expectTestReportWith([
+  writer.expectTestReportWith([
     behaviorReport("a single test", [
       exampleReport("my first test", [], [
         validObservation("does something cool")
@@ -30,7 +30,7 @@ test("it runs a single passing claim", async () => {
 })
 
 test("it runs an example with no description", async () => {
-  const reporter = new FakeReporter()
+  const writer = new FakeReportWriter()
 
   await validate([
     behavior("a single example; no description", [
@@ -43,9 +43,9 @@ test("it runs an example with no description", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { writer })
 
-  reporter.expectTestReportWith([
+  writer.expectTestReportWith([
     behaviorReport("a single example; no description", [
       exampleReport(null, [], [
         validObservation("does something cool")
@@ -56,7 +56,7 @@ test("it runs an example with no description", async () => {
 
 
 test("it runs more than one passing claim", async () => {
-  const reporter = new FakeReporter()
+  const writer = new FakeReportWriter()
 
   await validate([
     behavior("a single test", [
@@ -73,9 +73,9 @@ test("it runs more than one passing claim", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { writer })
 
-  reporter.expectTestReportWith([
+  writer.expectTestReportWith([
     behaviorReport("a single test", [
       exampleReport("several observations", [], [
         validObservation("does something cool"),
@@ -86,7 +86,7 @@ test("it runs more than one passing claim", async () => {
 })
 
 test("it runs a failing test", async () => {
-  const reporter = new FakeReporter()
+  const writer = new FakeReportWriter()
 
   await validate([
     behavior("a single test", [
@@ -106,9 +106,9 @@ test("it runs a failing test", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { writer })
 
-  reporter.expectTestReportWith([
+  writer.expectTestReportWith([
     behaviorReport("a single test", [
       exampleReport("failing observation", [], [
         invalidObservation("does something that fails", {
@@ -121,7 +121,7 @@ test("it runs a failing test", async () => {
 })
 
 test("it runs conditions", async () => {
-  const reporter = new FakeReporter()
+  const writer = new FakeReportWriter()
 
   await validate([
     behavior("a single test", [
@@ -140,9 +140,9 @@ test("it runs conditions", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { writer })
 
-  reporter.expectTestReportWith([
+  writer.expectTestReportWith([
     behaviorReport("a single test", [
       exampleReport("multiple conditions", [
         passingCondition("the value is incremented"),

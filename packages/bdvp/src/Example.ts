@@ -1,5 +1,5 @@
 import { firstOf } from "./Maybe.js"
-import { Reporter, writeComment, writeTestFailure, writeTestPass, writeTestSkip } from "./Reporter.js"
+import { Reporter } from "./Reporter.js"
 import { addInvalid, addSkipped, addSummary, addValid, emptySummary, Summary } from "./Summary.js"
 import { Claim } from "./Claim.js"
 import { waitFor } from "./waitFor.js"
@@ -71,13 +71,13 @@ export class BDVPExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetupBui
 }
 
 export class BDVPExample<T> implements Example {
-  private _description?: string
+  private description?: string
   private scripts: Array<Script<T>> = []
 
   constructor(public runMode: RunMode, public context: Context<T>) { }
 
   setDescription(description: string) {
-    this._description = description
+    this.description = description
   }
 
   setScript(script: Script<T>) {
@@ -89,9 +89,7 @@ export class BDVPExample<T> implements Example {
   }
 
   async run(reporter: Reporter): Promise<Summary> {
-    if (this._description) {
-      writeComment(reporter, this._description)
-    }
+    reporter.startExample(this.description)
 
     const context = await waitFor(this.context.init())
 
@@ -103,9 +101,7 @@ export class BDVPExample<T> implements Example {
   }
 
   async skip(reporter: Reporter): Promise<Summary> {
-    if (this._description) {
-      writeComment(reporter, this._description)
-    }
+    reporter.startExample(this.description)
 
     const state = await this.execute(skipNext(this.scripts), reporter)
 
@@ -138,8 +134,7 @@ export class BDVPExample<T> implements Example {
             return finish(state)
           },
           something: async (script) => {
-            const initialState = skipAll([...script.conditions, ...script.effects])
-            const scriptResult = await this.executeScript(initialState, reporter)
+            const scriptResult = await this.executeScript(skip(script), reporter)
 
             const updated = summarize(state, addSummary(scriptResult.summary))
 
@@ -159,17 +154,16 @@ export class BDVPExample<T> implements Example {
             return this.executeScript(allObservations(state), reporter)
           },
           something: async (condition) => {
-            const stepResult = await condition.validate(state.context)
-            return stepResult.on({
+            const assumptionResult = await condition.validate(state.context)
+            reporter.recordAssumption(condition, assumptionResult)
+            return assumptionResult.when({
               valid: () => {
                 const updated = summarize(state, addValid)
-                writeTestPass(reporter, condition.description)
                 return this.executeScript(remainingConditions(updated), reporter)
               },
-              invalid: (failure) => {
+              invalid: () => {
                 const updated = summarize(state, addInvalid)
-                writeTestFailure(reporter, condition.description, failure)
-                return this.executeScript(skipRemainingClaims(updated), reporter)
+                return this.executeScript(skipRemainingAssumptions(updated), reporter)
               }
             })
           }
@@ -181,29 +175,39 @@ export class BDVPExample<T> implements Example {
           },
           something: async (effect) => {
             const observationResult = await effect.validate(state.context)
-            return observationResult.on({
+            reporter.recordObservation(effect, observationResult)
+            return observationResult.when({
               valid: () => {
                 const updated = summarize(state, addValid)
-                writeTestPass(reporter, effect.description)
                 return this.executeScript(remainingObservations(updated), reporter)
               },
-              invalid: (failure) => {
+              invalid: () => {
                 const updated = summarize(state, addInvalid)
-                writeTestFailure(reporter, effect.description, failure)
                 return this.executeScript(remainingObservations(updated), reporter)
               }
             })
           }
         })
-      case "Skip":
-        return firstOf(state.claims).on({
+      case "SkipAssumptions":
+        return firstOf(state.conditions).on({
+          nothing: () => {
+            return this.executeScript(skipObservations(state), reporter)
+          },
+          something: (condition) => {
+            reporter.skipAssumption(condition)
+            const updated = summarize(state, addSkipped)
+            return this.executeScript(skipRemainingAssumptions(updated), reporter)
+          }
+        })
+      case "SkipObservations":
+        return firstOf(state.observations).on({
           nothing: () => {
             return this.executeScript(complete(state), reporter)
           },
-          something: (claim) => {
-            writeTestSkip(reporter, claim.description)
+          something: (effect) => {
+            reporter.skipObservation(effect)
             const updated = summarize(state, addSkipped)
-            return this.executeScript(skipRemaining(updated), reporter)
+            return this.executeScript(skipRemainingObservations(updated), reporter)
           }
         })
       case "Complete":
@@ -277,38 +281,65 @@ function skipRemainingScripts<T>(state: { scripts: Array<Script<T>>, summary: Su
 }
 
 type ScriptState<T>
-  = Skip<T>
+  = SkipAssumptions<T>
+  | SkipObservations<T>
   | Verify<T>
   | Observe<T>
   | Complete
 
-interface Skip<T> {
-  type: "Skip",
+interface SkipAssumptions<T> {
+  type: "SkipAssumptions",
+  script: Script<T>,
   summary: Summary,
-  claims: Array<Claim<T>>
+  conditions: Array<Condition<T>>
 }
 
-function skipAll<T>(claims: Array<Claim<T>>): Skip<T> {
+function skip<T>(script: Script<T>): SkipAssumptions<T> {
   return {
-    type: "Skip",
-    claims: claims,
-    summary: emptySummary()
+    type: "SkipAssumptions",
+    script,
+    summary: emptySummary(),
+    conditions: script.conditions
   }
 }
 
-function skipRemainingClaims<T>(current: Verify<T>): Skip<T> {
+interface Skippable<T> {
+  script: Script<T>,
+  summary: Summary,
+  conditions: Array<Condition<T>>
+}
+
+function skipRemainingAssumptions<T>(current: Skippable<T>): SkipAssumptions<T> {
   return {
-    type: "Skip",
-    claims: [ ...current.conditions.slice(1), ...current.script.effects ],
-    summary: current.summary
+    type: "SkipAssumptions",
+    script: current.script,
+    summary: current.summary,
+    conditions: current.conditions.slice(1)
   }
 }
 
-function skipRemaining<T>(current: Skip<T>): Skip<T> {
+interface SkipObservations<T> {
+  type: "SkipObservations",
+  script: Script<T>,
+  summary: Summary,
+  observations: Array<Effect<T>>
+}
+
+function skipObservations<T>(current: SkipAssumptions<T>): SkipObservations<T> {
   return {
-    type: "Skip",
-    claims: current.claims.slice(1),
-    summary: current.summary
+    type: "SkipObservations",
+    script: current.script,
+    summary: current.summary,
+    observations: current.script.effects
+  }
+}
+
+function skipRemainingObservations<T>(current: SkipObservations<T>): SkipObservations<T> {
+  return {
+    type: "SkipObservations",
+    script: current.script,
+    summary: current.summary,
+    observations: current.observations.slice(1)
   }
 }
 

@@ -1,21 +1,16 @@
+import { ClaimResult } from "./Claim.js"
+import { Condition } from "./Condition.js"
+import { Effect } from "./Effect.js"
 import { Summary } from "./Summary.js"
 
-export interface Reporter {
+export interface Writer {
   writeLine(message: string): void
 }
 
-export class ConsoleReporter implements Reporter {
+export class ConsoleWriter implements Writer {
   writeLine(message: string) {
     console.log(message)
   }
-}
-
-export function writeComment(reporter: Reporter, comment: string) {
-  reporter.writeLine(`# ${comment}`)
-}
-
-export function startReport(reporter: Reporter) {
-  reporter.writeLine("TAP version 13")
 }
 
 export interface Failure {
@@ -25,34 +20,19 @@ export interface Failure {
   stack: string
 }
 
-export function writeTestFailure(reporter: Reporter, description: string, failure: Failure) {
-  reporter.writeLine(`not ok ${description}`)
-  reporter.writeLine('  ---')
-  reporter.writeLine(`  operator: ${failure.operator}`)
-  reporter.writeLine(`  expected: ${failure.expected}`)
-  reporter.writeLine(`  actual:   ${failure.actual}`)
-  reporter.writeLine(`  stack: |-`)
-  reporter.writeLine(`    ${failure.stack}`)
-  reporter.writeLine('  ...')
-}
+export interface Reporter {
+  start(): void
+  end(summary: Summary): void
+  terminate(error: Failure): void
 
-export function writeTestPass(reporter: Reporter, description: string) {
-  reporter.writeLine(`ok ${description}`)
-}
+  startBehavior(description?: string): void
+  endBehavior(): void
+  startExample(description?: string): void
+  endExample(): void
 
-export function writeTestSkip(reporter: Reporter, description: string) {
-  reporter.writeLine(`ok ${description} # SKIP`)
-}
-
-export function writeSummary(reporter: Reporter, summary: Summary) {
-  const total = summary.valid + summary.invalid + summary.skipped
-  reporter.writeLine(`1..${total}`)
-  writeComment(reporter, `tests ${total}`)
-  writeComment(reporter, `pass ${summary.valid}`)
-  writeComment(reporter, `fail ${summary.invalid}`)
-  writeComment(reporter, `skip ${summary.skipped}`)
-}
-
-export function terminateReport(reporter: Reporter, err: Failure) {
-  reporter.writeLine(`Bail out! ${err.stack}`)
+  recordAssumption<T>(condition: Condition<T>, result: ClaimResult): void
+  skipAssumption<T>(condition: Condition<T>): void
+  
+  recordObservation<T>(effect: Effect<T>, result: ClaimResult): void
+  skipObservation<T>(effect: Effect<T>): void
 }

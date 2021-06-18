@@ -1,11 +1,11 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { behaviorReport, FakeReporter, invalidObservation, passingCondition, exampleReport, validObservation } from './helpers/FakeReporter.js'
+import { behaviorReport, FakeReportWriter, invalidObservation, passingCondition, exampleReport, validObservation } from './helpers/FakeReportWriter.js'
 import { validate, example, effect, condition, behavior } from '../src/index.js'
 import { expect } from 'chai'
 
 test("it runs an example with an async given", async () => {
-  const reporter = new FakeReporter()
+  const writer = new FakeReportWriter()
 
   await validate([
     behavior("a single test", [
@@ -25,9 +25,9 @@ test("it runs an example with an async given", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { writer })
 
-  reporter.expectTestReportWith([
+  writer.expectTestReportWith([
     behaviorReport("a single test", [
       exampleReport("async given", [], [
         validObservation("compares the right numbers")
@@ -37,7 +37,7 @@ test("it runs an example with an async given", async () => {
 })
 
 test("it runs an example with an async context generator and async observation", async () => {
-  const reporter = new FakeReporter()
+  const writer = new FakeReportWriter()
 
   let teardownValue = 0
 
@@ -78,11 +78,11 @@ test("it runs an example with an async context generator and async observation",
           ]
         })
     ])
-  ], { reporter })
+  ], { writer })
 
   assert.equal(teardownValue, 9, "it executes the async teardown function on the context")
 
-  reporter.expectTestReportWith([
+  writer.expectTestReportWith([
     behaviorReport("a single test", [
       exampleReport("async context and observation", [], [
         invalidObservation("async compares the right numbers", {
@@ -98,7 +98,7 @@ test("it runs an example with an async context generator and async observation",
 })
 
 test("it runs async conditions", async () => {
-  const reporter = new FakeReporter()
+  const writer = new FakeReportWriter()
 
   await validate([
     behavior("a single test", [
@@ -126,9 +126,9 @@ test("it runs async conditions", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { writer })
 
-  reporter.expectTestReportWith([
+  writer.expectTestReportWith([
     behaviorReport("a single test", [
       exampleReport("multiple conditions", [
         passingCondition("the value is incremented"),

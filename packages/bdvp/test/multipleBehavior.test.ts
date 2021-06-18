@@ -1,10 +1,10 @@
 import { test } from 'uvu'
 import { validate, example, effect, behavior } from '../src/index.js'
-import { behaviorReport, FakeReporter, exampleReport, validObservation } from './helpers/FakeReporter.js'
+import { behaviorReport, FakeReportWriter, exampleReport, validObservation } from './helpers/FakeReportWriter.js'
 import { expect } from 'chai'
 
 test("it runs multiple behaviors", async () => {
-  const reporter = new FakeReporter()
+  const writer = new FakeReportWriter()
 
   await validate([
     behavior("a single claim", [
@@ -29,9 +29,9 @@ test("it runs multiple behaviors", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { writer })
 
-  reporter.expectTestReportWith([
+  writer.expectTestReportWith([
     behaviorReport("a single claim", [
       exampleReport("just a claim", [], [
         validObservation("compares the correct number")

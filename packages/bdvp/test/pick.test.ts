@@ -1,10 +1,10 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import { validate, pick, example, effect, condition, behavior } from '../src/index.js'
-import { behaviorReport, FakeReporter, exampleReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReporter.js'
+import { behaviorReport, FakeReportWriter, exampleReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReportWriter.js'
 
 test("it only runs the picked example", async () => {
-  const reporter = new FakeReporter()
+  const writer = new FakeReportWriter()
 
   await validate([
     behavior("something", [
@@ -55,9 +55,9 @@ test("it only runs the picked example", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { writer })
 
-  reporter.expectTestReportWith([
+  writer.expectTestReportWith([
     behaviorReport("something", [
       exampleReport("not important", [
         skippedCondition("it does something bad")

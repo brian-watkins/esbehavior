@@ -1,7 +1,7 @@
-import { Reporter } from "../../src/Reporter";
+import { Writer } from "../../src/Reporter";
 import * as assert from 'uvu/assert'
 
-export class FakeReporter implements Reporter {
+export class FakeReportWriter implements Writer {
   public logLines: Array<string> = []
 
   writeLine(message: string): void {

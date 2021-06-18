@@ -1,10 +1,10 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import { validate, example, effect, condition, behavior } from '../src/index.js'
-import { behaviorReport, exampleReport, failureReport, FakeReporter, passingCondition, validObservation } from './helpers/FakeReporter.js'
+import { behaviorReport, exampleReport, failureReport, FakeReportWriter, passingCondition, validObservation } from './helpers/FakeReportWriter.js'
 
 test("failing context generator function", async () => {
-  const reporter = new FakeReporter()
+  const writer = new FakeReportWriter()
 
   await validate([
     behavior("failing context generator", [
@@ -27,9 +27,9 @@ test("failing context generator function", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { writer })
 
-  reporter.expectTestReportThatBails([
+  writer.expectTestReportThatBails([
     behaviorReport("failing context generator", [
       exampleReport("context generator throws exception", [], []),
       failureReport("funny stack")
@@ -38,7 +38,7 @@ test("failing context generator function", async () => {
 })
 
 test("failing context teardown function", async () => {
-  const reporter = new FakeReporter()
+  const writer = new FakeReportWriter()
 
   await validate([
     behavior("failing context teardown", [
@@ -71,9 +71,9 @@ test("failing context teardown function", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { writer })
 
-  reporter.expectTestReportThatBails([
+  writer.expectTestReportThatBails([
     behaviorReport("failing context teardown", [
       exampleReport("context teardown throws exception", [
         passingCondition("it does nothing")

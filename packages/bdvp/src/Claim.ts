@@ -23,7 +23,7 @@ export interface ClaimResultHandler<S> {
 export class ValidClaim {
   public type = "Valid"
 
-  on<S>(handler: ClaimResultHandler<S>): S {
+  when<S>(handler: ClaimResultHandler<S>): S {
     return handler.valid()
   }
 }
@@ -32,7 +32,7 @@ export class InvalidClaim {
   public type = "Invalid"
   constructor (public error: Failure) {}
 
-  on<S>(handler: ClaimResultHandler<S>): S {
+  when<S>(handler: ClaimResultHandler<S>): S {
     return handler.invalid(this.error)
   }
 }

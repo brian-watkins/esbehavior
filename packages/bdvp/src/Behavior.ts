@@ -1,5 +1,5 @@
 import { Example, RunMode } from "./Example.js";
-import { Reporter, writeComment } from "./Reporter.js";
+import { Reporter } from "./Reporter.js";
 import { addSummary, emptySummary, Summary } from "./Summary.js";
 
 export class BehaviorCollection {
@@ -43,7 +43,7 @@ export class Behavior {
   }
 
   private async execute(shouldRun: (example: Example) => boolean, reporter: Reporter): Promise<Summary> {
-    writeComment(reporter, this.description)
+    reporter.startBehavior(this.description)
 
     let summary = emptySummary()
 

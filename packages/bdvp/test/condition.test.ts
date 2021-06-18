@@ -1,9 +1,9 @@
 import { test } from 'uvu'
 import { example, effect, condition, validate, behavior } from '../src/index.js'
-import { behaviorReport, failingCondition, FakeReporter, exampleReport, skippedCondition, skippedObservation } from './helpers/FakeReporter.js'
+import { behaviorReport, failingCondition, FakeReportWriter, exampleReport, skippedCondition, skippedObservation } from './helpers/FakeReportWriter.js'
 
 test("failing condition", async () => {
-  const reporter = new FakeReporter()
+  const writer = new FakeReportWriter()
 
   await validate([
     behavior("behavior", [
@@ -26,9 +26,9 @@ test("failing condition", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { writer })
 
-  reporter.expectTestReportWith([
+  writer.expectTestReportWith([
     behaviorReport("behavior", [
       exampleReport("failing condition", [
         failingCondition("something throws an error", {
