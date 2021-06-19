@@ -97,11 +97,13 @@ export interface TestCondition {
   lines(): Array<string>
 }
 
+const ASSUMPTION_DESIGNATOR = "~"
+
 export function passingCondition(description: string): TestCondition {
   return {
     type: ConditionType.Valid,
     lines: () => {
-      return [`ok ${description}`]
+      return [`ok ${ASSUMPTION_DESIGNATOR} ${description}`]
     }
   }
 }
@@ -110,7 +112,7 @@ export function failingCondition(description: string, details: FailureDetails): 
   return {
     type: ConditionType.Invalid,
     lines: () => [
-      `not ok ${description}`,
+      `not ok ${ASSUMPTION_DESIGNATOR} ${description}`,
       "  ---",
       `  operator: ${details.operator}`,
       `  expected: ${details.expected}`,
@@ -126,7 +128,7 @@ export function skippedCondition(description: string): TestCondition {
   return {
     type: ConditionType.Skipped,
     lines: () => [
-      `ok ${description} # SKIP`
+      `ok ${ASSUMPTION_DESIGNATOR} ${description} # SKIP`
     ]
   }
 }

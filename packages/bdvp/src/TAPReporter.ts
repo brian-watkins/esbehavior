@@ -46,13 +46,13 @@ export class TAPReporter implements Reporter {
 
   recordAssumption<T>(condition: Condition<T>, result: ClaimResult): void {
     result.when({
-      valid: () => this.recordValidClaim(condition.description),
-      invalid: (error) => this.recordInvalidClaim(condition.description, error)
+      valid: () => this.recordValidClaim(`${ASSUMPTION_DESIGNATOR} ${condition.description}`),
+      invalid: (error) => this.recordInvalidClaim(`${ASSUMPTION_DESIGNATOR} ${condition.description}`, error)
     })
   }
 
   skipAssumption<T>(condition: Condition<T>): void {
-    this.writer.writeLine(`ok ${condition.description} # SKIP`)
+    this.writer.writeLine(`ok ${ASSUMPTION_DESIGNATOR} ${condition.description} # SKIP`)
   }
 
   recordObservation<T>(effect: Effect<T>, result: ClaimResult): void {
@@ -81,3 +81,5 @@ export class TAPReporter implements Reporter {
     this.writer.writeLine('  ...')
   }
 }
+
+const ASSUMPTION_DESIGNATOR = "~"
