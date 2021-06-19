@@ -1,7 +1,5 @@
-import { firstOf } from "./Maybe.js"
 import { Reporter } from "./Reporter.js"
-import { addInvalid, addSkipped, addSummary, addValid, emptySummary, Summary } from "./Summary.js"
-import { Claim } from "./Claim.js"
+import { addInvalid, addSkipped, addValid, emptySummary, Summary } from "./Summary.js"
 import { waitFor } from "./waitFor.js"
 import { Effect } from "./Effect.js"
 import { Condition } from "./Condition.js"
@@ -46,7 +44,7 @@ export interface ExampleScriptsBuilder<T> extends ExampleBuilder<T> {
 export class BDVPExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetupBuilder<T>, ExampleScriptBuilder<T>, ExampleScriptsBuilder<T> {
   private example: BDVPExample<T>
 
-  constructor (public runMode: RunMode, context: Context<T>) {
+  constructor(public runMode: RunMode, context: Context<T>) {
     this.example = new BDVPExample(runMode, context)
   }
 
@@ -81,7 +79,7 @@ export class BDVPExample<T> implements Example {
   }
 
   setScript(script: Script<T>) {
-    this.scripts = [ script ]
+    this.scripts = [script]
   }
 
   addScript(script: Script<T>) {
@@ -93,321 +91,104 @@ export class BDVPExample<T> implements Example {
 
     const context = await waitFor(this.context.init())
 
-    const state = await this.execute(runNext(context, this.scripts), reporter)
+    const run = new ExampleRun<T>(new ValidateMode(context), reporter)
+
+    await run.execute(this.scripts)
 
     await waitFor(this.context.teardown?.(context))
 
-    return state.summary
+    return run.summary
   }
 
   async skip(reporter: Reporter): Promise<Summary> {
     reporter.startExample(this.description)
 
-    const state = await this.execute(skipNext(this.scripts), reporter)
+    const run = new ExampleRun<T>(new SkipMode(), reporter)
+    
+    await run.execute(this.scripts)
 
-    return state.summary
+    return run.summary
   }
+}
 
-  private async execute(state: ExampleState<T>, reporter: Reporter): Promise<ExampleState<T>> {
-    switch (state.type) {
-      case "RunNext":
-        return firstOf(state.scripts).on({
-          nothing: async () => {
-            return finish(state)
-          },
-          something: async (script) => {
-            const initialState = verifyConditions(state.context, script)
-            const scriptResult = await this.executeScript(initialState, reporter)
+interface Mode<T> {
+  handleAssumption(run: ExampleRun<T>, condition: Condition<T>): Promise<void>
+  handleObservation(run: ExampleRun<T>, effect: Effect<T>): Promise<void>
+}
 
-            const updated = summarize(state, addSummary(scriptResult.summary))
+class ExampleRun<T> {
+  public summary = emptySummary()
 
-            if (scriptResult.summary.invalid > 0) {
-              return this.execute(skipRemainingScripts(updated), reporter)
-            }
+  constructor (
+    public mode: Mode<T>,
+    public reporter: Reporter,
+  ) {}
 
-            return this.execute(runRemaining(updated), reporter)
-          }
-        })
-      case "SkipNext":
-        return firstOf(state.scripts).on({
-          nothing: async () => {
-            return finish(state)
-          },
-          something: async (script) => {
-            const scriptResult = await this.executeScript(skip(script), reporter)
+  async execute(scripts: Array<Script<T>>): Promise<void> {
+    for (let script of scripts) {
+      await this.runScript(script)
 
-            const updated = summarize(state, addSummary(scriptResult.summary))
-
-            return this.execute(skipRemainingScripts(updated), reporter)
-          }
-        })
-      case "Finish":
-        return state
+      if (this.summary.invalid > 0) {
+        this.mode = new SkipMode()
+      }
     }
   }
 
-  private async executeScript(state: ScriptState<T>, reporter: Reporter): Promise<ScriptState<T>> {
-    switch (state.type) {
-      case "Verify":
-        return firstOf(state.conditions).on({
-          nothing: () => {
-            return this.executeScript(allObservations(state), reporter)
-          },
-          something: async (condition) => {
-            const assumptionResult = await condition.validate(state.context)
-            reporter.recordAssumption(condition, assumptionResult)
-            return assumptionResult.when({
-              valid: () => {
-                const updated = summarize(state, addValid)
-                return this.executeScript(remainingConditions(updated), reporter)
-              },
-              invalid: () => {
-                const updated = summarize(state, addInvalid)
-                return this.executeScript(skipRemainingAssumptions(updated), reporter)
-              }
-            })
-          }
-        })
-      case "Observe":
-        return firstOf(state.effects).on({
-          nothing: () => {
-            return this.executeScript(complete(state), reporter)
-          },
-          something: async (effect) => {
-            const observationResult = await effect.validate(state.context)
-            reporter.recordObservation(effect, observationResult)
-            return observationResult.when({
-              valid: () => {
-                const updated = summarize(state, addValid)
-                return this.executeScript(remainingObservations(updated), reporter)
-              },
-              invalid: () => {
-                const updated = summarize(state, addInvalid)
-                return this.executeScript(remainingObservations(updated), reporter)
-              }
-            })
-          }
-        })
-      case "SkipAssumptions":
-        return firstOf(state.conditions).on({
-          nothing: () => {
-            return this.executeScript(skipObservations(state), reporter)
-          },
-          something: (condition) => {
-            reporter.skipAssumption(condition)
-            const updated = summarize(state, addSkipped)
-            return this.executeScript(skipRemainingAssumptions(updated), reporter)
-          }
-        })
-      case "SkipObservations":
-        return firstOf(state.observations).on({
-          nothing: () => {
-            return this.executeScript(complete(state), reporter)
-          },
-          something: (effect) => {
-            reporter.skipObservation(effect)
-            const updated = summarize(state, addSkipped)
-            return this.executeScript(skipRemainingObservations(updated), reporter)
-          }
-        })
-      case "Complete":
-        return state
+  private async runScript(script: Script<T>): Promise<void> {
+    for (let condition of script.conditions) {
+      await this.mode.handleAssumption(this, condition)
+    }
+
+    for (let effect of script.effects) {
+      await this.mode.handleObservation(this, effect)
     }
   }
-}
 
-type ExampleState<T>
-  = RunNext<T>
-  | SkipNext<T>
-  | Finish
-
-interface Finish {
-  type: "Finish",
-  summary: Summary
-}
-
-function finish<T>(state: ExampleState<T>): Finish {
-  return {
-    type: "Finish",
-    summary: state.summary
+  updateSummary(summarizer: (summary: Summary) => Summary) {
+    this.summary = summarizer(this.summary)
   }
 }
 
-interface RunNext<T> {
-  type: "RunNext",
-  context: T,
-  scripts: Array<Script<T>>
-  summary: Summary
-}
 
-function runNext<T>(context: T, scripts: Array<Script<T>>): RunNext<T> {
-  return {
-    type: "RunNext",
-    context,
-    scripts,
-    summary: emptySummary()
+class ValidateMode<T> implements Mode<T> {
+  constructor(private context: T) {}
+
+  async handleAssumption(run: ExampleRun<T>, condition: Condition<T>): Promise<void> {
+    const assumptionResult = await condition.validate(this.context)
+    run.reporter.recordAssumption(condition, assumptionResult)
+    return assumptionResult.when({
+      valid: () => {
+        run.updateSummary(addValid)
+      },
+      invalid: () => {
+        run.updateSummary(addInvalid)
+        run.mode = new SkipMode()
+      }
+    })
+  }
+
+  async handleObservation(run: ExampleRun<T>, effect: Effect<T>): Promise<void> {
+    const observationResult = await effect.validate(this.context)
+    run.reporter.recordObservation(effect, observationResult)
+    return observationResult.when({
+      valid: () => {
+        run.updateSummary(addValid)
+      },
+      invalid: () => {
+        run.updateSummary(addInvalid)
+      }
+    })
   }
 }
 
-function runRemaining<T>(state: RunNext<T>): RunNext<T> {
-  return {
-    type: "RunNext",
-    context: state.context,
-    scripts: state.scripts.slice(1),
-    summary: state.summary
+class SkipMode<T> implements Mode<T> {
+  async handleAssumption(run: ExampleRun<T>, condition: Condition<T>): Promise<void> {
+    run.reporter.skipAssumption(condition)
+    run.updateSummary(addSkipped)
   }
-}
 
-interface SkipNext<T> {
-  type: "SkipNext",
-  scripts: Array<Script<T>>
-  summary: Summary
-}
-
-function skipNext<T>(scripts: Array<Script<T>>): SkipNext<T> {
-  return {
-    type: "SkipNext",
-    scripts,
-    summary: emptySummary()
+  async handleObservation(run: ExampleRun<T>, effect: Effect<T>): Promise<void> {
+    run.reporter.skipObservation(effect)
+    run.updateSummary(addSkipped)
   }
-}
-
-function skipRemainingScripts<T>(state: { scripts: Array<Script<T>>, summary: Summary }): SkipNext<T> {
-  return {
-    type: "SkipNext",
-    scripts: state.scripts.slice(1),
-    summary: state.summary
-  }
-}
-
-type ScriptState<T>
-  = SkipAssumptions<T>
-  | SkipObservations<T>
-  | Verify<T>
-  | Observe<T>
-  | Complete
-
-interface SkipAssumptions<T> {
-  type: "SkipAssumptions",
-  script: Script<T>,
-  summary: Summary,
-  conditions: Array<Condition<T>>
-}
-
-function skip<T>(script: Script<T>): SkipAssumptions<T> {
-  return {
-    type: "SkipAssumptions",
-    script,
-    summary: emptySummary(),
-    conditions: script.conditions
-  }
-}
-
-interface Skippable<T> {
-  script: Script<T>,
-  summary: Summary,
-  conditions: Array<Condition<T>>
-}
-
-function skipRemainingAssumptions<T>(current: Skippable<T>): SkipAssumptions<T> {
-  return {
-    type: "SkipAssumptions",
-    script: current.script,
-    summary: current.summary,
-    conditions: current.conditions.slice(1)
-  }
-}
-
-interface SkipObservations<T> {
-  type: "SkipObservations",
-  script: Script<T>,
-  summary: Summary,
-  observations: Array<Effect<T>>
-}
-
-function skipObservations<T>(current: SkipAssumptions<T>): SkipObservations<T> {
-  return {
-    type: "SkipObservations",
-    script: current.script,
-    summary: current.summary,
-    observations: current.script.effects
-  }
-}
-
-function skipRemainingObservations<T>(current: SkipObservations<T>): SkipObservations<T> {
-  return {
-    type: "SkipObservations",
-    script: current.script,
-    summary: current.summary,
-    observations: current.observations.slice(1)
-  }
-}
-
-interface Verify<T> {
-  type: "Verify"
-  context: T,
-  script: Script<T>,
-  summary: Summary,
-  conditions: Array<Claim<T>>
-}
-
-function verifyConditions<T>(context: T, script: Script<T>): Verify<T> {
-  return {
-    type: "Verify",
-    context: context,
-    script: script,
-    conditions: script.conditions,
-    summary: emptySummary()
-  }
-}
-
-function remainingConditions<T>(current: Verify<T>): Verify<T> {
-  return {
-    type: "Verify",
-    context: current.context,
-    script: current.script,
-    conditions: current.conditions.slice(1),
-    summary: current.summary
-  }
-}
-
-interface Observe<T> {
-  type: "Observe"
-  context: T,
-  script: Script<T>,
-  summary: Summary,
-  effects: Array<Claim<T>>
-}
-
-function allObservations<T>(current: Verify<T>): Observe<T> {
-  return {
-    type: "Observe",
-    effects: current.script.effects,
-    context: current.context,
-    script: current.script,
-    summary: current.summary
-  }
-}
-
-function remainingObservations<T>(current: Observe<T>): Observe<T> {
-  return {
-    type: "Observe",
-    effects: current.effects.slice(1),
-    context: current.context,
-    script: current.script,
-    summary: current.summary
-  }
-}
-
-interface Complete {
-  type: "Complete"
-  summary: Summary
-}
-
-function complete<T>(model: ScriptState<T>): Complete {
-  return { type: "Complete", summary: model.summary }
-}
-
-function summarize<T extends { summary: Summary }>(summarizable: T, summarizer: (summary: Summary) => Summary): T {
-  return { ...summarizable, summary: summarizer(summarizable.summary) }
 }
