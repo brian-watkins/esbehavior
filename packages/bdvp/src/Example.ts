@@ -156,7 +156,7 @@ class ValidateMode<T> implements Mode<T> {
   async handleAssumption(run: ExampleRun<T>, condition: Condition<T>): Promise<void> {
     const assumptionResult = await condition.validate(this.context)
     run.reporter.recordAssumption(condition, assumptionResult)
-    return assumptionResult.when({
+    assumptionResult.when({
       valid: () => {
         run.updateSummary(addValid)
       },
@@ -170,7 +170,7 @@ class ValidateMode<T> implements Mode<T> {
   async handleObservation(run: ExampleRun<T>, effect: Effect<T>): Promise<void> {
     const observationResult = await effect.validate(this.context)
     run.reporter.recordObservation(effect, observationResult)
-    return observationResult.when({
+    observationResult.when({
       valid: () => {
         run.updateSummary(addValid)
       },
