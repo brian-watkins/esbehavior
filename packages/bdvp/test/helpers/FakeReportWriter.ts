@@ -134,9 +134,17 @@ export function skippedCondition(description: string): TestCondition {
 }
 
 export function exampleReport(description: string | null, conditions: Array<TestCondition>, observations: Array<TestObservation>): TestExample {
+  return exampleScript((description ? [`# Example: ${description}`] : [ "# Example" ]), conditions, observations)
+}
+
+export function anotherScript(conditions: Array<TestCondition>, observations: Array<TestObservation>): TestExample {
+  return exampleScript([], conditions, observations)
+}
+
+function exampleScript(description: Array<string>, conditions: Array<TestCondition>, observations: Array<TestObservation>): TestExample {
   return {
     lines: () => {
-      return (description ? [`# ${description}`] : [])
+      return description
         .concat(conditions.reduce((lines: Array<string>, action) => lines.concat(action.lines()), []))
         .concat(observations.reduce((lines: Array<string>, observation) => lines.concat(observation.lines()), []))
     },
@@ -146,10 +154,6 @@ export function exampleReport(description: string | null, conditions: Array<Test
       skipped: conditionsMatching(conditions, ConditionType.Skipped) + observationsMatching(observations, ObservationType.Skipped)
     })
   }
-}
-
-export function anotherScript(conditions: Array<TestCondition>, observations: Array<TestObservation>): TestExample {
-  return exampleReport(null, conditions, observations)
 }
 
 export function failureReport(failureReason: string): TestExample {

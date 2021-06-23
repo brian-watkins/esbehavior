@@ -37,7 +37,11 @@ export class TAPReporter implements Reporter {
   }
 
   startExample(description?: string): void {
-    if (description) this.writeComment(description)
+    if (description) {
+      this.writeComment(`Example: ${description}`)
+    } else {
+      this.writeComment("Example")
+    }
   }
 
   endExample(): void {
