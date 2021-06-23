@@ -72,7 +72,7 @@ export interface TestObservation {
 export function behaviorReport(description: string, scenarios: Array<TestExample>): TestDoc {
   return {
     lines: () => {
-      return [`# ${description}`]
+      return [`# Behavior: ${description}`]
         .concat(scenarios.reduce((lines: Array<string>, scenario) => lines.concat(scenario.lines()), []))
     },
     results: () => {

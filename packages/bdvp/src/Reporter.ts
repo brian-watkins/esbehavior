@@ -25,7 +25,7 @@ export interface Reporter {
   end(summary: Summary): void
   terminate(error: Failure): void
 
-  startBehavior(description?: string): void
+  startBehavior(description: string): void
   endBehavior(): void
   startExample(description?: string): void
   endExample(): void

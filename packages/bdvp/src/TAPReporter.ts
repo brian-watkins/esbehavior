@@ -28,8 +28,8 @@ export class TAPReporter implements Reporter {
     this.writer.writeLine(`Bail out! ${error.stack}`)
   }
 
-  startBehavior(description?: string): void {
-    if (description) this.writeComment(description)
+  startBehavior(description: string): void {
+    this.writeComment(`Behavior: ${description}`)
   }
 
   endBehavior(): void {
