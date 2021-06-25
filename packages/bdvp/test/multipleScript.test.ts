@@ -55,7 +55,7 @@ test("it runs multiple scripts in one example", async () => {
       ], [
         validObservation("part of the second script works"),
         invalidObservation("the second script fails", {
-          operator: "equals", expected: "a thing", actual: "nothing", stack: "cool stack"
+          operator: "equals", expected: "\"a thing\"", actual: "\"nothing\"", stack: "cool stack"
         })
       ])
     ])
@@ -168,7 +168,7 @@ test("it skips remaining plans if any observations fail", async () => {
         passingCondition("it touches the context again"),
       ], [
         invalidObservation("the second script fails", {
-          operator: "equals", expected: "something", actual: "nothing", stack: "stack"
+          operator: "equals", expected: "\"something\"", actual: "\"nothing\"", stack: "stack"
         })
       ]),
       anotherScript([

@@ -112,7 +112,7 @@ test("it runs a failing test", async () => {
     behaviorReport("a single test", [
       exampleReport("failing observation", [], [
         invalidObservation("does something that fails", {
-          operator: "equals", expected: "something", actual: "nothing", stack: "fake stack"
+          operator: "equals", expected: "\"something\"", actual: "\"nothing\"", stack: "fake stack"
         }),
         validObservation("passes")
       ])

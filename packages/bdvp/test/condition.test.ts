@@ -32,7 +32,7 @@ test("failing condition", async () => {
     behaviorReport("behavior", [
       exampleReport("failing condition", [
         failingCondition("something throws an error", {
-          operator: "equals", expected: "something", actual: "nothing", stack: "funny stack"
+          operator: "equals", expected: "\"something\"", actual: "\"nothing\"", stack: "funny stack"
         }),
         skippedCondition("there is another condition")
       ], [

@@ -78,11 +78,22 @@ export class TAPReporter implements Reporter {
     this.writer.writeLine(`not ok ${description}`)
     this.writer.writeLine('  ---')
     this.writer.writeLine(`  operator: ${failure.operator}`)
-    this.writer.writeLine(`  expected: ${failure.expected}`)
-    this.writer.writeLine(`  actual:   ${failure.actual}`)
+    this.writer.writeLine(`  expected: ${this.stringify(failure.expected)}`)
+    this.writer.writeLine(`  actual:   ${this.stringify(failure.actual)}`)
     this.writer.writeLine(`  stack: |-`)
-    this.writer.writeLine(`    ${failure.stack}`)
+    this.writeMultiline('    ', failure.stack)
     this.writer.writeLine('  ...')
+  }
+
+  private stringify(value: any): string {
+    return JSON.stringify(value)
+  }
+
+  private writeMultiline(pad: string, multiline: string) {
+    const lines = multiline.split("\n")
+    for (const line of lines) {
+      this.writer.writeLine(`${pad}${line}`)
+    }
   }
 }
 

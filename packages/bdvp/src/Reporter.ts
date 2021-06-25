@@ -15,8 +15,8 @@ export class ConsoleWriter implements Writer {
 
 export interface Failure {
   operator: string
-  expected: string
-  actual: string
+  expected: any
+  actual: any
   stack: string
 }
 
