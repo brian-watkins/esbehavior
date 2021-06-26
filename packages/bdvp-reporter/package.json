@@ -19,10 +19,9 @@
     "tap-parser": "^10.1.0"
   },
   "devDependencies": {
-    "@types/node": "^14.14.37",
+    "@types/node": "^15.12.4",
     "@types/proclaim": "^3.6.2",
     "bdvp": "^1.0.0",
-    "bdvp-node": "^1.0.0",
     "proclaim": "^3.6.0",
     "tap-mocha-reporter": "^5.0.1",
     "tap-spec": "^5.0.0",
