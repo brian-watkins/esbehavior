@@ -97,7 +97,7 @@ export interface TestCondition {
   lines(): Array<string>
 }
 
-const ASSUMPTION_DESIGNATOR = "~"
+const ASSUMPTION_DESIGNATOR = "Assume:"
 
 export function passingCondition(description: string): TestCondition {
   return {
