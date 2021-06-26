@@ -5,6 +5,12 @@ import { Effect } from "./Effect.js"
 import { Condition } from "./Condition.js"
 import { TAPReporter } from "./TAPReporter.js"
 
+export { Condition } from "./Condition.js"
+export { Effect } from "./Effect.js"
+export { Behavior } from "./Behavior.js"
+export { Example, Script, Context, ExampleBuilder, ExampleSetupBuilder, ExampleScriptBuilder, ExampleScriptsBuilder } from "./Example.js"
+export { Writer } from "./Reporter.js"
+
 export interface ValidationOptions {
   writer?: Writer
 }

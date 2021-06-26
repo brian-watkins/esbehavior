@@ -1,6 +1,5 @@
-import { validate } from 'bdvp'
+import { Behavior, validate } from 'bdvp'
 import globby from 'globby'
-import { Behavior } from '../../bdvp/dist/Behavior';
 
 const loadDoc = async (path: string): Promise<Behavior> => {
   return (await import(path)).default
