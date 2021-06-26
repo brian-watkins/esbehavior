@@ -116,11 +116,16 @@ export function failingCondition(description: string, details: FailureDetails): 
       "  ---",
       `  operator: ${details.operator}`,
       `  expected: ${details.expected}`,
-      `  actual:   ${details.actual}`,
-      "  stack: |-",
-      `    ${details.stack}`,
-      "  ...",
+      `  actual:   ${details.actual}`
     ]
+      .concat(details.at ? [ `  at: ${details.at}` ] : [])
+      .concat([
+        "  stack: |-"
+      ])
+      .concat(details.stack.split("\n").map(l => `    ${l}`))
+      .concat([
+        "  ..."
+      ])
   }
 }
 
@@ -184,6 +189,7 @@ export interface FailureDetails {
   expected: string,
   actual: string,
   operator: string,
+  at?: string,
   stack: string
 }
 
@@ -195,11 +201,16 @@ export function invalidObservation(description: string, details: FailureDetails)
       "  ---",
       `  operator: ${details.operator}`,
       `  expected: ${details.expected}`,
-      `  actual:   ${details.actual}`,
-      "  stack: |-",
-      `    ${details.stack}`,
-      "  ...",
+      `  actual:   ${details.actual}`
     ]
+      .concat(details.at ? [ `  at: ${details.at}` ] : [])
+      .concat([
+        "  stack: |-"
+      ])
+      .concat(details.stack.split("\n").map(l => `    ${l}`))
+      .concat([
+        "  ..."
+      ])
   }
 }
 

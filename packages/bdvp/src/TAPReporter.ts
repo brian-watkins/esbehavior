@@ -80,9 +80,19 @@ export class TAPReporter implements Reporter {
     this.writer.writeLine(`  operator: ${failure.operator}`)
     this.writer.writeLine(`  expected: ${this.stringify(failure.expected)}`)
     this.writer.writeLine(`  actual:   ${this.stringify(failure.actual)}`)
+    this.writeClaimReference(failure.stack)
     this.writer.writeLine(`  stack: |-`)
     this.writeMultiline('    ', failure.stack)
     this.writer.writeLine('  ...')
+  }
+
+  private writeClaimReference(stack: string) {
+    const lines = stack.split("\n")
+    const claim = lines.findIndex((line) => line.includes("Condition.execute") || line.includes("Effect.execute"))
+    if (claim > -1) {
+      const start = lines[claim].indexOf("at ")
+      this.writer.writeLine(`  at: ${lines[claim].substring(start + 3)}`)
+    }
   }
 
   private stringify(value: any): string {
