@@ -14,10 +14,10 @@ export class ConsoleWriter implements Writer {
 }
 
 export interface Failure {
-  operator: string
-  expected: any
-  actual: any
-  stack: string
+  operator?: string
+  expected?: any
+  actual?: any
+  stack?: string
 }
 
 export interface Reporter {
