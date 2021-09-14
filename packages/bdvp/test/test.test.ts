@@ -128,7 +128,7 @@ test("it runs conditions", async () => {
       example({ init: () => ({ val: 7 }) })
         .description("multiple conditions")
         .script({
-          assume: [
+          prepare: [
             condition("the value is incremented", (context) => { context.val++ }),
             condition("the value is incremented", (context) => { context.val++ }),
             condition("the value is incremented", (context) => { context.val++ })

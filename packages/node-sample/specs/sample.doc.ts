@@ -7,7 +7,7 @@ export default
     example({ init: () => new Thing() })
       .description("comparing some numbers")
       .script({
-        assume: [
+        prepare: [
           condition("something happens", () => { }),
           condition("something else happens", () => { })
         ],

@@ -118,4 +118,4 @@ export class TAPReporter implements Reporter {
   }
 }
 
-const ASSUMPTION_DESIGNATOR = "Assume:"
+const ASSUMPTION_DESIGNATOR = "Prepare:"

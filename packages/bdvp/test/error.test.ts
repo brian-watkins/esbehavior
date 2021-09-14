@@ -10,7 +10,7 @@ test("multiline actual and expected in error with bad TAP-like characters", asyn
       example()
         .description("failing condition with multiline TAP-like output in actual")
         .script({
-          assume: [
+          prepare: [
             condition("something throws an error", () => {
               const error: any = new Error()
               error.expected = "# Behavior: A Sample Behavior\n# Example: Comparing some numbers\n# tests 1\n# pass 1\n# fail 0\n# skip 0"
@@ -53,7 +53,7 @@ test("non-string actual and expected", async () => {
       example()
         .description("failing condition with non-string actual and expected")
         .script({
-          assume: [
+          prepare: [
             condition("something throws an error", () => {
               const error: any = new Error()
               error.expected = 7
@@ -96,7 +96,7 @@ test("raw error is thrown", async () => {
       example()
         .description("failing condition with non-string actual and expected")
         .script({
-          assume: [
+          prepare: [
             condition("something throws an error", () => {
               const error: any = new Error()
               error.stack = "funny stack"
@@ -133,7 +133,7 @@ test("no error is thrown", async () => {
       example()
         .description("failing condition with non-string actual and expected")
         .script({
-          assume: [
+          prepare: [
             condition("something throws an error", () => {
               throw { message: "some message" }
             }),
@@ -168,7 +168,7 @@ test("provide reference to the failure in the Condition block", async () => {
       example()
         .description("failing condition with non-string actual and expected")
         .script({
-          assume: [
+          prepare: [
             condition("something throws an error", () => {
               const error: any = new Error()
               error.expected = 7

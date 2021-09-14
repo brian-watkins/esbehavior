@@ -11,7 +11,7 @@ test("it runs multiple scripts in one example", async () => {
       example({ init: () => ({ touched: 0 }) })
         .description("multiple scripts")
         .script({
-          assume: [
+          prepare: [
             condition("it touches the context", (context) => { context.touched++ })
           ],
           observe: [
@@ -21,7 +21,7 @@ test("it runs multiple scripts in one example", async () => {
           ]
         })
         .andThen({
-          assume: [
+          prepare: [
             condition("it touches the context again", (context) => { context.touched++ }),
             condition("it touches the context and again", (context) => { context.touched++ })
           ],
@@ -70,7 +70,7 @@ test("it skips all scripts when the example is skipped", async () => {
       skip.example({ init: () => ({ touched: 0 }) })
         .description("example is skipped")
         .script({
-          assume: [
+          prepare: [
             condition("it touches the context", (context) => { context.touched++ })
           ],
           observe: [
@@ -80,7 +80,7 @@ test("it skips all scripts when the example is skipped", async () => {
           ]
         })
         .andThen({
-          assume: [
+          prepare: [
             condition("it touches the context again", (context) => { context.touched++ }),
             condition("it touches the context and again", (context) => { context.touched++ })
           ],
@@ -119,7 +119,7 @@ test("it skips remaining plans if any observations fail", async () => {
       example({ init: () => ({ touched: 0 }) })
         .description("first script fails")
         .script({
-          assume: [
+          prepare: [
             condition("it touches the context", (context) => { context.touched++ })
           ],
           observe: [
@@ -129,7 +129,7 @@ test("it skips remaining plans if any observations fail", async () => {
           ]
         })
         .andThen({
-          assume: [
+          prepare: [
             condition("it touches the context again", (context) => { context.touched++ })
           ],
           observe: [
@@ -144,7 +144,7 @@ test("it skips remaining plans if any observations fail", async () => {
           ]
         })
         .andThen({
-          assume: [
+          prepare: [
             condition("it touches the context another time", (context) => { context.touched++ }),
             condition("it touches the context for the last time", (context) => { context.touched++ })
           ],

@@ -24,7 +24,7 @@ const appBehavior =
     example({ init: () => new TestApp() })
       .description("a particular case")
       .script({
-        assume: [
+        prepare: [
           condition("the app loads", (app) => await app.start())
         ],
         observe: [

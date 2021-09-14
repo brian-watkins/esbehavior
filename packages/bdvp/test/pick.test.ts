@@ -11,7 +11,7 @@ test("it only runs the picked example", async () => {
       example()
         .description("not important")
         .script({
-          assume: [
+          prepare: [
             condition("it does something bad", () => {
               throw new Error("BAD WHEN!!")
             })
@@ -43,7 +43,7 @@ test("it only runs the picked example", async () => {
       })
         .description("should be skipped")
         .script({
-          assume: [
+          prepare: [
             condition("it does something that it shouldn't", () => {
               throw new Error("BAD!")
             })

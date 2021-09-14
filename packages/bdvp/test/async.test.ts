@@ -107,7 +107,7 @@ test("it runs async conditions", async () => {
       })
         .description("multiple conditions")
         .script({
-          assume: [
+          prepare: [
             condition("the value is incremented", (context) => { context.val++ }),
             condition("the value is incremented asynchronously", (context) => {
               return new Promise(resolve => {

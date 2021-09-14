@@ -16,7 +16,7 @@ test("it skips an example", async () => {
       })
         .description("not important")
         .script({
-          assume: [
+          prepare: [
             condition("it does something bad", () => {
               throw new Error("BAD WHEN!!")
             })

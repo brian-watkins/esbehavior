@@ -26,7 +26,7 @@ export async function validate<T>(behaviors: Array<Behavior>, options: Validatio
   try {
     const results = await behaviorCollection.run(reporter)
     reporter.end(results)
-  } catch (err) {
+  } catch (err: any) {
     reporter.terminate(err)
   }
 }

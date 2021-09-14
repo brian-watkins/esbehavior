@@ -10,7 +10,7 @@ test("failing condition", async () => {
       example()
         .description("failing condition")
         .script({
-          assume: [
+          prepare: [
             condition("something throws an error", () => {
               const error: any = new Error()
               error.expected = "something"

@@ -24,7 +24,7 @@ test("it tears down the context", async () => {
       })
         .description("teardown context")
         .script({
-          assume: [
+          prepare: [
             condition("it touches the context", (context) => { context.touched++ })
           ],
           observe: [

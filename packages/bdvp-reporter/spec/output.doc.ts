@@ -20,7 +20,7 @@ const standardScenario =
   example(appContext)
     .description("simple behavior with example")
     .script({
-      assume: [
+      prepare: [
         condition("a behavior is validated", async (testableApp) => {
           await testableApp.validateBehavior(simpleBehavior)
         })

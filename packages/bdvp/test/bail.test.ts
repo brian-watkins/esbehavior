@@ -17,7 +17,7 @@ test("failing context generator function", async () => {
       })
         .description("context generator throws exception")
         .script({
-          assume: [
+          prepare: [
             condition("it does nothing", (context) => { })
           ],
           observe: [
@@ -52,7 +52,7 @@ test("failing context teardown function", async () => {
       })
         .description("context teardown throws exception")
         .script({
-          assume: [
+          prepare: [
             condition("it does nothing", (context) => { })
           ],
           observe: [
