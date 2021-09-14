@@ -88,6 +88,78 @@ test("non-string actual and expected", async () => {
   ], "it escapes line breaks in the actual output")
 })
 
+test("raw error is thrown", async () => {
+  const writer = new FakeReportWriter()
+
+  await validate([
+    behavior("behavior", [
+      example()
+        .description("failing condition with non-string actual and expected")
+        .script({
+          assume: [
+            condition("something throws an error", () => {
+              const error: any = new Error()
+              error.stack = "funny stack"
+              throw error
+            }),
+            condition("there is another condition", () => { })
+          ],
+          observe: [
+            effect("does something that will get skipped", () => { })
+          ]
+        })
+    ])
+  ], { writer })
+
+  writer.expectTestReportWith([
+    behaviorReport("behavior", [
+      exampleReport("failing condition with non-string actual and expected", [
+        failingCondition("something throws an error", {
+          stack: "funny stack"
+        }),
+        skippedCondition("there is another condition")
+      ], [
+        skippedObservation("does something that will get skipped")
+      ])
+    ])
+  ], "it prints only the stack")
+})
+
+test("no error is thrown", async () => {
+  const writer = new FakeReportWriter()
+
+  await validate([
+    behavior("behavior", [
+      example()
+        .description("failing condition with non-string actual and expected")
+        .script({
+          assume: [
+            condition("something throws an error", () => {
+              throw { message: "some message" }
+            }),
+            condition("there is another condition", () => { })
+          ],
+          observe: [
+            effect("does something that will get skipped", () => { })
+          ]
+        })
+    ])
+  ], { writer })
+
+  writer.expectTestReportWith([
+    behaviorReport("behavior", [
+      exampleReport("failing condition with non-string actual and expected", [
+        failingCondition("something throws an error", {
+          error: "{\"message\":\"some message\"}"
+        }),
+        skippedCondition("there is another condition")
+      ], [
+        skippedObservation("does something that will get skipped")
+      ])
+    ])
+  ], "it prints only the stack")
+})
+
 test("provide reference to the failure in the Condition block", async () => {
   const writer = new FakeReportWriter()
 

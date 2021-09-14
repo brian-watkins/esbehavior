@@ -77,12 +77,23 @@ export class TAPReporter implements Reporter {
   recordInvalidClaim(description: string, failure: Failure) {
     this.writer.writeLine(`not ok ${description}`)
     this.writer.writeLine('  ---')
-    this.writer.writeLine(`  operator: ${failure.operator}`)
-    this.writer.writeLine(`  expected: ${this.stringify(failure.expected)}`)
-    this.writer.writeLine(`  actual:   ${this.stringify(failure.actual)}`)
-    this.writeClaimReference(failure.stack)
-    this.writer.writeLine(`  stack: |-`)
-    this.writeMultiline('    ', failure.stack)
+    if (failure.operator) {
+      this.writer.writeLine(`  operator: ${failure.operator}`)
+    }
+    if (failure.expected) {
+      this.writer.writeLine(`  expected: ${this.stringify(failure.expected)}`)
+    }
+    if (failure.actual) {
+      this.writer.writeLine(`  actual:   ${this.stringify(failure.actual)}`)
+    }
+    if (failure.stack) {
+      this.writeClaimReference(failure.stack)
+      this.writer.writeLine(`  stack: |-`)
+      this.writeMultiline('    ', failure.stack)  
+    } else {
+      this.writer.writeLine(`  error: ${JSON.stringify(failure)}`)
+    }
+
     this.writer.writeLine('  ...')
   }
 

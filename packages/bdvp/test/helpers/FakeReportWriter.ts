@@ -111,21 +111,7 @@ export function passingCondition(description: string): TestCondition {
 export function failingCondition(description: string, details: FailureDetails): TestCondition {
   return {
     type: ConditionType.Invalid,
-    lines: () => [
-      `not ok ${ASSUMPTION_DESIGNATOR} ${description}`,
-      "  ---",
-      `  operator: ${details.operator}`,
-      `  expected: ${details.expected}`,
-      `  actual:   ${details.actual}`
-    ]
-      .concat(details.at ? [ `  at: ${details.at}` ] : [])
-      .concat([
-        "  stack: |-"
-      ])
-      .concat(details.stack.split("\n").map(l => `    ${l}`))
-      .concat([
-        "  ..."
-      ])
+    lines: () => errorLines(`${ASSUMPTION_DESIGNATOR} ${description}`, details)
   }
 }
 
@@ -139,7 +125,7 @@ export function skippedCondition(description: string): TestCondition {
 }
 
 export function exampleReport(description: string | null, conditions: Array<TestCondition>, observations: Array<TestObservation>): TestExample {
-  return exampleScript((description ? [`# Example: ${description}`] : [ "# Example" ]), conditions, observations)
+  return exampleScript((description ? [`# Example: ${description}`] : ["# Example"]), conditions, observations)
 }
 
 export function anotherScript(conditions: Array<TestCondition>, observations: Array<TestObservation>): TestExample {
@@ -163,7 +149,7 @@ function exampleScript(description: Array<string>, conditions: Array<TestConditi
 
 export function failureReport(failureReason: string): TestExample {
   return {
-    lines: () => [ `Bail out! ${failureReason}` ],
+    lines: () => [`Bail out! ${failureReason}`],
     results: () => emptyResults
   }
 }
@@ -186,32 +172,42 @@ export function validObservation(description: string): TestObservation {
 }
 
 export interface FailureDetails {
-  expected: string,
-  actual: string,
-  operator: string,
+  expected?: string,
+  actual?: string,
+  operator?: string,
   at?: string,
-  stack: string
+  stack?: string,
+  error?: string
 }
 
 export function invalidObservation(description: string, details: FailureDetails): TestObservation {
   return {
     type: ObservationType.Invalid,
-    lines: () => [
-      `not ok ${description}`,
-      "  ---",
-      `  operator: ${details.operator}`,
-      `  expected: ${details.expected}`,
-      `  actual:   ${details.actual}`
-    ]
-      .concat(details.at ? [ `  at: ${details.at}` ] : [])
-      .concat([
-        "  stack: |-"
-      ])
-      .concat(details.stack.split("\n").map(l => `    ${l}`))
-      .concat([
-        "  ..."
-      ])
+    lines: () => errorLines(description, details)
   }
+}
+
+function errorLines(description: string, details: FailureDetails): Array<string> {
+  let output = [
+    `not ok ${description}`,
+    "  ---"
+  ]
+    .concat(details.operator ? [`  operator: ${details.operator}`] : [])
+    .concat(details.expected ? [`  expected: ${details.expected}`] : [])
+    .concat(details.actual ? [`  actual:   ${details.actual}`] : [])
+    .concat(details.at ? [`  at: ${details.at}`] : [])
+    .concat(details.error ? [`  error: ${details.error}`] : [])
+
+  if (details.stack) {
+    output = output.concat([
+      "  stack: |-"
+    ])
+      .concat(details.stack.split("\n").map(l => `    ${l}`))
+  }
+
+  return output.concat([
+    "  ..."
+  ])
 }
 
 export function skippedObservation(description: string): TestObservation {
