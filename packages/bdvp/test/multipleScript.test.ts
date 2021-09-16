@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { validate, example, effect, condition, skip, behavior } from '../src/index.js'
-import { anotherScript, behaviorReport, exampleReport, FakeReportWriter, invalidObservation, passingCondition, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReportWriter.js'
+import { validate, example, effect, condition, skip, behavior, step } from '../src/index.js'
+import { anotherScript, behaviorReport, exampleReport, FakeReportWriter, invalidObservation, passingCondition, passingStep, skippedCondition, skippedObservation, skippedStep, validObservation } from './helpers/FakeReportWriter.js'
 
 test("it runs multiple scripts in one example", async () => {
   const writer = new FakeReportWriter()
@@ -132,6 +132,9 @@ test("it skips remaining plans if any observations fail", async () => {
           prepare: [
             condition("it touches the context again", (context) => { context.touched++ })
           ],
+          perform: [
+            step("it touches the context again", (context) => { context.touched++ })
+          ],
           observe: [
             effect("the second script fails", (context) => {
               const error: any = new Error()
@@ -145,8 +148,10 @@ test("it skips remaining plans if any observations fail", async () => {
         })
         .andThen({
           prepare: [
-            condition("it touches the context another time", (context) => { context.touched++ }),
-            condition("it touches the context for the last time", (context) => { context.touched++ })
+            condition("it touches the context another time", (context) => { context.touched++ })
+          ],
+          perform: [
+            step("it touches the context for the last time", (context) => { context.touched++ })
           ],
           observe: [
             effect("the second script would fail if not skipped", (context) => {
@@ -166,6 +171,7 @@ test("it skips remaining plans if any observations fail", async () => {
       ]),
       anotherScript([
         passingCondition("it touches the context again"),
+        passingStep("it touches the context again"),
       ], [
         invalidObservation("the second script fails", {
           operator: "equals", expected: "\"something\"", actual: "\"nothing\"", stack: "stack"
@@ -173,7 +179,7 @@ test("it skips remaining plans if any observations fail", async () => {
       ]),
       anotherScript([
         skippedCondition("it touches the context another time"),
-        skippedCondition("it touches the context for the last time"),
+        skippedStep("it touches the context for the last time"),
       ], [
         skippedObservation("the second script would fail if not skipped")
       ])

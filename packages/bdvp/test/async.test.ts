@@ -3,7 +3,6 @@ import * as assert from 'uvu/assert'
 import { behaviorReport, FakeReportWriter, invalidObservation, passingCondition, exampleReport, validObservation } from './helpers/FakeReportWriter.js'
 import { validate, example, effect, condition, behavior } from '../src/index.js'
 import { expect } from 'chai'
-import { AssertionError } from 'assert'
 
 test("it runs an example with an async given", async () => {
   const writer = new FakeReportWriter()

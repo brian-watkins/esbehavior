@@ -60,7 +60,7 @@ enum ObservationType {
   Valid, Invalid, Skipped
 }
 
-enum ConditionType {
+enum AssumptionType {
   Valid, Invalid, Skipped
 }
 
@@ -92,47 +92,72 @@ function sumResults(total: ObservationResults, scenario: TestExample) {
   }
 }
 
-export interface TestCondition {
-  type: ConditionType
+export interface TestAssumption {
+  type: AssumptionType
   lines(): Array<string>
 }
 
-const ASSUMPTION_DESIGNATOR = "Prepare:"
+const CONDITION_DESIGNATOR = "Prepare:"
+const STEP_DESIGNATOR = "Perform:"
 
-export function passingCondition(description: string): TestCondition {
+function passingAssumption(description: string): TestAssumption {
   return {
-    type: ConditionType.Valid,
+    type: AssumptionType.Valid,
     lines: () => {
-      return [`ok ${ASSUMPTION_DESIGNATOR} ${description}`]
+      return [`ok ${description}`]
     }
   }
 }
 
-export function failingCondition(description: string, details: FailureDetails): TestCondition {
+function failingAssumption(description: string, details: FailureDetails): TestAssumption {
   return {
-    type: ConditionType.Invalid,
-    lines: () => errorLines(`${ASSUMPTION_DESIGNATOR} ${description}`, details)
+    type: AssumptionType.Invalid,
+    lines: () => errorLines(description, details)
   }
 }
 
-export function skippedCondition(description: string): TestCondition {
+function skippedAssumption(description: string): TestAssumption {
   return {
-    type: ConditionType.Skipped,
+    type: AssumptionType.Skipped,
     lines: () => [
-      `ok ${ASSUMPTION_DESIGNATOR} ${description} # SKIP`
+      `ok ${description} # SKIP`
     ]
   }
 }
 
-export function exampleReport(description: string | null, conditions: Array<TestCondition>, observations: Array<TestObservation>): TestExample {
+export function passingCondition(description: string): TestAssumption {
+  return passingAssumption(`${CONDITION_DESIGNATOR} ${description}`)
+}
+
+export function failingCondition(description: string, details: FailureDetails): TestAssumption {
+  return failingAssumption(`${CONDITION_DESIGNATOR} ${description}`, details)
+}
+
+export function skippedCondition(description: string): TestAssumption {
+  return skippedAssumption(`${CONDITION_DESIGNATOR} ${description}`)
+}
+
+export function passingStep(description: string): TestAssumption {
+  return passingAssumption(`${STEP_DESIGNATOR} ${description}`)
+}
+
+export function skippedStep(description: string): TestAssumption {
+  return skippedAssumption(`${STEP_DESIGNATOR} ${description}`)
+}
+
+export function failingStep(description: string, details: FailureDetails): TestAssumption {
+  return failingAssumption(`${STEP_DESIGNATOR} ${description}`, details)
+}
+
+export function exampleReport(description: string | null, conditions: Array<TestAssumption>, observations: Array<TestObservation>): TestExample {
   return exampleScript((description ? [`# Example: ${description}`] : ["# Example"]), conditions, observations)
 }
 
-export function anotherScript(conditions: Array<TestCondition>, observations: Array<TestObservation>): TestExample {
+export function anotherScript(conditions: Array<TestAssumption>, observations: Array<TestObservation>): TestExample {
   return exampleScript([], conditions, observations)
 }
 
-function exampleScript(description: Array<string>, conditions: Array<TestCondition>, observations: Array<TestObservation>): TestExample {
+function exampleScript(description: Array<string>, conditions: Array<TestAssumption>, observations: Array<TestObservation>): TestExample {
   return {
     lines: () => {
       return description
@@ -140,9 +165,9 @@ function exampleScript(description: Array<string>, conditions: Array<TestConditi
         .concat(observations.reduce((lines: Array<string>, observation) => lines.concat(observation.lines()), []))
     },
     results: () => ({
-      valid: conditionsMatching(conditions, ConditionType.Valid) + observationsMatching(observations, ObservationType.Valid),
-      invalid: conditionsMatching(conditions, ConditionType.Invalid) + observationsMatching(observations, ObservationType.Invalid),
-      skipped: conditionsMatching(conditions, ConditionType.Skipped) + observationsMatching(observations, ObservationType.Skipped)
+      valid: conditionsMatching(conditions, AssumptionType.Valid) + observationsMatching(observations, ObservationType.Valid),
+      invalid: conditionsMatching(conditions, AssumptionType.Invalid) + observationsMatching(observations, ObservationType.Invalid),
+      skipped: conditionsMatching(conditions, AssumptionType.Skipped) + observationsMatching(observations, ObservationType.Skipped)
     })
   }
 }
@@ -154,7 +179,7 @@ export function failureReport(failureReason: string): TestExample {
   }
 }
 
-function conditionsMatching(conditions: Array<TestCondition>, expectedType: ConditionType): number {
+function conditionsMatching(conditions: Array<TestAssumption>, expectedType: AssumptionType): number {
   return conditions.filter(condition => condition.type === expectedType).length
 }
 

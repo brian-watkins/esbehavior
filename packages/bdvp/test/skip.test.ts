@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { validate, skip, effect, example, condition, behavior } from '../src/index.js'
-import { behaviorReport, FakeReportWriter, exampleReport, skippedCondition, skippedObservation, validObservation } from './helpers/FakeReportWriter.js'
+import { validate, skip, effect, example, condition, behavior, step } from '../src/index.js'
+import { behaviorReport, FakeReportWriter, exampleReport, skippedCondition, skippedObservation, validObservation, skippedStep } from './helpers/FakeReportWriter.js'
 
 test("it skips an example", async () => {
   const writer = new FakeReportWriter()
@@ -20,6 +20,9 @@ test("it skips an example", async () => {
             condition("it does something bad", () => {
               throw new Error("BAD WHEN!!")
             })
+          ],
+          perform: [
+            step("it never does this", () => {})
           ],
           observe: [
             effect("will never run this", () => {
@@ -45,7 +48,8 @@ test("it skips an example", async () => {
   writer.expectTestReportWith([
     behaviorReport("something", [
       exampleReport("not important", [
-        skippedCondition("it does something bad")
+        skippedCondition("it does something bad"),
+        skippedStep("it never does this")
       ], [
         skippedObservation("will never run this"),
         skippedObservation("or this")

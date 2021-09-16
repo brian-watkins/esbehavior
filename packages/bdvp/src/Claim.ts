@@ -9,7 +9,7 @@ export class Claim<T> {
     try {
       await waitFor(this.execute(context))
       return new ValidClaim()
-    } catch (failure) {
+    } catch (failure: any) {
       return new InvalidClaim(failure)
     }
   }

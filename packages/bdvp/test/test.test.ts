@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { example, validate, effect, condition, behavior } from '../src/index.js'
-import { passingCondition, behaviorReport, FakeReportWriter, invalidObservation, exampleReport, validObservation } from './helpers/FakeReportWriter.js'
+import { example, validate, effect, condition, behavior, step } from '../src/index.js'
+import { passingCondition, behaviorReport, FakeReportWriter, invalidObservation, exampleReport, validObservation, passingStep } from './helpers/FakeReportWriter.js'
 
 test("it runs a single passing claim", async () => {
   const writer = new FakeReportWriter()
@@ -28,32 +28,6 @@ test("it runs a single passing claim", async () => {
     ])
   ], "it prints the expected output for an example with a single valid observation")
 })
-
-test("it runs an example with no description", async () => {
-  const writer = new FakeReportWriter()
-
-  await validate([
-    behavior("a single example; no description", [
-      example()
-        .script({
-          observe: [
-            effect("does something cool", () => {
-              // nothing
-            })
-          ]
-        })
-    ])
-  ], { writer })
-
-  writer.expectTestReportWith([
-    behaviorReport("a single example; no description", [
-      exampleReport(null, [], [
-        validObservation("does something cool")
-      ])
-    ])
-  ], "it prints the expected output for an example with a single valid observation")
-})
-
 
 test("it runs more than one passing claim", async () => {
   const writer = new FakeReportWriter()
@@ -120,18 +94,20 @@ test("it runs a failing test", async () => {
   ], "it prints the expected output for an example with an observation that throws an AssertionError")
 })
 
-test("it runs conditions", async () => {
+test("it runs assumptions", async () => {
   const writer = new FakeReportWriter()
 
   await validate([
     behavior("a single test", [
-      example({ init: () => ({ val: 7 }) })
-        .description("multiple conditions")
+      example({ init: () => ({ val: 0 }) })
+        .description("multiple assumptions")
         .script({
           prepare: [
-            condition("the value is incremented", (context) => { context.val++ }),
-            condition("the value is incremented", (context) => { context.val++ }),
-            condition("the value is incremented", (context) => { context.val++ })
+            condition("the value is set", (context) => { context.val = 8 })
+          ],
+          perform: [
+            step("the value is incremented", (context) => { context.val++ }),
+            step("the value is incremented", (context) => { context.val++ })
           ],
           observe: [
             effect("it compares the correct number", (context) => {
@@ -144,15 +120,51 @@ test("it runs conditions", async () => {
 
   writer.expectTestReportWith([
     behaviorReport("a single test", [
-      exampleReport("multiple conditions", [
-        passingCondition("the value is incremented"),
-        passingCondition("the value is incremented"),
-        passingCondition("the value is incremented")
+      exampleReport("multiple assumptions", [
+        passingCondition("the value is set"),
+        passingStep("the value is incremented"),
+        passingStep("the value is incremented")
       ], [
         validObservation("it compares the correct number")
       ])
     ])
-  ], "it prints the expected output for an example with multiple conditions")
+  ], "it prints the expected output for an example with multiple assumptions")
+})
+
+test("it runs example with no description", async () => {
+  const writer = new FakeReportWriter()
+
+  await validate([
+    behavior("a single test", [
+      example({ init: () => ({ val: 0 }) })
+        .script({
+          prepare: [
+            condition("the value is set", (context) => { context.val = 8 })
+          ],
+          perform: [
+            step("the value is incremented", (context) => { context.val++ }),
+            step("the value is incremented", (context) => { context.val++ })
+          ],
+          observe: [
+            effect("it compares the correct number", (context) => {
+              expect(context.val).to.equal(10)
+            })
+          ]
+        })
+    ])
+  ], { writer })
+
+  writer.expectTestReportWith([
+    behaviorReport("a single test", [
+      exampleReport(null, [
+        passingCondition("the value is set"),
+        passingStep("the value is incremented"),
+        passingStep("the value is incremented")
+      ], [
+        validObservation("it compares the correct number")
+      ])
+    ])
+  ], "it prints the expected output for an example with no description")
 })
 
 test.run()

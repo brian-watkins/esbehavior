@@ -1,5 +1,5 @@
+import { Assumption } from "./Assumption.js"
 import { ClaimResult } from "./Claim.js"
-import { Condition } from "./Condition.js"
 import { Effect } from "./Effect.js"
 import { Summary } from "./Summary.js"
 
@@ -30,8 +30,8 @@ export interface Reporter {
   startExample(description?: string): void
   endExample(): void
 
-  recordAssumption<T>(condition: Condition<T>, result: ClaimResult): void
-  skipAssumption<T>(condition: Condition<T>): void
+  recordAssumption<T>(assumption: Assumption<T>, result: ClaimResult): void
+  skipAssumption<T>(assumption: Assumption<T>): void
   
   recordObservation<T>(effect: Effect<T>, result: ClaimResult): void
   skipObservation<T>(effect: Effect<T>): void

@@ -2,10 +2,8 @@ import { Context, RunMode, ExampleBuilder, BDVPExampleBuilder, ExampleSetupBuild
 import { ConsoleWriter, Writer } from "./Reporter.js"
 import { Behavior, BehaviorCollection } from "./Behavior.js"
 import { Effect } from "./Effect.js"
-import { Condition } from "./Condition.js"
 import { TAPReporter } from "./TAPReporter.js"
-
-export { Condition } from "./Condition.js"
+import { Condition, Step } from "./Assumption.js"
 export { Effect } from "./Effect.js"
 export { Behavior } from "./Behavior.js"
 export { Example, Script, Context, ExampleBuilder, ExampleSetupBuilder, ExampleScriptBuilder, ExampleScriptsBuilder } from "./Example.js"
@@ -55,6 +53,10 @@ export const pick = {
 
 export function condition<T>(description: string, validate: (context: T) => void | Promise<void>): Condition<T> {
   return new Condition(description, validate)
+}
+
+export function step<T>(description: string, validate: (context: T) => void | Promise<void>): Step<T> {
+  return new Step(description, validate)
 }
 
 export function effect<T>(description: string, validate: (context: T) => void | Promise<void>): Effect<T> {

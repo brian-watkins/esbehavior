@@ -2,7 +2,7 @@ import { Reporter } from "./Reporter.js"
 import { addInvalid, addSkipped, addValid, emptySummary, Summary } from "./Summary.js"
 import { waitFor } from "./waitFor.js"
 import { Effect } from "./Effect.js"
-import { Condition } from "./Condition.js"
+import { Assumption, Condition, Step } from "./Assumption.js"
 
 export interface Example {
   runMode: RunMode
@@ -11,7 +11,7 @@ export interface Example {
 }
 
 export interface Script<T> {
-  conditions: Array<Condition<T>>
+  assumptions: Array<Assumption<T>>
   effects: Array<Effect<T>>
 }
 
@@ -30,15 +30,15 @@ export interface ExampleBuilder<T> {
 
 export interface ExampleSetupBuilder<T> extends ExampleBuilder<T> {
   description(description: string): ExampleScriptBuilder<T>
-  script({ prepare, observe }: { prepare?: Array<Condition<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T>
+  script({ prepare, perform, observe }: { prepare?: Array<Condition<T>>, perform?: Array<Step<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T>
 }
 
 export interface ExampleScriptBuilder<T> extends ExampleBuilder<T> {
-  script({ prepare, observe }: { prepare?: Array<Condition<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T>
+  script({ prepare, perform, observe }: { prepare?: Array<Condition<T>>, perform?: Array<Step<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T>
 }
 
 export interface ExampleScriptsBuilder<T> extends ExampleBuilder<T> {
-  andThen({ prepare, observe }: { prepare?: Array<Condition<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T>
+  andThen({ prepare, perform, observe }: { prepare?: Array<Condition<T>>, perform?:Array<Step<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T>
 }
 
 export class BDVPExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetupBuilder<T>, ExampleScriptBuilder<T>, ExampleScriptsBuilder<T> {
@@ -53,13 +53,13 @@ export class BDVPExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetupBui
     return this
   }
 
-  script({ prepare = [], observe }: { prepare?: Array<Condition<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T> {
-    this.example.setScript({ conditions: prepare, effects: observe })
+  script({ prepare = [], perform = [], observe }: { prepare?: Array<Condition<T>>, perform?: Array<Step<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T> {
+    this.example.setScript({ assumptions: (prepare as Array<Assumption<T>>).concat(perform), effects: observe })
     return this
   }
 
-  andThen({ prepare = [], observe }: { prepare?: Array<Condition<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T> {
-    this.example.addScript({ conditions: prepare, effects: observe })
+  andThen({ prepare = [], perform = [], observe }: { prepare?: Array<Condition<T>>, perform?: Array<Step<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T> {
+    this.example.addScript({ assumptions: (prepare as Array<Assumption<T>>).concat(perform), effects: observe })
     return this
   }
 
@@ -112,7 +112,7 @@ export class BDVPExample<T> implements Example {
 }
 
 interface Mode<T> {
-  handleAssumption(run: ExampleRun<T>, condition: Condition<T>): Promise<void>
+  handleAssumption(run: ExampleRun<T>, assumption: Assumption<T>): Promise<void>
   handleObservation(run: ExampleRun<T>, effect: Effect<T>): Promise<void>
 }
 
@@ -135,8 +135,8 @@ class ExampleRun<T> {
   }
 
   private async runScript(script: Script<T>): Promise<void> {
-    for (let condition of script.conditions) {
-      await this.mode.handleAssumption(this, condition)
+    for (let assumption of script.assumptions) {
+      await this.mode.handleAssumption(this, assumption)
     }
 
     for (let effect of script.effects) {
