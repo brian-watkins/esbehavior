@@ -1,7 +1,8 @@
 {
   "name": "node-sample",
   "version": "1.0.0",
-  "description": "",
+  "description": "Demonstrate testing a Node app",
+  "private": "true",
   "main": "index.js",
   "type": "module",
   "scripts": {

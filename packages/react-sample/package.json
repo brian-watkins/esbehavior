@@ -1,7 +1,8 @@
 {
   "name": "react-sample",
   "version": "1.0.0",
-  "description": "",
+  "description": "Demonstrate testing a React app",
+  "private": "true",
   "main": "index.js",
   "scripts": {
     "test": "./specs/runner.mjs | tap-difflet",
