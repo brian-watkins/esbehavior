@@ -96,7 +96,7 @@ tap-mocha-reporter, tap-difflet, etc) to display validation output.
 esbehavior works well with Typescript; type hints should (hopefully) provide some
 documentation of the dsl.
 
-For more examples, see the [tests](./test).
+For more examples, see the [tests](https://github.com/brian-watkins/esbehavior/tree/main/packages/esbehavior/test).
 
 
 ## Running Behaviors
@@ -113,5 +113,5 @@ it's easy to read.
 
 You can use `pick` to run selected examples or `skip` to ignore selected examples.
 
-Here's a sample with [behaviors evaluated in node](../node-sample) and here's
-a sample for a React app with [behaviors evaluated in a browser](../react-sample).
+Here's a sample with [behaviors evaluated in node](https://github.com/brian-watkins/esbehavior/tree/main/packages/node-sample) and here's
+a sample for a React app with [behaviors evaluated in a browser](https://github.com/brian-watkins/esbehavior/tree/main/packages/react-sample).
