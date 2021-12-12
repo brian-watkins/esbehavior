@@ -30,15 +30,15 @@ export interface ExampleBuilder<T> {
 
 export interface ExampleSetupBuilder<T> extends ExampleBuilder<T> {
   description(description: string): ExampleScriptBuilder<T>
-  script({ prepare, perform, observe }: { prepare?: Array<Condition<T>>, perform?: Array<Step<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T>
+  script({ prepare, perform, observe }: { prepare?: Array<Condition<T>>, perform?: Array<Step<T>>, observe?: Array<Effect<T>> }): ExampleScriptsBuilder<T>
 }
 
 export interface ExampleScriptBuilder<T> extends ExampleBuilder<T> {
-  script({ prepare, perform, observe }: { prepare?: Array<Condition<T>>, perform?: Array<Step<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T>
+  script({ prepare, perform, observe }: { prepare?: Array<Condition<T>>, perform?: Array<Step<T>>, observe?: Array<Effect<T>> }): ExampleScriptsBuilder<T>
 }
 
 export interface ExampleScriptsBuilder<T> extends ExampleBuilder<T> {
-  andThen({ prepare, perform, observe }: { prepare?: Array<Condition<T>>, perform?:Array<Step<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T>
+  andThen({ prepare, perform, observe }: { prepare?: Array<Condition<T>>, perform?:Array<Step<T>>, observe?: Array<Effect<T>> }): ExampleScriptsBuilder<T>
 }
 
 export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetupBuilder<T>, ExampleScriptBuilder<T>, ExampleScriptsBuilder<T> {
@@ -53,12 +53,12 @@ export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetu
     return this
   }
 
-  script({ prepare = [], perform = [], observe }: { prepare?: Array<Condition<T>>, perform?: Array<Step<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T> {
+  script({ prepare = [], perform = [], observe = [] }: { prepare?: Array<Condition<T>>, perform?: Array<Step<T>>, observe?: Array<Effect<T>> }): ExampleScriptsBuilder<T> {
     this.example.setScript({ assumptions: (prepare as Array<Assumption<T>>).concat(perform), effects: observe })
     return this
   }
 
-  andThen({ prepare = [], perform = [], observe }: { prepare?: Array<Condition<T>>, perform?: Array<Step<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T> {
+  andThen({ prepare = [], perform = [], observe = [] }: { prepare?: Array<Condition<T>>, perform?: Array<Step<T>>, observe?: Array<Effect<T>> }): ExampleScriptsBuilder<T> {
     this.example.addScript({ assumptions: (prepare as Array<Assumption<T>>).concat(perform), effects: observe })
     return this
   }
