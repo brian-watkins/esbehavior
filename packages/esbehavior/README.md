@@ -38,7 +38,10 @@ const appBehavior =
       .description("a particular case")
       .script({
         prepare: [
-          condition("the app loads", (app) => await app.start())
+          condition("the app loads", (app) => app.start())
+        ],
+        perform: [
+          step("the user clicks", (app) => app.doClick())
         ],
         observe: [
           effect("things are shown", (app) => {
@@ -51,20 +54,62 @@ const appBehavior =
 validate([appBehavior])
 ```
 
-Some notes:
-- Use any assertion library you like (chai, power assert, proclaim, node assert, etc)
-- esbehavior can run in node or the browser
-- esbehavior produces TAP output, so you can use any TAP reporter (tap-spec, tap-mocha-reporter, tap-difflet, etc)
+Each behavior is made up of one or more examples. Each example has an optional
+context, an optional description, and a script.
+
+The context is initialized at the start of an example and passed to each function in the script.
+Use the context to store any state for this exmple. A teardown function can be provided,
+which will run at the end of the example.
+
+The script is a sequence of `Claims`; each claim has a description and a function that
+takes the context as an argument and returns `void` or `Promise<void>`. esbehavior will
+wait for any returned promise to resolve before evaluating the next claim.
+
+There are three types of claims: `Conditions`, `Steps`, and `Effects`. esbehavior
+exposes `condition`, `step`, and `effect` functions to generate these types of claims.
+But it's possible to extend the relevant class to make domain specific claims.
+
+A script is organized into three parts, each of which is optional. `prepare` specifies
+one or more `Conditions` that should be run first, `perform` specifies
+one or more `Steps` that are executed as part of the example, and
+`observe` specifies one or more `Effects` that should be observable as
+a result of performing the steps. Use `andThen` to chain multiple scripts as
+part of one example.
+
+If any exception is thrown when executing a `Condition`
+or a `Step`, then the example is considered invalid, an error will be reported, and
+the remainder of the script will be skipped. By contrast, an attempt will be made to
+observe each `Effect`, no matter if doing so results in an exception. So, a single
+example can have multiple invalid effects.
+
+Generally speaking, `Effect` functions make assertions about the state of things,
+but you can include assertions in conditions and steps, as well, if it makes
+sense to do so.
+
+Use any assertion library you like (chai, power assert, proclaim, node assert, etc).
+
+esbehavior can run in node or the browser.
+
+esbehavior produces TAP output, so you can use any TAP reporter (tap-spec,
+tap-mocha-reporter, tap-difflet, etc) to display validation output.
+
+esbehavior works well with Typescript; type hints should (hopefully) provide some
+documentation of the dsl.
+
+For more examples, see the [tests](./test).
 
 
 ## Running Behaviors
 
-Once you have written some behaviors, pass them to the `validate` function to run them.
-The idea here is that you will provide a 'runner' that collects your behaviors and
-evaluates them using the `validate` function. This runner script could be executed
-with node, or it could be executed in a browser context. `validate` will run each
-example in sequence and print the results in TAP output to the console. Typically, you
-will then pipe the output to a TAP reporter so that it's easy to read.
+esbehavior is a DSL that helps you write programs that document the behavior of
+your software. In order to execute the examples, you will need to write a 'runner'
+script that gathers the appropriate examples and passes them to the `validate` function,
+which will run each example in sequence and print the results in TAP output to
+the console. 
+
+This 'runner' script could be executed with node, or it could be executed in a
+browser context. Typically, you will then pipe the output to a TAP reporter so that
+it's easy to read.
 
 You can use `pick` to run selected examples or `skip` to ignore selected examples.
 
