@@ -1,5 +1,5 @@
 import outputDoc from "./output.doc"
-import { validate } from 'bdvp'
+import { validate } from 'esbehavior'
 
 validate([
   outputDoc

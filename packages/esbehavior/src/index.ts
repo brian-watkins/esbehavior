@@ -1,4 +1,4 @@
-import { Context, RunMode, ExampleBuilder, BDVPExampleBuilder, ExampleSetupBuilder } from "./Example.js"
+import { Context, RunMode, ExampleBuilder, BehaviorExampleBuilder, ExampleSetupBuilder } from "./Example.js"
 import { ConsoleWriter, Writer } from "./Reporter.js"
 import { Behavior, BehaviorCollection } from "./Behavior.js"
 import { Effect } from "./Effect.js"
@@ -36,18 +36,18 @@ export function behavior<T>(description: string, examples: Array<ExampleBuilder<
 const voidContext: Context<any> = { init: () => {} }
 
 export function example<T = void>(context: Context<T> = voidContext): ExampleSetupBuilder<T> {
-  return new BDVPExampleBuilder(RunMode.Normal, context)
+  return new BehaviorExampleBuilder(RunMode.Normal, context)
 }
 
 export const skip = {
   example<T = void>(context: Context<T> = voidContext): ExampleSetupBuilder<T> {
-    return new BDVPExampleBuilder(RunMode.Skipped, context)
+    return new BehaviorExampleBuilder(RunMode.Skipped, context)
   }
 }
 
 export const pick = {
   example<T = void>(context: Context<T> = voidContext): ExampleSetupBuilder<T> {
-    return new BDVPExampleBuilder(RunMode.Picked, context)
+    return new BehaviorExampleBuilder(RunMode.Picked, context)
   }
 }
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { BDVPReporter } from "../dist/BDVPReporter.js"
+import { BehaviorReporter } from "../dist/BehaviorReporter.js"
 import process from "process"
 
-const reporter = new BDVPReporter()
+const reporter = new BehaviorReporter()
 
 process.stdin
   .pipe(reporter)

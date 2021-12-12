@@ -35,11 +35,11 @@ page.on("console", console.log)
 page.on("pageerror", console.log)
 
 await page.goto(`http://localhost:${port}/index.html`)
-await page.evaluate((files) => bdvp_run(files), files)
+await page.evaluate((files) => esbehavior_run(files), files)
 
 if (mode === "watch" || mode === "debug") {
   page.on("load", (page) => {
-    page.evaluate((files) => bdvp_run(files), files)
+    page.evaluate((files) => esbehavior_run(files), files)
   })
 } else {
   await browser.close()

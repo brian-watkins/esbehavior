@@ -1,5 +1,5 @@
 import assert from 'proclaim'
-import { behavior, condition, effect, example, skip } from 'bdvp'
+import { behavior, condition, effect, example, skip } from 'esbehavior'
 import { Thing } from '../src/Thing.js'
 
 export default

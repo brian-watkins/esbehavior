@@ -8,15 +8,15 @@
   "scripts": {
     "test:raw": "node --loader ts-node/esm --no-warnings ./specs/runner.ts",
     "test:tap": "npm run test:raw | tap-difflet",
-    "test": "npm run test:raw | bdvp-reporter"
+    "test": "npm run test:raw | esbehavior-reporter"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/proclaim": "^3.6.2",
-    "bdvp": "^1.0.0",
-    "bdvp-reporter": "^1.0.0",
+    "esbehavior": "^1.0.0",
+    "esbehavior-reporter": "^1.0.0",
     "globby": "^11.0.3",
     "proclaim": "^3.6.0",
     "tap-dancer": "^0.3.1",

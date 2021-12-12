@@ -177,14 +177,14 @@ test("provide reference to the failure in the Condition block", async () => {
               error.stack = `AssertionError: 'Stuff!' == 8
 at Function.proclaim.equal (/Users/bwatkins/work/beep/packages/node-sample/node_modules/proclaim/lib/proclaim.js:38:4)
 at Condition.execute (file:///Users/bwatkins/work/beep/packages/node-sample/specs/sample.doc.ts:19:20)
-at Effect.validate (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Claim.js:9:32)
-at ValidateMode.handleObservation (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Example.js:104:48)
-at ExampleRun.runScript (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Example.js:79:29)
-at ExampleRun.execute (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Example.js:68:13)
-at BDVPExample.run (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Example.js:49:9)
-at Behavior.execute (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Behavior.js:41:34)
-at BehaviorCollection.run (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Behavior.js:16:35)
-at validate (file:///Users/bwatkins/work/beep/packages/bdvp/dist/index.js:13:25)`
+at Effect.validate (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Claim.js:9:32)
+at ValidateMode.handleObservation (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Example.js:104:48)
+at ExampleRun.runScript (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Example.js:79:29)
+at ExampleRun.execute (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Example.js:68:13)
+at BehaviorExample.run (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Example.js:49:9)
+at Behavior.execute (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Behavior.js:41:34)
+at BehaviorCollection.run (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Behavior.js:16:35)
+at validate (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/index.js:13:25)`
               throw error
             }),
             condition("there is another condition", () => { })
@@ -207,14 +207,14 @@ at validate (file:///Users/bwatkins/work/beep/packages/bdvp/dist/index.js:13:25)
           stack: `AssertionError: 'Stuff!' == 8
 at Function.proclaim.equal (/Users/bwatkins/work/beep/packages/node-sample/node_modules/proclaim/lib/proclaim.js:38:4)
 at Condition.execute (file:///Users/bwatkins/work/beep/packages/node-sample/specs/sample.doc.ts:19:20)
-at Effect.validate (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Claim.js:9:32)
-at ValidateMode.handleObservation (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Example.js:104:48)
-at ExampleRun.runScript (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Example.js:79:29)
-at ExampleRun.execute (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Example.js:68:13)
-at BDVPExample.run (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Example.js:49:9)
-at Behavior.execute (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Behavior.js:41:34)
-at BehaviorCollection.run (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Behavior.js:16:35)
-at validate (file:///Users/bwatkins/work/beep/packages/bdvp/dist/index.js:13:25)`
+at Effect.validate (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Claim.js:9:32)
+at ValidateMode.handleObservation (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Example.js:104:48)
+at ExampleRun.runScript (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Example.js:79:29)
+at ExampleRun.execute (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Example.js:68:13)
+at BehaviorExample.run (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Example.js:49:9)
+at Behavior.execute (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Behavior.js:41:34)
+at BehaviorCollection.run (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Behavior.js:16:35)
+at validate (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/index.js:13:25)`
         }),
         skippedCondition("there is another condition")
       ], [
@@ -242,14 +242,14 @@ test("provide reference to the failure in the Execute block", async () => {
               error.stack = `AssertionError: 'Stuff!' == 8
 at Function.proclaim.equal (/Users/bwatkins/work/beep/packages/node-sample/node_modules/proclaim/lib/proclaim.js:38:4)
 at Effect.execute (file:///Users/bwatkins/work/beep/packages/node-sample/specs/sample.doc.ts:19:20)
-at Effect.validate (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Claim.js:9:32)
-at ValidateMode.handleObservation (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Example.js:104:48)
-at ExampleRun.runScript (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Example.js:79:29)
-at ExampleRun.execute (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Example.js:68:13)
-at BDVPExample.run (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Example.js:49:9)
-at Behavior.execute (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Behavior.js:41:34)
-at BehaviorCollection.run (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Behavior.js:16:35)
-at validate (file:///Users/bwatkins/work/beep/packages/bdvp/dist/index.js:13:25)`
+at Effect.validate (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Claim.js:9:32)
+at ValidateMode.handleObservation (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Example.js:104:48)
+at ExampleRun.runScript (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Example.js:79:29)
+at ExampleRun.execute (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Example.js:68:13)
+at BehaviorExample.run (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Example.js:49:9)
+at Behavior.execute (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Behavior.js:41:34)
+at BehaviorCollection.run (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Behavior.js:16:35)
+at validate (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/index.js:13:25)`
               throw error
             })
           ]
@@ -268,14 +268,14 @@ at validate (file:///Users/bwatkins/work/beep/packages/bdvp/dist/index.js:13:25)
           stack: `AssertionError: 'Stuff!' == 8
 at Function.proclaim.equal (/Users/bwatkins/work/beep/packages/node-sample/node_modules/proclaim/lib/proclaim.js:38:4)
 at Effect.execute (file:///Users/bwatkins/work/beep/packages/node-sample/specs/sample.doc.ts:19:20)
-at Effect.validate (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Claim.js:9:32)
-at ValidateMode.handleObservation (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Example.js:104:48)
-at ExampleRun.runScript (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Example.js:79:29)
-at ExampleRun.execute (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Example.js:68:13)
-at BDVPExample.run (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Example.js:49:9)
-at Behavior.execute (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Behavior.js:41:34)
-at BehaviorCollection.run (file:///Users/bwatkins/work/beep/packages/bdvp/dist/Behavior.js:16:35)
-at validate (file:///Users/bwatkins/work/beep/packages/bdvp/dist/index.js:13:25)`
+at Effect.validate (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Claim.js:9:32)
+at ValidateMode.handleObservation (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Example.js:104:48)
+at ExampleRun.runScript (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Example.js:79:29)
+at ExampleRun.execute (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Example.js:68:13)
+at BehaviorExample.run (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Example.js:49:9)
+at Behavior.execute (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Behavior.js:41:34)
+at BehaviorCollection.run (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/Behavior.js:16:35)
+at validate (file:///Users/bwatkins/work/beep/packages/esbehavior/dist/index.js:13:25)`
         })
       ])
     ])

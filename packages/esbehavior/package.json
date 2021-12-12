@@ -1,14 +1,14 @@
 {
-  "name": "bdvp",
+  "name": "esbehavior",
   "version": "1.0.0",
-  "description": "behavior documentation and verification program",
+  "description": "A framework for writing executable documentation",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
   "scripts": {
     "prepublish": "npm run build",
     "build": "rm -rf ./dist && tsc",
-    "test": "node --loader ts-node/esm ./test/index.ts"
+    "test": "node --loader ts-node/esm --no-warnings ./test/index.ts"
   },
   "author": "Brian Watkins",
   "license": "MIT",

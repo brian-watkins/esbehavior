@@ -1,8 +1,8 @@
 # React Sample
 
-Simple react app (created with Neutrino). BDVP documents are in [specs](./specs).
+Simple react app (created with Neutrino). esbehavior documents are in [specs](./specs).
 
-Vite is used to process and serve the bdvp documents; they are validated in a browser
+Vite is used to process and serve the esbehavior documents; they are validated in a browser
 environment provided by playwright.
 
 - `npm run test` --> validate the docs once

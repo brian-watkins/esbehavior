@@ -2,7 +2,7 @@
 import Parser from 'tap-parser'
 import { Duplex } from "stream";
 
-export class BDVPReporter extends Duplex {
+export class BehaviorReporter extends Duplex {
   private tapParser
 
   constructor() {

@@ -1,4 +1,4 @@
-import { behavior, effect, example } from 'bdvp'
+import { behavior, effect, example } from 'esbehavior'
 import { testableApp } from './testableApp.jsx'
 
 export default

@@ -1,10 +1,10 @@
 {
-  "name": "bdvp-monorepo",
+  "name": "esbehavior-monorepo",
   "version": "1.0.0",
-  "description": "BDVP is a framework for producing documentation that works.",
+  "description": "esbehavior is a framework for producing executable documentation.",
   "main": "index.js",
   "scripts": {
-    "test": "lerna run test --scope=bdvp --scope=bdvp-reporter"
+    "test": "lerna run test --scope=esbehavior --scope=esbehavior-reporter"
   },
   "author": "Brian Watkins",
   "license": "MIT",

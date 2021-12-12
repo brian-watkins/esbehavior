@@ -1,4 +1,4 @@
-import { example, condition, effect, behavior } from 'bdvp'
+import { example, condition, effect, behavior } from 'esbehavior'
 import expect from 'proclaim'
 import { appContext } from './TestableApp'
 

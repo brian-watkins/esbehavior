@@ -1,18 +1,18 @@
-import { validate, Writer, Behavior, Context } from "bdvp"
+import { validate, Writer, Behavior, Context } from "esbehavior"
 import { Readable, Writable } from "stream"
-import { BDVPReporter } from "../src/BDVPReporter"
+import { BehaviorReporter } from "../src/BehaviorReporter"
 
 export const appContext: Context<TestableApp> = { init: () => new TestableApp() }
 
 export class TestableApp {
-  private bdvpReporter = new BDVPReporter()
+  private behaviorReporter = new BehaviorReporter()
   private consumer = new OutputConsumer()
 
   async validateBehavior(behavior: Behavior): Promise<void> {
     const reportWriter = new ReportWriter()
     await validate([ behavior ], { writer: reportWriter })
     const reportStream = reportWriter.stream()
-    reportStream.pipe(this.bdvpReporter).pipe(this.consumer)
+    reportStream.pipe(this.behaviorReporter).pipe(this.consumer)
     return new Promise(resolve => {
       reportStream.on("close", () => {
         resolve()

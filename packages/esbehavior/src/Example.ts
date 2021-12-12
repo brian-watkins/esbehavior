@@ -41,11 +41,11 @@ export interface ExampleScriptsBuilder<T> extends ExampleBuilder<T> {
   andThen({ prepare, perform, observe }: { prepare?: Array<Condition<T>>, perform?:Array<Step<T>>, observe: Array<Effect<T>> }): ExampleScriptsBuilder<T>
 }
 
-export class BDVPExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetupBuilder<T>, ExampleScriptBuilder<T>, ExampleScriptsBuilder<T> {
-  private example: BDVPExample<T>
+export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetupBuilder<T>, ExampleScriptBuilder<T>, ExampleScriptsBuilder<T> {
+  private example: BehaviorExample<T>
 
   constructor(public runMode: RunMode, context: Context<T>) {
-    this.example = new BDVPExample(runMode, context)
+    this.example = new BehaviorExample(runMode, context)
   }
 
   description(description: string): ExampleScriptBuilder<T> {
@@ -68,7 +68,7 @@ export class BDVPExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetupBui
   }
 }
 
-export class BDVPExample<T> implements Example {
+export class BehaviorExample<T> implements Example {
   private description?: string
   private scripts: Array<Script<T>> = []
 
