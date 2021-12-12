@@ -68,5 +68,5 @@ will then pipe the output to a TAP reporter so that it's easy to read.
 
 You can use `pick` to run selected examples or `skip` to ignore selected examples.
 
-Here's a sample with [behaviors evaluated in node](./packages/node-sample) and here's
-a sample for a React app with [behaviors evaluated in a browser](./packages/react-sample).
+Here's a sample with [behaviors evaluated in node](../packages/node-sample) and here's
+a sample for a React app with [behaviors evaluated in a browser](../packages/react-sample).
