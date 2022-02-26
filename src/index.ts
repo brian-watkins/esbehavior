@@ -13,7 +13,7 @@ export interface ValidationOptions {
 }
 
 export async function validate<T>(behaviors: Array<Behavior>, options: ValidationOptions = {}): Promise<void> {
-  const reporter = options.reporter || new TAPReporter(new ConsoleWriter())
+  const reporter = options.reporter ?? new TAPReporter()
 
   reporter.start()
 

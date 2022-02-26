@@ -1,11 +1,15 @@
 import { Assumption, Condition } from "./Assumption.js"
 import { ClaimResult } from "./Claim.js"
 import { Effect } from "./Effect.js"
-import { Failure, Reporter, Writer } from "./Reporter.js"
+import { ConsoleWriter, Failure, Reporter, Writer } from "./Reporter.js"
 import { Summary } from "./Summary.js"
 
 export class TAPReporter implements Reporter {
-  constructor (private writer: Writer) {}
+  private writer: Writer
+
+  constructor (writer?: Writer) {
+    this.writer = writer ?? new ConsoleWriter()
+  }
   
   start(): void {
     this.writer.writeLine("TAP version 13")
