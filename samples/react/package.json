@@ -23,8 +23,8 @@
   "devDependencies": {
     "@neutrinojs/react": "^9.5.0",
     "@testing-library/react": "^11.2.7",
-    "esbehavior": "^1.0.0",
     "chai": "^4.3.4",
+    "esbehavior": "file:../..",
     "globby": "^11.0.3",
     "neutrino": "^9.5.0",
     "playwright": "^1.11.1",
