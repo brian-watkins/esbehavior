@@ -140,15 +140,15 @@ class ExampleRun<T> {
   }
 
   private async runScript(script: Script<T>): Promise<void> {
-    for (let condition of script.prepare || []) {
+    for (let condition of script.prepare ?? []) {
       await this.mode.handleAssumption(this, condition)
     }
 
-    for (let step of script.perform || []) {
+    for (let step of script.perform ?? []) {
       await this.mode.handleAssumption(this, step)
     }
 
-    for (let effect of script.observe || []) {
+    for (let effect of script.observe ?? []) {
       await this.mode.handleObservation(this, effect)
     }
   }
