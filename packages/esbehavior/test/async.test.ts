@@ -1,11 +1,11 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { behaviorReport, FakeReportWriter, invalidObservation, passingCondition, exampleReport, validObservation } from './helpers/FakeReportWriter.js'
 import { validate, example, effect, condition, behavior } from '../src/index.js'
 import { expect } from 'chai'
+import { FakeReporter, withBehavior, withExample, withInvalidClaim, withValidClaim } from './helpers/FakeReporter.js'
 
 test("it runs an example with an async given", async () => {
-  const writer = new FakeReportWriter()
+  const reporter = new FakeReporter()
 
   await validate([
     behavior("a single test", [
@@ -25,19 +25,25 @@ test("it runs an example with an async given", async () => {
           ]
         })
     ])
-  ], { writer })
+  ], { reporter })
 
-  writer.expectTestReportWith([
-    behaviorReport("a single test", [
-      exampleReport("async given", [], [
-        validObservation("compares the right numbers")
+  reporter.expectReport([
+    withBehavior("a single test", [
+      withExample("async given", [
+        withValidClaim("compares the right numbers")
       ])
     ])
-  ], "it prints the expected output for an example with an async given")
+  ])
+
+  reporter.expectSummary({
+    valid: 1,
+    invalid: 0,
+    skipped: 0
+  })
 })
 
 test("it runs an example with an async context generator and async observation", async () => {
-  const writer = new FakeReportWriter()
+  const reporter = new FakeReporter()
 
   let teardownValue = 0
 
@@ -68,8 +74,12 @@ test("it runs an example with an async context generator and async observation",
               try {
                 expect(fetchedValue).to.equal(15)
               } catch (err: any) {
-                err.stack = "fake stack"
-                throw err
+                throw {
+                  expected: err.expected,
+                  actual: err.actual,
+                  operator: err.operator,
+                  stack: "fake stack"
+                }
               }
             }),
             effect("does something sync", (actual) => {
@@ -78,27 +88,33 @@ test("it runs an example with an async context generator and async observation",
           ]
         })
     ])
-  ], { writer })
+  ], { reporter })
 
   assert.equal(teardownValue, 9, "it executes the async teardown function on the context")
 
-  writer.expectTestReportWith([
-    behaviorReport("a single test", [
-      exampleReport("async context and observation", [], [
-        invalidObservation("async compares the right numbers", {
+  reporter.expectReport([
+    withBehavior("a single test", [
+      withExample("async context and observation", [
+        withInvalidClaim("async compares the right numbers", {
           operator: "strictEqual",
-          expected: "15",
-          actual: "12",
+          expected: 15,
+          actual: 12,
           stack: "fake stack"
         }),
-        validObservation("does something sync")
+        withValidClaim("does something sync")
       ])
     ])
-  ], "it prints the expected output for an example with an async context generator and teardown and async observation")
+  ])
+
+  reporter.expectSummary({
+    valid: 1,
+    invalid: 1,
+    skipped: 0
+  })
 })
 
 test("it runs async conditions", async () => {
-  const writer = new FakeReportWriter()
+  const reporter = new FakeReporter()
 
   await validate([
     behavior("a single test", [
@@ -126,19 +142,24 @@ test("it runs async conditions", async () => {
           ]
         })
     ])
-  ], { writer })
+  ], { reporter })
 
-  writer.expectTestReportWith([
-    behaviorReport("a single test", [
-      exampleReport("multiple conditions", [
-        passingCondition("the value is incremented"),
-        passingCondition("the value is incremented asynchronously"),
-        passingCondition("the value is incremented")
-      ], [
-        validObservation("compares the correct number")
+  reporter.expectReport([
+    withBehavior("a single test", [
+      withExample("multiple conditions", [
+        withValidClaim("the value is incremented"),
+        withValidClaim("the value is incremented asynchronously"),
+        withValidClaim("the value is incremented"),
+        withValidClaim("compares the correct number"),
       ])
     ])
-  ], "it prints the expected output for an example with multiple conditions")
+  ])
+
+  reporter.expectSummary({
+    valid: 4,
+    invalid: 0,
+    skipped: 0
+  })
 })
 
 test.run()

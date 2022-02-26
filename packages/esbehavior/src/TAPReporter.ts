@@ -20,7 +20,7 @@ export class TAPReporter implements Reporter {
     this.writeComment(`skip ${summary.skipped}`)
   }
 
-  writeComment(comment: string) {
+  private writeComment(comment: string) {
     this.writer.writeLine(`# ${comment}`)
   }
 
@@ -79,11 +79,11 @@ export class TAPReporter implements Reporter {
     this.writer.writeLine(`ok ${effect.description} # SKIP`)
   }
 
-  recordValidClaim(description: string) {
+  private recordValidClaim(description: string) {
     this.writer.writeLine(`ok ${description}`)
   }
 
-  recordInvalidClaim(description: string, failure: Failure) {
+  private recordInvalidClaim(description: string, failure: Failure) {
     this.writer.writeLine(`not ok ${description}`)
     this.writer.writeLine('  ---')
     if (failure.operator) {
@@ -108,7 +108,7 @@ export class TAPReporter implements Reporter {
 
   private writeClaimReference(stack: string) {
     const lines = stack.split("\n")
-    const claim = lines.findIndex((line) => line.includes("Condition.execute") || line.includes("Effect.execute"))
+    const claim = lines.findIndex((line) => line.includes("Condition.execute") || line.includes("Step.execute") || line.includes("Effect.execute"))
     if (claim > -1) {
       const start = lines[claim].indexOf("at ")
       this.writer.writeLine(`  at: ${lines[claim].substring(start + 3)}`)

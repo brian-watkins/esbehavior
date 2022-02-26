@@ -1,10 +1,10 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import { validate, skip, effect, example, condition, behavior, step } from '../src/index.js'
-import { behaviorReport, FakeReportWriter, exampleReport, skippedCondition, skippedObservation, validObservation, skippedStep } from './helpers/FakeReportWriter.js'
+import { FakeReporter, withBehavior, withExample, withSkippedClaim, withValidClaim } from './helpers/FakeReporter.js'
 
 test("it skips an example", async () => {
-  const writer = new FakeReportWriter()
+  const reporter = new FakeReporter()
 
   await validate([
     behavior("something", [
@@ -43,22 +43,27 @@ test("it skips an example", async () => {
           ]
         })
     ])
-  ], { writer })
+  ], { reporter })
 
-  writer.expectTestReportWith([
-    behaviorReport("something", [
-      exampleReport("not important", [
-        skippedCondition("it does something bad"),
-        skippedStep("it never does this")
-      ], [
-        skippedObservation("will never run this"),
-        skippedObservation("or this")
+  reporter.expectReport([
+    withBehavior("something", [
+      withExample("not important", [
+        withSkippedClaim("it does something bad"),
+        withSkippedClaim("it never does this"),
+        withSkippedClaim("will never run this"),
+        withSkippedClaim("or this"),
       ]),
-      exampleReport("important", [], [
-        validObservation("will run this")
+      withExample("important", [
+        withValidClaim("will run this")
       ])
     ])
-  ], "it skips all observations when an example is skipped")
+  ])
+
+  reporter.expectSummary({
+    valid: 1,
+    invalid: 0,
+    skipped: 4
+  })
 })
 
 test.run()

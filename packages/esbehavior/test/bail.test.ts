@@ -1,18 +1,18 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import { validate, example, effect, condition, behavior } from '../src/index.js'
-import { behaviorReport, exampleReport, failureReport, FakeReportWriter, passingCondition, validObservation } from './helpers/FakeReportWriter.js'
+import { FakeReporter, withBehavior, withExample, withFailure, withValidClaim } from './helpers/FakeReporter.js'
 
 test("failing context generator function", async () => {
-  const writer = new FakeReportWriter()
+  const reporter = new FakeReporter()
 
   await validate([
     behavior("failing context generator", [
       example({
         init: () => {
-          const error: any = new Error()
-          error.stack = "funny stack"
-          throw error
+          throw {
+            stack: "funny stack"
+          }
         }
       })
         .description("context generator throws exception")
@@ -27,27 +27,27 @@ test("failing context generator function", async () => {
           ]
         })
     ])
-  ], { writer })
+  ], { reporter })
 
-  writer.expectTestReportThatBails([
-    behaviorReport("failing context generator", [
-      exampleReport("context generator throws exception", [], []),
-      failureReport("funny stack")
-    ])
-  ], "it bails out when the context generator throws an error")
+  reporter.expectReport([
+    withBehavior("failing context generator", [
+      withExample("context generator throws exception", [])
+    ]),
+    withFailure({ stack: "funny stack" })
+  ])
 })
 
 test("failing context teardown function", async () => {
-  const writer = new FakeReportWriter()
+  const reporter = new FakeReporter()
 
   await validate([
     behavior("failing context teardown", [
       example({
         init: () => 7,
         teardown: () => {
-          const error: any = new Error()
-          error.stack = "awesome stack"
-          throw error
+          throw {
+            stack: "awesome stack"
+          }
         }
       })
         .description("context teardown throws exception")
@@ -71,16 +71,17 @@ test("failing context teardown function", async () => {
           ]
         })
     ])
-  ], { writer })
+  ], { reporter })
 
-  writer.expectTestReportThatBails([
-    behaviorReport("failing context teardown", [
-      exampleReport("context teardown throws exception", [
-        passingCondition("it does nothing")
-      ], [
-        validObservation("it works")
-      ]),
-      failureReport("awesome stack")
-    ])
-  ], "it bails out when the context generator throws an error")
+  reporter.expectReport([
+    withBehavior("failing context teardown", [
+      withExample("context teardown throws exception", [
+        withValidClaim("it does nothing"),
+        withValidClaim("it works")
+      ])
+    ]),
+    withFailure({ stack: "awesome stack" })
+  ])
 })
+
+test.run()

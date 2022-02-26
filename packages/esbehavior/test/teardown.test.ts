@@ -2,10 +2,10 @@ import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { validate, example, effect, condition, behavior } from '../src/index.js'
-import { FakeReportWriter } from './helpers/FakeReportWriter.js'
+import { FakeReporter } from './helpers/FakeReporter.js'
 
 test("it tears down the context", async () => {
-  const writer = new FakeReportWriter()
+  const reporter = new FakeReporter()
 
   const testContext = {
     touched: 0
@@ -34,7 +34,7 @@ test("it tears down the context", async () => {
           ]
         })
     ])
-  ], { writer })
+  ], { reporter })
 
   assert.equal(testContext.touched, 3, "it runs the teardown function on the context value")
 })

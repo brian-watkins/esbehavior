@@ -58,6 +58,8 @@ export class Behavior {
       summary = addSummary(summary)(exampleSummary)
     }
 
+    reporter.endBehavior()
+
     return summary
   }
 }

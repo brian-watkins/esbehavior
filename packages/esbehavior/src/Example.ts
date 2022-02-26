@@ -10,11 +10,6 @@ export interface Example {
   skip(reporter: Reporter): Promise<Summary>
 }
 
-export interface Script<T> {
-  assumptions: Array<Assumption<T>>
-  effects: Array<Effect<T>>
-}
-
 export interface Context<T> {
   init: () => T | Promise<T>
   teardown?: (context: T) => void | Promise<void>
@@ -28,17 +23,23 @@ export interface ExampleBuilder<T> {
   build(): Example
 }
 
+export interface Script<T> {
+  prepare?: Array<Condition<T>>
+  perform?: Array<Step<T>>
+  observe?: Array<Effect<T>>
+}
+
 export interface ExampleSetupBuilder<T> extends ExampleBuilder<T> {
   description(description: string): ExampleScriptBuilder<T>
-  script({ prepare, perform, observe }: { prepare?: Array<Condition<T>>, perform?: Array<Step<T>>, observe?: Array<Effect<T>> }): ExampleScriptsBuilder<T>
+  script(script: Script<T>): ExampleScriptsBuilder<T>
 }
 
 export interface ExampleScriptBuilder<T> extends ExampleBuilder<T> {
-  script({ prepare, perform, observe }: { prepare?: Array<Condition<T>>, perform?: Array<Step<T>>, observe?: Array<Effect<T>> }): ExampleScriptsBuilder<T>
+  script(script: Script<T>): ExampleScriptsBuilder<T>
 }
 
 export interface ExampleScriptsBuilder<T> extends ExampleBuilder<T> {
-  andThen({ prepare, perform, observe }: { prepare?: Array<Condition<T>>, perform?:Array<Step<T>>, observe?: Array<Effect<T>> }): ExampleScriptsBuilder<T>
+  andThen(script: Script<T>): ExampleScriptsBuilder<T>
 }
 
 export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetupBuilder<T>, ExampleScriptBuilder<T>, ExampleScriptsBuilder<T> {
@@ -53,13 +54,13 @@ export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetu
     return this
   }
 
-  script({ prepare = [], perform = [], observe = [] }: { prepare?: Array<Condition<T>>, perform?: Array<Step<T>>, observe?: Array<Effect<T>> }): ExampleScriptsBuilder<T> {
-    this.example.setScript({ assumptions: (prepare as Array<Assumption<T>>).concat(perform), effects: observe })
+  script(script: Script<T>): ExampleScriptsBuilder<T> {
+    this.example.setScript(script)
     return this
   }
 
-  andThen({ prepare = [], perform = [], observe = [] }: { prepare?: Array<Condition<T>>, perform?: Array<Step<T>>, observe?: Array<Effect<T>> }): ExampleScriptsBuilder<T> {
-    this.example.addScript({ assumptions: (prepare as Array<Assumption<T>>).concat(perform), effects: observe })
+  andThen(script: Script<T>): ExampleScriptsBuilder<T> {
+    this.example.addScript(script)
     return this
   }
 
@@ -97,6 +98,8 @@ export class BehaviorExample<T> implements Example {
 
     await waitFor(this.context.teardown?.(context))
 
+    reporter.endExample()
+
     return run.summary
   }
 
@@ -106,6 +109,8 @@ export class BehaviorExample<T> implements Example {
     const run = new ExampleRun<T>(new SkipMode(), reporter)
     
     await run.execute(this.scripts)
+
+    reporter.endExample()
 
     return run.summary
   }
@@ -135,11 +140,15 @@ class ExampleRun<T> {
   }
 
   private async runScript(script: Script<T>): Promise<void> {
-    for (let assumption of script.assumptions) {
-      await this.mode.handleAssumption(this, assumption)
+    for (let condition of script.prepare || []) {
+      await this.mode.handleAssumption(this, condition)
     }
 
-    for (let effect of script.effects) {
+    for (let step of script.perform || []) {
+      await this.mode.handleAssumption(this, step)
+    }
+
+    for (let effect of script.observe || []) {
       await this.mode.handleObservation(this, effect)
     }
   }

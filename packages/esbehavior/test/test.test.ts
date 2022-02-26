@@ -1,10 +1,10 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import { example, validate, effect, condition, behavior, step } from '../src/index.js'
-import { passingCondition, behaviorReport, FakeReportWriter, invalidObservation, exampleReport, validObservation, passingStep } from './helpers/FakeReportWriter.js'
+import { withBehavior, withExample, FakeReporter, withValidClaim, withInvalidClaim } from './helpers/FakeReporter.js'
 
-test("it runs a single passing claim", async () => {
-  const writer = new FakeReportWriter()
+test("when a single valid claim is observed", async () => {
+  const reporter = new FakeReporter()
 
   await validate([
     behavior("a single test", [
@@ -18,19 +18,25 @@ test("it runs a single passing claim", async () => {
           ]
         })
     ])
-  ], { writer })
+  ], { reporter })
 
-  writer.expectTestReportWith([
-    behaviorReport("a single test", [
-      exampleReport("my first test", [], [
-        validObservation("does something cool")
+  reporter.expectReport([
+    withBehavior("a single test", [
+      withExample("my first test", [
+        withValidClaim("does something cool")
       ])
     ])
-  ], "it prints the expected output for an example with a single valid observation")
+  ])
+
+  reporter.expectSummary({
+    valid: 1,
+    invalid: 0,
+    skipped: 0
+  })
 })
 
-test("it runs more than one passing claim", async () => {
-  const writer = new FakeReportWriter()
+test("when multiple valid claims are observed", async () => {
+  const reporter = new FakeReporter()
 
   await validate([
     behavior("a single test", [
@@ -47,20 +53,26 @@ test("it runs more than one passing claim", async () => {
           ]
         })
     ])
-  ], { writer })
+  ], { reporter })
 
-  writer.expectTestReportWith([
-    behaviorReport("a single test", [
-      exampleReport("several observations", [], [
-        validObservation("does something cool"),
-        validObservation("does something else cool")
+  reporter.expectReport([
+    withBehavior("a single test", [
+      withExample("several observations", [
+        withValidClaim("does something cool"),
+        withValidClaim("does something else cool")
       ])
     ])
-  ], "it prints the expected output for an example with multiple valid observations")
+  ])
+
+  reporter.expectSummary({
+    valid: 2,
+    invalid: 0,
+    skipped: 0
+  })
 })
 
-test("it runs a failing test", async () => {
-  const writer = new FakeReportWriter()
+test("where an invalid claim is observed", async () => {
+  const reporter = new FakeReporter()
 
   await validate([
     behavior("a single test", [
@@ -69,33 +81,38 @@ test("it runs a failing test", async () => {
         .script({
           observe: [
             effect("does something that fails", () => {
-              const testFailure: any = new Error()
-              testFailure.expected = "something"
-              testFailure.actual = "nothing"
-              testFailure.operator = "equals"
-              testFailure.stack = "fake stack"
-              throw testFailure
+              throw {
+                operator: "equals",
+                expected: "something",
+                actual: "nothing"
+              }
             }),
             effect("passes", () => { })
           ]
         })
     ])
-  ], { writer })
+  ], { reporter })
 
-  writer.expectTestReportWith([
-    behaviorReport("a single test", [
-      exampleReport("failing observation", [], [
-        invalidObservation("does something that fails", {
-          operator: "equals", expected: "\"something\"", actual: "\"nothing\"", stack: "fake stack"
+  reporter.expectReport([
+    withBehavior("a single test", [
+      withExample("failing observation", [
+        withInvalidClaim("does something that fails", {
+          operator: "equals", expected: "something", actual: "nothing"
         }),
-        validObservation("passes")
+        withValidClaim("passes")
       ])
     ])
-  ], "it prints the expected output for an example with an observation that throws an AssertionError")
+  ])
+
+  reporter.expectSummary({
+    valid: 1,
+    invalid: 1,
+    skipped: 0
+  })
 })
 
-test("it runs assumptions", async () => {
-  const writer = new FakeReportWriter()
+test("when the example has valid assumptions", async () => {
+  const reporter = new FakeReporter()
 
   await validate([
     behavior("a single test", [
@@ -116,23 +133,28 @@ test("it runs assumptions", async () => {
           ]
         })
     ])
-  ], { writer })
+  ], { reporter })
 
-  writer.expectTestReportWith([
-    behaviorReport("a single test", [
-      exampleReport("multiple assumptions", [
-        passingCondition("the value is set"),
-        passingStep("the value is incremented"),
-        passingStep("the value is incremented")
-      ], [
-        validObservation("it compares the correct number")
+  reporter.expectReport([
+    withBehavior("a single test", [
+      withExample("multiple assumptions", [
+        withValidClaim("the value is set"),
+        withValidClaim("the value is incremented"),
+        withValidClaim("the value is incremented"),
+        withValidClaim("it compares the correct number")
       ])
     ])
-  ], "it prints the expected output for an example with multiple assumptions")
+  ])
+
+  reporter.expectSummary({
+    valid: 4,
+    invalid: 0,
+    skipped: 0
+  })
 })
 
 test("it runs example with no description", async () => {
-  const writer = new FakeReportWriter()
+  const reporter = new FakeReporter()
 
   await validate([
     behavior("a single test", [
@@ -152,19 +174,24 @@ test("it runs example with no description", async () => {
           ]
         })
     ])
-  ], { writer })
+  ], { reporter })
 
-  writer.expectTestReportWith([
-    behaviorReport("a single test", [
-      exampleReport(null, [
-        passingCondition("the value is set"),
-        passingStep("the value is incremented"),
-        passingStep("the value is incremented")
-      ], [
-        validObservation("it compares the correct number")
+  reporter.expectReport([
+    withBehavior("a single test", [
+      withExample(null, [
+        withValidClaim("the value is set"),
+        withValidClaim("the value is incremented"),
+        withValidClaim("the value is incremented"),
+        withValidClaim("it compares the correct number")
       ])
     ])
-  ], "it prints the expected output for an example with no description")
+  ])
+
+  reporter.expectSummary({
+    valid: 4,
+    invalid: 0,
+    skipped: 0
+  })
 })
 
 test.run()

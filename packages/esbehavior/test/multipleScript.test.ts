@@ -1,10 +1,10 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import { validate, example, effect, condition, skip, behavior, step } from '../src/index.js'
-import { anotherScript, behaviorReport, exampleReport, FakeReportWriter, invalidObservation, passingCondition, passingStep, skippedCondition, skippedObservation, skippedStep, validObservation } from './helpers/FakeReportWriter.js'
+import { FakeReporter, withBehavior, withExample, withInvalidClaim, withSkippedClaim, withValidClaim } from './helpers/FakeReporter.js'
 
 test("it runs multiple scripts in one example", async () => {
-  const writer = new FakeReportWriter()
+  const reporter = new FakeReporter()
 
   await validate([
     behavior("multiple scripts", [
@@ -30,40 +30,42 @@ test("it runs multiple scripts in one example", async () => {
               expect(context.touched).to.equal(3)
             }),
             effect("the second script fails", (context) => {
-              const error: any = new Error()
-              error.expected = "a thing"
-              error.actual = "nothing"
-              error.operator = "equals"
-              error.stack = "cool stack"
-              throw error
+              throw {
+                expected: "a thing",
+                actual: "nothing",
+                operator: "equals",
+                stack: "cool stack"
+              }
             })
           ]
         })
     ])
-  ], { writer })
+  ], { reporter })
 
-  writer.expectTestReportWith([
-    behaviorReport("multiple scripts", [
-      exampleReport("multiple scripts", [
-        passingCondition("it touches the context"),
-      ], [
-        validObservation("the first script works")
-      ]),
-      anotherScript([
-        passingCondition("it touches the context again"),
-        passingCondition("it touches the context and again"),
-      ], [
-        validObservation("part of the second script works"),
-        invalidObservation("the second script fails", {
-          operator: "equals", expected: "\"a thing\"", actual: "\"nothing\"", stack: "cool stack"
+  reporter.expectReport([
+    withBehavior("multiple scripts", [
+      withExample("multiple scripts", [
+        withValidClaim("it touches the context"),
+        withValidClaim("the first script works"),
+        withValidClaim("it touches the context again"),
+        withValidClaim("it touches the context and again"),
+        withValidClaim("part of the second script works"),
+        withInvalidClaim("the second script fails", {
+          operator: "equals", expected: "a thing", actual: "nothing", stack: "cool stack"
         })
       ])
     ])
-  ], "it prints the results of both scripts")
+  ])
+
+  reporter.expectSummary({
+    valid: 5,
+    invalid: 1,
+    skipped: 0
+  })
 })
 
 test("it skips all scripts when the example is skipped", async () => {
-  const writer = new FakeReportWriter()
+  const reporter = new FakeReporter()
 
   await validate([
     behavior("example with multiple scripts", [
@@ -91,28 +93,30 @@ test("it skips all scripts when the example is skipped", async () => {
           ]
         })
     ])
-  ], { writer })
+  ], { reporter })
 
-  writer.expectTestReportWith([
-    behaviorReport("example with multiple scripts", [
-      exampleReport("example is skipped", [
-        skippedCondition("it touches the context"),
-      ], [
-        skippedObservation("the first script works")
-      ]),
-      anotherScript([
-        skippedCondition("it touches the context again"),
-        skippedCondition("it touches the context and again"),
-      ], [
-        skippedObservation("the second script works")
+  reporter.expectReport([
+    withBehavior("example with multiple scripts", [
+      withExample("example is skipped", [
+        withSkippedClaim("it touches the context"),
+        withSkippedClaim("the first script works"),
+        withSkippedClaim("it touches the context again"),
+        withSkippedClaim("it touches the context and again"),
+        withSkippedClaim("the second script works")
       ])
     ])
-  ], "it prints the results of both scripts")
+  ])
+
+  reporter.expectSummary({
+    valid: 0,
+    invalid: 0,
+    skipped: 5
+  })
 })
 
 
 test("it skips remaining plans if any observations fail", async () => {
-  const writer = new FakeReportWriter()
+  const reporter = new FakeReporter()
 
   await validate([
     behavior("multiple scripts", [
@@ -137,12 +141,12 @@ test("it skips remaining plans if any observations fail", async () => {
           ],
           observe: [
             effect("the second script fails", (context) => {
-              const error: any = new Error()
-              error.expected = "something"
-              error.actual = "nothing"
-              error.operator = "equals"
-              error.stack = "stack"
-              throw error
+              throw {
+                expected: "something",
+                actual: "nothing",
+                operator: "equals",
+                stack: "stack"
+              }
             })
           ]
         })
@@ -160,31 +164,30 @@ test("it skips remaining plans if any observations fail", async () => {
           ]
         })
     ])
-  ], { writer })
+  ], { reporter })
 
-  writer.expectTestReportWith([
-    behaviorReport("multiple scripts", [
-      exampleReport("first script fails", [
-        passingCondition("it touches the context")
-      ], [
-        validObservation("the context was touched")
-      ]),
-      anotherScript([
-        passingCondition("it touches the context again"),
-        passingStep("it touches the context again"),
-      ], [
-        invalidObservation("the second script fails", {
-          operator: "equals", expected: "\"something\"", actual: "\"nothing\"", stack: "stack"
-        })
-      ]),
-      anotherScript([
-        skippedCondition("it touches the context another time"),
-        skippedStep("it touches the context for the last time"),
-      ], [
-        skippedObservation("the second script would fail if not skipped")
+  reporter.expectReport([
+    withBehavior("multiple scripts", [
+      withExample("first script fails", [
+        withValidClaim("it touches the context"),
+        withValidClaim("the context was touched"),
+        withValidClaim("it touches the context again"),
+        withValidClaim("it touches the context again"),
+        withInvalidClaim("the second script fails", {
+          operator: "equals", expected: "something", actual: "nothing", stack: "stack"
+        }),
+        withSkippedClaim("it touches the context another time"),
+        withSkippedClaim("it touches the context for the last time"),
+        withSkippedClaim("the second script would fail if not skipped")
       ])
     ])
-  ], "it prints the results of both scripts")
+  ])
+
+  reporter.expectSummary({
+    valid: 4,
+    invalid: 1,
+    skipped: 3
+  })
 })
 
 test.run()
