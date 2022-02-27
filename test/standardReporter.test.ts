@@ -72,6 +72,25 @@ test("multiple examples with valid, skipped, and invalid claims", async () => {
   ])
 })
 
+test("when the validation run is terminated", () => {
+  const writer = new FakeReportWriter()
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+  const error = {
+    message: "some failure",
+    stack: "some stack trace\r\nat some.line.of.code\r\nat another.line.of.code"
+  }
+
+  reporter.terminate(error)
+
+  writer.expectLines([
+    "Failed to validate behaviors!",
+    "  some failure",
+    "  at some.line.of.code",
+    "  at another.line.of.code"
+  ])
+})
+
 
 const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, claimResult: ClaimResult) => void, description: string) => {
   test(`invalid ${name}`, () => {

@@ -43,7 +43,16 @@ export class StandardReporter implements Reporter {
   }
 
   terminate(error: Failure): void {
-    // need to print error
+    this.writer.writeLine(this.format.bold(this.format.red("Failed to validate behaviors!")))
+    this.space()
+    if (error.message) {
+      this.writer.writeLine(indent(1, this.format.red(error.message)))
+      this.space()
+    }
+    if (error.stack) {
+      this.writeStack(error.stack, { indentLevel: 1 })
+      this.space()
+    }
   }
 
   startBehavior(description: string): void {
@@ -117,16 +126,16 @@ export class StandardReporter implements Reporter {
     this.writeStack(error.stack)
   }
 
-  writeStack(stack: string) {
+  writeStack(stack: string, { indentLevel }: { indentLevel: number } = { indentLevel: 2 }) {
     stack
       .split("\n")
       .map(line => line.trim())
       .filter((line) => line.startsWith("at"))
       .forEach(line => {
         if (line.includes("Effect.execute") || line.includes("Condition.execute") || line.includes("Step.execute")) {
-          this.writer.writeLine(indent(2, this.format.cyan(line)))
+          this.writer.writeLine(indent(indentLevel, this.format.cyan(line)))
         } else {
-          this.writer.writeLine(indent(2, this.format.dim(line)))
+          this.writer.writeLine(indent(indentLevel, this.format.dim(line)))
         }
       })
   }

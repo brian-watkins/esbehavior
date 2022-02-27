@@ -8,6 +8,7 @@ export interface Writer {
 }
 
 export interface Failure {
+  message?: string
   operator?: string
   expected?: any
   actual?: any
