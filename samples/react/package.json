@@ -5,9 +5,10 @@
   "private": "true",
   "main": "index.js",
   "scripts": {
-    "test": "./specs/runner.mjs | tap-difflet",
-    "test:watch": "MODE=watch ./specs/runner.mjs | tap-difflet",
-    "test:debug": "MODE=debug ./specs/runner.mjs | tap-difflet",
+    "test": "./specs/runner.mjs",
+    "test:tap": "npm run test | tap-difflet",
+    "test:watch": "MODE=watch ./specs/runner.mjs",
+    "test:debug": "MODE=debug ./specs/runner.mjs",
     "start": "webpack-dev-server --mode development --open",
     "build": "webpack --mode production"
   },

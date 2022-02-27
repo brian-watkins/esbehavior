@@ -18,7 +18,7 @@
     "build": "rm -rf ./dist && tsc",
     "test": "node --loader ts-node/esm --no-warnings ./test/index.ts",
     "test:one": "node --loader ts-node/esm --no-warnings ",
-    "sample:node": "npm run test:tap --prefix samples/node",
+    "sample:node": "npm run test:raw --prefix samples/node",
     "sample:react": "npm run test --prefix samples/react"
   },
   "author": "Brian Watkins",

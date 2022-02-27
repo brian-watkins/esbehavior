@@ -1,9 +1,9 @@
 import { Context, RunMode, ExampleBuilder, BehaviorExampleBuilder, ExampleSetupBuilder } from "./Example.js"
-import { ConsoleWriter, Reporter, Writer } from "./Reporter.js"
+import { Reporter } from "./Reporter.js"
 import { Behavior, BehaviorCollection } from "./Behavior.js"
 import { Effect } from "./Effect.js"
-import { TAPReporter } from "./TAPReporter.js"
 import { Condition, Step } from "./Assumption.js"
+import { StandardReporter } from "./StandardReporter.js"
 export { Effect } from "./Effect.js"
 export { Behavior } from "./Behavior.js"
 export { Example, Script, Context, ExampleBuilder, ExampleSetupBuilder, ExampleScriptBuilder, ExampleScriptsBuilder } from "./Example.js"
@@ -13,7 +13,7 @@ export interface ValidationOptions {
 }
 
 export async function validate<T>(behaviors: Array<Behavior>, options: ValidationOptions = {}): Promise<void> {
-  const reporter = options.reporter ?? new TAPReporter()
+  const reporter = options.reporter ?? new StandardReporter()
 
   reporter.start()
 

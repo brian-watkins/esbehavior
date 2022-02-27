@@ -1,7 +1,8 @@
 import { Assumption, Condition } from "./Assumption.js"
 import { ClaimResult } from "./Claim.js"
+import { ConsoleWriter } from "./ConsoleWriter.js"
 import { Effect } from "./Effect.js"
-import { ConsoleWriter, Failure, Reporter, Writer } from "./Reporter.js"
+import { Failure, Reporter, Writer } from "./Reporter.js"
 import { Summary } from "./Summary.js"
 
 export class TAPReporter implements Reporter {

@@ -7,12 +7,6 @@ export interface Writer {
   writeLine(message: string): void
 }
 
-export class ConsoleWriter implements Writer {
-  writeLine(message: string) {
-    console.log(message)
-  }
-}
-
 export interface Failure {
   operator?: string
   expected?: any

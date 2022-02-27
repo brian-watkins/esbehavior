@@ -4,11 +4,11 @@ import { testableApp } from './testableApp.jsx'
 export default
   behavior("hello", [
     example(testableApp)
-      .description("the app loaded")
+      .description("the app does not have the right text")
       .script({
         observe: [
-          effect("the title shows", (app) => {
-            app.expectTextOnPage("Hello!")
+          effect("the title shows hello", (app) => {
+            app.expectTextOnPage("Hello?!")
           })
         ]
       })

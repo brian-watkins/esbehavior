@@ -7,7 +7,7 @@ export default
       .description("the app loaded")
       .script({
         observe: [
-          effect("the title shows", (app) => {
+          effect("the title shows what we expect", (app) => {
             app.expectTextOnPage("Hello!")
           })
         ]
