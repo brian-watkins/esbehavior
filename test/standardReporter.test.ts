@@ -39,10 +39,10 @@ test("multiple examples with valid, skipped, and invalid claims", async () => {
         .description("skipped case")
         .script({
           prepare: [
-            condition("some skipped condition", () => {})
+            condition("some skipped condition", () => { })
           ],
           perform: [
-            step("some skipped step", () => {})
+            step("some skipped step", () => { })
           ],
           observe: [
             effect("it does not much", () => {
@@ -77,7 +77,7 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
   test(`invalid ${name}`, () => {
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
-  
+
     try {
       expect(7).to.be.lessThan(5)
     } catch (err: any) {
@@ -96,18 +96,36 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
       ])
     }
   })
+
+  test(`invalid ${name} with no actual and expected`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+    const err = {
+      message: "expected things to happen",
+      stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
+    }
+    writeToReport(reporter, new InvalidClaim(err))
+
+    writer.expectLines([
+      `  ✖ ${description}`,
+      "    expected things to happen",
+      "    at some.line.of.code",
+      "    at another.line.of.code"
+    ])
+  })
 }
 
 invalidClaimBehavior("condition", (reporter, claimResult) => {
-  reporter.recordAssumption(condition("some condition", () => {}), claimResult)
+  reporter.recordAssumption(condition("some condition", () => { }), claimResult)
 }, "some condition")
 
 invalidClaimBehavior("step", (reporter, claimResult) => {
-  reporter.recordAssumption(step("some step", () => {}), claimResult)
+  reporter.recordAssumption(step("some step", () => { }), claimResult)
 }, "some step")
 
 invalidClaimBehavior("observation", (reporter, claimResult) => {
-  reporter.recordObservation(effect("some observation", () => {}), claimResult)
+  reporter.recordObservation(effect("some observation", () => { }), claimResult)
 }, "some observation")
 
 

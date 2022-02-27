@@ -99,14 +99,18 @@ export class StandardReporter implements Reporter {
     this.space()
     this.writer.writeLine(indent(2, this.format.red(error.message)))
     this.space()
-    this.writer.writeLine(indent(2, this.format.dim(this.format.underline("Actual"))))
-    this.space()
-    this.writer.writeLine(indent(3, error.actual))
-    this.space()
-    this.writer.writeLine(indent(2, this.format.dim(this.format.underline("Expected"))))
-    this.space()
-    this.writer.writeLine(indent(3, error.expected))
-    this.space()
+    if (error.actual) {
+      this.writer.writeLine(indent(2, this.format.dim(this.format.underline("Actual"))))
+      this.space()
+      this.writer.writeLine(indent(3, error.actual))
+      this.space()  
+    }
+    if (error.expected) {
+      this.writer.writeLine(indent(2, this.format.dim(this.format.underline("Expected"))))
+      this.space()
+      this.writer.writeLine(indent(3, error.expected))
+      this.space()  
+    }
     this.writeStack(error.stack)
   }
 
