@@ -114,6 +114,26 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
       "    at another.line.of.code"
     ])
   })
+
+  test(`invalid ${name} with multi-line message`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+    const err = {
+      message: "expected things to happen\nmore information\r\neven more information.",
+      stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
+    }
+    writeToReport(reporter, new InvalidClaim(err))
+
+    writer.expectLines([
+      `  ✖ ${description}`,
+      "    expected things to happen",
+      "    more information",
+      "    even more information.",
+      "    at some.line.of.code",
+      "    at another.line.of.code"
+    ])
+  })
 }
 
 invalidClaimBehavior("condition", (reporter, claimResult) => {

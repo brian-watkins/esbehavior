@@ -97,7 +97,10 @@ export class StandardReporter implements Reporter {
   writeInvalidClaim(description: string, error: any) {
     this.writer.writeLine(indent(1, this.format.red(this.format.bold(`${failure()} ${description}`))))
     this.space()
-    this.writer.writeLine(indent(2, this.format.red(error.message)))
+    const messageLines = error.message.split(/\r?\n/);
+    for (const line of messageLines) {
+      this.writer.writeLine(indent(2, this.format.red(line)))
+    }
     this.space()
     if (error.actual) {
       this.writer.writeLine(indent(2, this.format.dim(this.format.underline("Actual"))))
