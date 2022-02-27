@@ -4,10 +4,12 @@ import { ConsoleWriter } from "./ConsoleWriter.js";
 import { Effect } from "./Effect.js";
 import { Failure, Reporter, Writer } from "./Reporter.js";
 import { Summary } from "./Summary.js";
+import { BrowserTimer, Timer, TimerFactory } from "./Timer.js";
 
 export interface StandardReporterOptions {
   writer?: Writer
   formatter?: Formatter
+  timer?: Timer
 }
 
 export interface Formatter {
@@ -23,15 +25,20 @@ export interface Formatter {
 export class StandardReporter implements Reporter {
   private writer: Writer
   private format: Formatter
+  private timer: Timer
 
   constructor(options: StandardReporterOptions = {}) {
     this.writer = options.writer ?? new ConsoleWriter()
     this.format = options.formatter ?? new ANSIFormatter()
+    this.timer = options.timer ?? TimerFactory.newTimer()
   }
 
-  start(): void {}
+  start(): void {
+    this.timer.start()
+  }
 
   end(summary: Summary): void {
+    this.timer.stop()
     const total = summary.valid + summary.invalid + summary.skipped
     this.writer.writeLine(this.format.bold(this.format.underline("Summary")))
     this.space()
@@ -39,6 +46,7 @@ export class StandardReporter implements Reporter {
     this.writer.writeLine(`Valid: ${summary.valid}`)
     this.writer.writeLine(`Invalid: ${summary.invalid}`)
     this.writer.writeLine(`Skipped: ${summary.skipped}`)
+    this.writer.writeLine(`Duration: ${this.timer.duration()}ms`)
     this.space()
   }
 

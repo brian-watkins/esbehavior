@@ -6,10 +6,15 @@ import { expect } from 'chai'
 import { InvalidClaim } from '../dist/Claim.js'
 import { Reporter } from '../src/Reporter.js'
 import { ClaimResult } from '../src/Claim.js'
+import { FakeTimer } from './helpers/FakeTimer.js'
 
 test("multiple examples with valid, skipped, and invalid claims", async () => {
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+  const reporter = new StandardReporter({
+    writer,
+    formatter: new FakeFormatter(),
+    timer: new FakeTimer("13")
+  })
 
   await validate([
     behavior("cool behavior", [
@@ -68,7 +73,8 @@ test("multiple examples with valid, skipped, and invalid claims", async () => {
     "Total claims: 7",
     "Valid: 4",
     "Invalid: 0",
-    "Skipped: 3"
+    "Skipped: 3",
+    "Duration: 13ms"
   ])
 })
 
