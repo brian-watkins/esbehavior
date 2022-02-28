@@ -42,19 +42,19 @@ export class StandardReporter implements Reporter {
     const total = summary.valid + summary.invalid + summary.skipped
     this.writer.writeLine(this.format.bold(this.format.underline("Summary")))
     this.space()
-    this.writer.writeLine(`${pluralize(summary.behaviors, 'behavior')}, ${pluralize(summary.examples, 'example')}, ${pluralize(total, 'claim')} (${this.timer.duration()}ms)`)
+    this.writer.writeLine(this.format.bold(`${pluralize(summary.behaviors, 'behavior')}, ${pluralize(summary.examples, 'example')}, ${pluralize(total, 'claim')} ${this.format.dim('('+this.timer.duration()+'ms)')}`))
     this.space()
 
     if (summary.skipped == 0 && summary.invalid == 0) {
-      this.writer.writeLine(this.format.green(pluralize(summary.valid, 'valid claim')))
+      this.writer.writeLine(this.format.bold(this.format.green(check() + " All claims are valid!")))
     }
     
     if (summary.invalid > 0) {
-      this.writer.writeLine(this.format.bold(this.format.red(pluralize(summary.invalid, 'invalid claim'))))
+      this.writer.writeLine(this.format.bold(this.format.red(failure() + " " + pluralize(summary.invalid, 'invalid claim'))))
     }
     
     if (summary.skipped > 0) {
-      this.writer.writeLine(this.format.yellow(pluralize(summary.skipped, 'skipped claim')))
+      this.writer.writeLine(this.format.bold(this.format.yellow("• " + pluralize(summary.skipped, 'skipped claim'))))
     }
 
     this.space()

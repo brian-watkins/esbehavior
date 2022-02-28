@@ -71,7 +71,7 @@ test("multiple examples with valid and skipped claims", async () => {
     "  • it does not much",
     "Summary",
     "1 behavior, 2 examples, 7 claims (13ms)",
-    "3 skipped claims",
+    "• 3 skipped claims",
   ])
 })
 
@@ -86,7 +86,7 @@ test("multiple behaviors, multiple examples, multiple claims", () => {
   writer.expectLines([
     "Summary",
     "3 behaviors, 4 examples, 12 claims (8ms)",
-    "12 valid claims"
+    "✔ All claims are valid!"
   ])
 })
 
@@ -101,7 +101,7 @@ test("multiple behaviors, multiple examples, multiple claims, one skipped", () =
   writer.expectLines([
     "Summary",
     "3 behaviors, 4 examples, 12 claims (8ms)",
-    "1 skipped claim"
+    "• 1 skipped claim"
   ])
 })
 
@@ -116,7 +116,7 @@ test("multiple behaviors, multiple examples, multiple claims, one invalid", () =
   writer.expectLines([
     "Summary",
     "3 behaviors, 4 examples, 12 claims (8ms)",
-    "1 invalid claim"
+    "✖ 1 invalid claim"
   ])
 })
 
@@ -131,7 +131,7 @@ test("multiple behaviors, multiple examples, multiple claims, multiple invalid",
   writer.expectLines([
     "Summary",
     "3 behaviors, 4 examples, 12 claims (8ms)",
-    "2 invalid claims"
+    "✖ 2 invalid claims"
   ])
 })
 
@@ -146,8 +146,8 @@ test("multiple behaviors, multiple examples, multiple claims, one invalid, one s
   writer.expectLines([
     "Summary",
     "3 behaviors, 4 examples, 12 claims (8ms)",
-    "1 invalid claim",
-    "1 skipped claim"
+    "✖ 1 invalid claim",
+    "• 1 skipped claim"
   ])
 })
 
@@ -163,7 +163,7 @@ test("one behavior, one example, one claim", () => {
   writer.expectLines([
     "Summary",
     "1 behavior, 1 example, 1 claim (14ms)",
-    "1 valid claim"
+    "✔ All claims are valid!"
   ])
 })
 
