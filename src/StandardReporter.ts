@@ -50,7 +50,7 @@ export class StandardReporter implements Reporter {
     }
     
     if (summary.invalid > 0) {
-      this.writer.writeLine(this.format.red(pluralize(summary.invalid, 'invalid claim')))
+      this.writer.writeLine(this.format.bold(this.format.red(pluralize(summary.invalid, 'invalid claim'))))
     }
     
     if (summary.skipped > 0) {
