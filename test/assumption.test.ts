@@ -40,6 +40,8 @@ test("failing condition", async () => {
   ])
 
   reporter.expectSummary({
+    behaviors: 1,
+    examples: 1,
     valid: 0,
     invalid: 1,
     skipped: 2, 
@@ -84,6 +86,8 @@ test("failing step", async () => {
   ])
 
   reporter.expectSummary({
+    behaviors: 1,
+    examples: 1,
     valid: 0,
     invalid: 1,
     skipped: 2

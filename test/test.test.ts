@@ -29,6 +29,8 @@ test("when a single valid claim is observed", async () => {
   ])
 
   reporter.expectSummary({
+    behaviors: 1,
+    examples: 1,
     valid: 1,
     invalid: 0,
     skipped: 0
@@ -65,6 +67,8 @@ test("when multiple valid claims are observed", async () => {
   ])
 
   reporter.expectSummary({
+    behaviors: 1,
+    examples: 1,
     valid: 2,
     invalid: 0,
     skipped: 0
@@ -105,6 +109,8 @@ test("where an invalid claim is observed", async () => {
   ])
 
   reporter.expectSummary({
+    behaviors: 1,
+    examples: 1,
     valid: 1,
     invalid: 1,
     skipped: 0
@@ -147,6 +153,8 @@ test("when the example has valid assumptions", async () => {
   ])
 
   reporter.expectSummary({
+    behaviors: 1,
+    examples: 1,
     valid: 4,
     invalid: 0,
     skipped: 0
@@ -188,6 +196,8 @@ test("it runs example with no description", async () => {
   ])
 
   reporter.expectSummary({
+    behaviors: 1,
+    examples: 1,
     valid: 4,
     invalid: 0,
     skipped: 0

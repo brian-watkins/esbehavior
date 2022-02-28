@@ -24,6 +24,8 @@ test("when a report ends", () => {
   const reporter = new TAPReporter(writer)
 
   reporter.end({
+    behaviors: 1,
+    examples: 1,
     valid: 3,
     invalid: 2,
     skipped: 4

@@ -1,5 +1,5 @@
 import { Reporter } from "./Reporter.js"
-import { addInvalid, addSkipped, addValid, emptySummary, Summary } from "./Summary.js"
+import { addExample, addInvalid, addSkipped, addValid, emptySummary, Summary } from "./Summary.js"
 import { waitFor } from "./waitFor.js"
 import { Effect } from "./Effect.js"
 import { Assumption, Condition, Step } from "./Assumption.js"
@@ -122,7 +122,7 @@ interface Mode<T> {
 }
 
 class ExampleRun<T> {
-  public summary = emptySummary()
+  public summary = addExample(emptySummary())
 
   constructor (
     public mode: Mode<T>,

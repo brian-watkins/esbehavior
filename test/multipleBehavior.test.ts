@@ -45,6 +45,8 @@ test("it runs multiple behaviors", async () => {
   ])
 
   reporter.expectSummary({
+    behaviors: 2,
+    examples: 2,
     valid: 2,
     invalid: 0,
     skipped: 0

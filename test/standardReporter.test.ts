@@ -8,7 +8,7 @@ import { Reporter } from '../src/Reporter.js'
 import { ClaimResult } from '../src/Claim.js'
 import { FakeTimer } from './helpers/FakeTimer.js'
 
-test("multiple examples with valid, skipped, and invalid claims", async () => {
+test("multiple examples with valid and skipped claims", async () => {
   const writer = new FakeReportWriter()
   const reporter = new StandardReporter({
     writer,
@@ -70,11 +70,100 @@ test("multiple examples with valid, skipped, and invalid claims", async () => {
     "  • some skipped step",
     "  • it does not much",
     "Summary",
-    "Total claims: 7",
-    "Valid: 4",
-    "Invalid: 0",
-    "Skipped: 3",
-    "Duration: 13ms"
+    "1 behavior, 2 examples, 7 claims (13ms)",
+    "3 skipped claims",
+  ])
+})
+
+test("multiple behaviors, multiple examples, multiple claims", () => {
+  const writer = new FakeReportWriter()
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: new FakeTimer("8") })
+
+  reporter.end({
+    behaviors: 3, examples: 4, valid: 12, invalid: 0, skipped: 0
+  })
+
+  writer.expectLines([
+    "Summary",
+    "3 behaviors, 4 examples, 12 claims (8ms)",
+    "12 valid claims"
+  ])
+})
+
+test("multiple behaviors, multiple examples, multiple claims, one skipped", () => {
+  const writer = new FakeReportWriter()
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: new FakeTimer("8") })
+
+  reporter.end({
+    behaviors: 3, examples: 4, valid: 11, invalid: 0, skipped: 1
+  })
+
+  writer.expectLines([
+    "Summary",
+    "3 behaviors, 4 examples, 12 claims (8ms)",
+    "1 skipped claim"
+  ])
+})
+
+test("multiple behaviors, multiple examples, multiple claims, one invalid", () => {
+  const writer = new FakeReportWriter()
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: new FakeTimer("8") })
+
+  reporter.end({
+    behaviors: 3, examples: 4, valid: 11, invalid: 1, skipped: 0
+  })
+
+  writer.expectLines([
+    "Summary",
+    "3 behaviors, 4 examples, 12 claims (8ms)",
+    "1 invalid claim"
+  ])
+})
+
+test("multiple behaviors, multiple examples, multiple claims, multiple invalid", () => {
+  const writer = new FakeReportWriter()
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: new FakeTimer("8") })
+
+  reporter.end({
+    behaviors: 3, examples: 4, valid: 10, invalid: 2, skipped: 0
+  })
+
+  writer.expectLines([
+    "Summary",
+    "3 behaviors, 4 examples, 12 claims (8ms)",
+    "2 invalid claims"
+  ])
+})
+
+test("multiple behaviors, multiple examples, multiple claims, one invalid, one skipped", () => {
+  const writer = new FakeReportWriter()
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: new FakeTimer("8") })
+
+  reporter.end({
+    behaviors: 3, examples: 4, valid: 10, invalid: 1, skipped: 1
+  })
+
+  writer.expectLines([
+    "Summary",
+    "3 behaviors, 4 examples, 12 claims (8ms)",
+    "1 invalid claim",
+    "1 skipped claim"
+  ])
+})
+
+
+test("one behavior, one example, one claim", () => {
+  const writer = new FakeReportWriter()
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: new FakeTimer("14") })
+
+  reporter.end({
+    behaviors: 1, examples: 1, valid: 1, invalid: 0, skipped: 0
+  })
+
+  writer.expectLines([
+    "Summary",
+    "1 behavior, 1 example, 1 claim (14ms)",
+    "1 valid claim"
   ])
 })
 

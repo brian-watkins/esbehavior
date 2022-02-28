@@ -77,6 +77,8 @@ test("it only runs the picked example", async () => {
   ])
 
   reporter.expectSummary({
+    behaviors: 2,
+    examples: 3,
     valid: 1,
     invalid: 0,
     skipped: 5

@@ -1,6 +1,6 @@
 import { Example, RunMode } from "./Example.js";
 import { Reporter } from "./Reporter.js";
-import { addSummary, emptySummary, Summary } from "./Summary.js";
+import { addBehavior, addSummary, emptySummary, Summary } from "./Summary.js";
 
 export class BehaviorCollection {
   private someExampleIsPicked: boolean
@@ -45,7 +45,7 @@ export class Behavior {
   private async execute(shouldRun: (example: Example) => boolean, reporter: Reporter): Promise<Summary> {
     reporter.startBehavior(this.description)
 
-    let summary = emptySummary()
+    let summary = addBehavior(emptySummary())
 
     for (const example of this.examples) {
       let exampleSummary: Summary

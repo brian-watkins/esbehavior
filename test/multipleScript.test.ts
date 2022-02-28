@@ -58,6 +58,8 @@ test("it runs multiple scripts in one example", async () => {
   ])
 
   reporter.expectSummary({
+    behaviors: 1,
+    examples: 1,
     valid: 5,
     invalid: 1,
     skipped: 0
@@ -108,6 +110,8 @@ test("it skips all scripts when the example is skipped", async () => {
   ])
 
   reporter.expectSummary({
+    behaviors: 1,
+    examples: 1,
     valid: 0,
     invalid: 0,
     skipped: 5
@@ -184,6 +188,8 @@ test("it skips remaining plans if any observations fail", async () => {
   ])
 
   reporter.expectSummary({
+    behaviors: 1,
+    examples: 1,
     valid: 4,
     invalid: 1,
     skipped: 3

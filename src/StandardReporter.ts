@@ -42,11 +42,21 @@ export class StandardReporter implements Reporter {
     const total = summary.valid + summary.invalid + summary.skipped
     this.writer.writeLine(this.format.bold(this.format.underline("Summary")))
     this.space()
-    this.writer.writeLine(`Total claims: ${total}`)
-    this.writer.writeLine(`Valid: ${summary.valid}`)
-    this.writer.writeLine(`Invalid: ${summary.invalid}`)
-    this.writer.writeLine(`Skipped: ${summary.skipped}`)
-    this.writer.writeLine(`Duration: ${this.timer.duration()}ms`)
+    this.writer.writeLine(`${pluralize(summary.behaviors, 'behavior')}, ${pluralize(summary.examples, 'example')}, ${pluralize(total, 'claim')} (${this.timer.duration()}ms)`)
+    this.space()
+
+    if (summary.skipped == 0 && summary.invalid == 0) {
+      this.writer.writeLine(this.format.green(pluralize(summary.valid, 'valid claim')))
+    }
+    
+    if (summary.invalid > 0) {
+      this.writer.writeLine(this.format.red(pluralize(summary.invalid, 'invalid claim')))
+    }
+    
+    if (summary.skipped > 0) {
+      this.writer.writeLine(this.format.yellow(pluralize(summary.skipped, 'skipped claim')))
+    }
+
     this.space()
   }
 
@@ -202,3 +212,10 @@ function failure(): string {
   return "✖"
 }
 
+function pluralize(total: number, name: string): string {
+  if (total > 1) {
+    return `${total} ${name}s`
+  } else {
+    return `${total} ${name}`
+  }
+}

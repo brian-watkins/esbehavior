@@ -60,6 +60,8 @@ test("it skips an example", async () => {
   ])
 
   reporter.expectSummary({
+    behaviors: 1,
+    examples: 2,
     valid: 1,
     invalid: 0,
     skipped: 4

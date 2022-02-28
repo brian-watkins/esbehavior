@@ -36,6 +36,8 @@ test("it runs an example with an async given", async () => {
   ])
 
   reporter.expectSummary({
+    behaviors: 1,
+    examples: 1,
     valid: 1,
     invalid: 0,
     skipped: 0
@@ -107,6 +109,8 @@ test("it runs an example with an async context generator and async observation",
   ])
 
   reporter.expectSummary({
+    behaviors: 1,
+    examples: 1,
     valid: 1,
     invalid: 1,
     skipped: 0
@@ -156,6 +160,8 @@ test("it runs async conditions", async () => {
   ])
 
   reporter.expectSummary({
+    behaviors: 1,
+    examples: 1,
     valid: 4,
     invalid: 0,
     skipped: 0
