@@ -5,7 +5,6 @@ import { Thing } from '../src/Thing.js'
 export default
   behavior("a sample spec", [
     example({ init: () => new Thing() })
-      .description("comparing some numbers")
       .script({
         prepare: [
           condition("something happens", () => { }),
