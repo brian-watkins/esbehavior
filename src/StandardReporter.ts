@@ -73,8 +73,10 @@ export class StandardReporter implements Reporter {
   }
 
   startExample(description?: string): void {
-    this.writer.writeLine(indent(1, this.format.bold(description ?? "")))
-    this.space()
+    if (description) {
+      this.writer.writeLine(indent(1, this.format.bold(description)))
+      this.space()
+    }
   }
 
   endExample(): void {
