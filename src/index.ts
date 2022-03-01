@@ -8,6 +8,7 @@ import { emptySummary, Summary } from "./Summary.js"
 export { Effect } from "./Effect.js"
 export { Behavior } from "./Behavior.js"
 export { Summary } from "./Summary.js"
+export { Reporter, Writer, Failure } from "./Reporter.js"
 export { Example, Script, Context, ExampleBuilder, ExampleSetupBuilder, ExampleScriptBuilder, ExampleScriptsBuilder } from "./Example.js"
 
 export interface ValidationOptions {
