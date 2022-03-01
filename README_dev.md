@@ -13,3 +13,11 @@ only a single file. To run a single test file:
 ```
 $ npm run test:one <test file name>
 ```
+
+### Publishing
+
+1. `npm version <new version>`
+- This will update package.json, package-lock.json, create a tag for the new version and make a commit.
+2. `git push`
+3. `npm publish`
+- Make sure you are logged into npm; you'll need to provide an OTP token
