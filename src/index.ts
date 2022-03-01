@@ -4,15 +4,17 @@ import { Behavior, BehaviorCollection } from "./Behavior.js"
 import { Effect } from "./Effect.js"
 import { Condition, Step } from "./Assumption.js"
 import { StandardReporter } from "./StandardReporter.js"
+import { emptySummary, Summary } from "./Summary.js"
 export { Effect } from "./Effect.js"
 export { Behavior } from "./Behavior.js"
+export { Summary } from "./Summary.js"
 export { Example, Script, Context, ExampleBuilder, ExampleSetupBuilder, ExampleScriptBuilder, ExampleScriptsBuilder } from "./Example.js"
 
 export interface ValidationOptions {
   reporter?: Reporter
 }
 
-export async function validate<T>(behaviors: Array<Behavior>, options: ValidationOptions = {}): Promise<void> {
+export async function validate<T>(behaviors: Array<Behavior>, options: ValidationOptions = {}): Promise<Summary> {
   const reporter = options.reporter ?? new StandardReporter()
 
   reporter.start()
@@ -20,10 +22,12 @@ export async function validate<T>(behaviors: Array<Behavior>, options: Validatio
   const behaviorCollection = new BehaviorCollection(behaviors)
 
   try {
-    const results = await behaviorCollection.run(reporter)
-    reporter.end(results)
+    const summary = await behaviorCollection.run(reporter)
+    reporter.end(summary)
+    return summary
   } catch (err: any) {
     reporter.terminate(err)
+    return emptySummary()
   }
 }
 

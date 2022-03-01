@@ -35,13 +35,16 @@ page.on("console", console.log)
 page.on("pageerror", console.log)
 
 await page.goto(`http://localhost:${port}/index.html`)
-await page.evaluate((files) => esbehavior_run(files), files)
+const summary = await page.evaluate((files) => { return esbehavior_run(files) }, files)
 
 if (mode === "watch" || mode === "debug") {
   page.on("load", (page) => {
     page.evaluate((files) => esbehavior_run(files), files)
   })
 } else {
+  if (summary.invalid > 0 || summary.skipped > 0) {
+    process.exitCode = 1
+  }
   await browser.close()
   await server.close()
 }

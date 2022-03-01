@@ -6,8 +6,8 @@
 
       const load = async (path) => (await import(`./${path}`)).default
 
-      window.esbehavior_run = async (files) => {
-        await Promise.all(files.map(load)).then(validate)
+      window.esbehavior_run = (files) => {
+        return Promise.all(files.map(load)).then(validate)
       }
     </script>
   </head>

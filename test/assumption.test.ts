@@ -1,11 +1,12 @@
 import { test } from 'uvu'
+import * as assert from 'uvu/assert'
 import { example, effect, condition, validate, behavior, step } from '../src/index.js'
 import { FakeReporter, withBehavior, withExample, withInvalidClaim, withSkippedClaim } from './helpers/FakeReporter.js'
 
 test("failing condition", async () => {
   const reporter = new FakeReporter()
 
-  await validate([
+  const actualSummary = await validate([
     behavior("behavior", [
       example()
         .description("failing condition")
@@ -39,7 +40,9 @@ test("failing condition", async () => {
     ])
   ])
 
-  reporter.expectSummary({
+  reporter.expectSummary(actualSummary)
+  
+  assert.equal(actualSummary, {
     behaviors: 1,
     examples: 1,
     valid: 0,
@@ -51,7 +54,7 @@ test("failing condition", async () => {
 test("failing step", async () => {
   const reporter = new FakeReporter()
 
-  await validate([
+  const actualSummary = await validate([
     behavior("behavior", [
       example()
         .description("failing step")
@@ -85,7 +88,9 @@ test("failing step", async () => {
     ])
   ])
 
-  reporter.expectSummary({
+  reporter.expectSummary(actualSummary)
+  
+  assert.equal(actualSummary, {
     behaviors: 1,
     examples: 1,
     valid: 0,

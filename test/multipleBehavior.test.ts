@@ -2,11 +2,12 @@ import { test } from 'uvu'
 import { validate, example, effect, behavior } from '../src/index.js'
 import { expect } from 'chai'
 import { FakeReporter, withBehavior, withExample, withValidClaim } from './helpers/FakeReporter.js'
+import * as assert from 'uvu/assert'
 
 test("it runs multiple behaviors", async () => {
   const reporter = new FakeReporter()
 
-  await validate([
+  const actualSummary = await validate([
     behavior("a single claim", [
       example({ init: () => 7 })
         .description("just a claim")
@@ -44,7 +45,9 @@ test("it runs multiple behaviors", async () => {
     ])
   ])
 
-  reporter.expectSummary({
+  reporter.expectSummary(actualSummary)
+  
+  assert.equal(actualSummary, {
     behaviors: 2,
     examples: 2,
     valid: 2,
