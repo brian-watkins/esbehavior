@@ -1,7 +1,7 @@
 export interface Timer {
   start(): void
   stop(): void
-  duration(): string
+  durationInMillis(): number
 }
 
 export class TimerFactory {
@@ -23,9 +23,9 @@ export class BrowserTimer implements Timer {
     window.performance.mark("end_validation")
   }
 
-  duration(): string {
+  durationInMillis(): number {
     const measure = window.performance.measure("validation_duration", "start_validation", "end_validation")
-    return measure.duration.toFixed()
+    return Number(measure.duration.toFixed())
   }
 }
 
@@ -41,9 +41,9 @@ export class NodeTimer implements Timer {
     this.endTime = process.hrtime.bigint() 
   }
 
-  duration(): string {
+  durationInMillis(): number {
     const diff = this.endTime - this.startTime
     const millis = diff / BigInt(1000000)
-    return millis.toString()
+    return Number(millis)
   }
 }

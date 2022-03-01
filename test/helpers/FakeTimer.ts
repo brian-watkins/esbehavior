@@ -1,11 +1,11 @@
 import { Timer } from "../../src/Timer.js";
 
 export class FakeTimer implements Timer {
-  constructor(private time: string) {}
+  constructor(private time: number) {}
   
   start(): void {}
   stop(): void {}
-  duration(): string {
+  durationInMillis(): number {
     return this.time
   }
 }
