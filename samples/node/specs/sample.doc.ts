@@ -1,5 +1,5 @@
 import assert from 'proclaim'
-import { behavior, condition, effect, example, skip } from 'esbehavior'
+import { behavior, condition, effect, example, skip, step } from 'esbehavior'
 import { Thing } from '../src/Thing.js'
 
 export default
@@ -9,6 +9,10 @@ export default
         prepare: [
           condition("something happens", () => { }),
           condition("something else happens", () => { })
+        ],
+        perform: [
+          step("first step", () => {}),
+          step("second step", () => {})
         ],
         observe: [
           effect("looks at stuff", (thing) => {

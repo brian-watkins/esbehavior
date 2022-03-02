@@ -61,17 +61,17 @@ test("multiple examples with valid and skipped claims", async () => {
   writer.expectLines([
     "cool behavior",
     "  doing two things",
-    "  ✔ Do this first",
-    "  ✔ Add to the number",
+    "  + Do this first",
+    "  • Add to the number",
     "  ✔ it compares the correct number",
     "  ✔ it compares other numbers",
     "  skipped case",
-    "  • some skipped condition",
-    "  • some skipped step",
-    "  • it does not much",
+    "  - some skipped condition",
+    "  - some skipped step",
+    "  - it does not much",
     "Summary",
     "1 behavior, 2 examples, 7 claims (13ms)",
-    "• 3 skipped claims",
+    "- 3 skipped claims",
   ])
 })
 
@@ -101,7 +101,7 @@ test("multiple behaviors, multiple examples, multiple claims, one skipped", () =
   writer.expectLines([
     "Summary",
     "3 behaviors, 4 examples, 12 claims (8ms)",
-    "• 1 skipped claim"
+    "- 1 skipped claim"
   ])
 })
 
@@ -147,7 +147,7 @@ test("multiple behaviors, multiple examples, multiple claims, one invalid, one s
     "Summary",
     "3 behaviors, 4 examples, 12 claims (8ms)",
     "✖ 1 invalid claim",
-    "• 1 skipped claim"
+    "- 1 skipped claim"
   ])
 })
 

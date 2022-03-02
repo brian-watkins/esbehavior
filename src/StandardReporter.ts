@@ -1,4 +1,4 @@
-import { Assumption } from "./Assumption.js";
+import { Assumption, Condition } from "./Assumption.js";
 import { ClaimResult } from "./Claim.js";
 import { ConsoleWriter } from "./ConsoleWriter.js";
 import { Effect } from "./Effect.js";
@@ -55,11 +55,11 @@ export class StandardReporter implements Reporter {
     }
     
     if (summary.invalid > 0) {
-      this.writer.writeLine(this.format.bold(this.format.red(failure() + " " + pluralize(summary.invalid, 'invalid claim'))))
+      this.writer.writeLine(this.format.bold(this.format.red(fail() + " " + pluralize(summary.invalid, 'invalid claim'))))
     }
     
     if (summary.skipped > 0) {
-      this.writer.writeLine(this.format.bold(this.format.yellow("• " + pluralize(summary.skipped, 'skipped claim'))))
+      this.writer.writeLine(this.format.bold(this.format.yellow(ignore() + " " + pluralize(summary.skipped, 'skipped claim'))))
     }
 
     this.space()
@@ -96,12 +96,13 @@ export class StandardReporter implements Reporter {
 
   endExample(): void {
     this.space()
+    this.stepNumber = 1
   }
 
   recordAssumption<T>(assumption: Assumption<T>, result: ClaimResult): void {
     result.when({
       valid: () => {
-        this.writeValidClaim(assumption.description)
+        this.writeValidAssumption(assumption)
       },
       invalid: (error) => {
         this.writeInvalidClaim(assumption.description, error)
@@ -124,12 +125,22 @@ export class StandardReporter implements Reporter {
     this.writeSkippedClaim(effect.description)
   }
 
+  private stepNumber = 1
+
+  writeValidAssumption<T>(assumption: Assumption<T>) {
+    if (assumption instanceof Condition) {
+      this.writer.writeLine(indent(1, this.format.green(`+ ${assumption.description}`)))
+    } else {
+      this.writer.writeLine(indent(1, this.format.green(`• ${assumption.description}`)))
+    }
+  }
+
   writeValidClaim(description: string) {
     this.writer.writeLine(indent(1, this.format.green(`${check()} ${description}`)))
   }
 
   writeInvalidClaim(description: string, error: any) {
-    this.writer.writeLine(indent(1, this.format.red(this.format.bold(`${failure()} ${description}`))))
+    this.writer.writeLine(indent(1, this.format.red(this.format.bold(`${fail()} ${description}`))))
     this.space()
     const messageLines = error.message.split(/\r?\n/);
     for (const line of messageLines) {
@@ -166,7 +177,7 @@ export class StandardReporter implements Reporter {
   }
 
   writeSkippedClaim(description: string) {
-    this.writer.writeLine(indent(1, this.format.yellow(`• ${description}`)))
+    this.writer.writeLine(indent(1, this.format.yellow(`${ignore()} ${description}`)))
   }
 
   space() {
@@ -213,8 +224,12 @@ function check(): string {
   return "✔";
 }
 
-function failure(): string {
+function fail(): string {
   return "✖"
+}
+
+function ignore(): string {
+  return "-"
 }
 
 function pluralize(total: number, name: string): string {
