@@ -96,7 +96,6 @@ export class StandardReporter implements Reporter {
 
   endExample(): void {
     this.space()
-    this.stepNumber = 1
   }
 
   recordAssumption<T>(assumption: Assumption<T>, result: ClaimResult): void {
@@ -124,8 +123,6 @@ export class StandardReporter implements Reporter {
   skipObservation<T>(effect: Effect<T>): void {
     this.writeSkippedClaim(effect.description)
   }
-
-  private stepNumber = 1
 
   writeValidAssumption<T>(assumption: Assumption<T>) {
     if (assumption instanceof Condition) {
