@@ -14,7 +14,7 @@
   ],
   "type": "module",
   "scripts": {
-    "prepublish": "npm run build",
+    "prepublishOnly": "npm run build",
     "build": "rm -rf ./dist && tsc",
     "test": "node --loader ts-node/esm --no-warnings ./test/index.ts",
     "test:one": "node --loader ts-node/esm --no-warnings ",
