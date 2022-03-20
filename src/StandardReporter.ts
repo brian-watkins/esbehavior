@@ -149,6 +149,7 @@ export class StandardReporter implements Reporter {
       this.writeDetail("Expected", error.expected)
     }
     this.writeStack(error.stack)
+    this.space()
   }
 
   writeDetail(description: string, value: string) {
