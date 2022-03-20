@@ -42,7 +42,7 @@ export class StandardReporter implements Reporter {
     const total = summary.valid + summary.invalid + summary.skipped
     this.writer.writeLine(this.format.bold(this.format.underline("Summary")))
     this.space()
-    
+
     const behaviors = pluralize(summary.behaviors, 'behavior')
     const examples = pluralize(summary.examples, 'example')
     const claims = pluralize(total, 'claim')
@@ -53,11 +53,11 @@ export class StandardReporter implements Reporter {
     if (summary.skipped == 0 && summary.invalid == 0) {
       this.writer.writeLine(this.format.bold(this.format.green(check() + " All claims are valid!")))
     }
-    
+
     if (summary.invalid > 0) {
       this.writer.writeLine(this.format.bold(this.format.red(fail() + " " + pluralize(summary.invalid, 'invalid claim'))))
     }
-    
+
     if (summary.skipped > 0) {
       this.writer.writeLine(this.format.bold(this.format.yellow(ignore() + " " + pluralize(summary.skipped, 'skipped claim'))))
     }
@@ -147,19 +147,22 @@ export class StandardReporter implements Reporter {
       this.writer.writeLine(indent(2, this.format.red(line)))
     }
     this.space()
-    if (error.actual) {
-      this.writer.writeLine(indent(2, this.format.dim(this.format.underline("Actual"))))
-      this.space()
-      this.writer.writeLine(indent(3, error.actual))
-      this.space()  
-    }
-    if (error.expected) {
-      this.writer.writeLine(indent(2, this.format.dim(this.format.underline("Expected"))))
-      this.space()
-      this.writer.writeLine(indent(3, error.expected))
-      this.space()  
+    if (error.expected != undefined && error.actual != undefined) {
+      if (error.actual) {
+        this.writeDetail("Actual", error.actual)
+      }
+      if (error.expected) {
+        this.writeDetail("Expected", error.expected)
+      }
     }
     this.writeStack(error.stack)
+  }
+
+  writeDetail(description: string, value: string) {
+    this.writer.writeLine(indent(2, this.format.dim(this.format.underline(description))))
+    this.space()
+    this.writer.writeLine(indent(3, value))
+    this.space()
   }
 
   writeStack(stack: string, { indentLevel }: { indentLevel: number } = { indentLevel: 2 }) {

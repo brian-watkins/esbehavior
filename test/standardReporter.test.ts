@@ -293,6 +293,25 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
       "    at another.line.of.code"
     ])
   })
+
+  test(`invalid ${name} with no expected`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+    try {
+      expect(["one", "two", "three"]).to.contain("apples")
+    } catch (err: any) {
+      err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
+      writeToReport(reporter, new InvalidClaim(err))
+
+      writer.expectLines([
+        `  ✖ ${description}`,
+        "    expected [ 'one', 'two', 'three' ] to include 'apples'",
+        "    at some.line.of.code",
+        "    at another.line.of.code"
+      ])
+    }
+  })
 }
 
 invalidClaimBehavior("condition", (reporter, claimResult) => {
