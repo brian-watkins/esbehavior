@@ -148,12 +148,8 @@ export class StandardReporter implements Reporter {
     }
     this.space()
     if (error.expected != undefined && error.actual != undefined) {
-      if (error.actual) {
-        this.writeDetail("Actual", error.actual)
-      }
-      if (error.expected) {
-        this.writeDetail("Expected", error.expected)
-      }
+      this.writeDetail("Actual", error.actual)
+      this.writeDetail("Expected", error.expected)
     }
     this.writeStack(error.stack)
   }

@@ -312,6 +312,52 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
       ])
     }
   })
+
+  test(`invalid ${name} with falsey expected`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+    try {
+      expect(false).to.be.true
+    } catch (err: any) {
+      err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
+      writeToReport(reporter, new InvalidClaim(err))
+
+      writer.expectLines([
+        `  ✖ ${description}`,
+        "    expected false to be true",
+        "    Actual",
+        "      false",
+        "    Expected",
+        "      true",
+        "    at some.line.of.code",
+        "    at another.line.of.code"
+      ])
+    }
+  })
+
+  test(`invalid ${name} with falsey actual`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+    try {
+      expect(true).to.be.false
+    } catch (err: any) {
+      err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
+      writeToReport(reporter, new InvalidClaim(err))
+
+      writer.expectLines([
+        `  ✖ ${description}`,
+        "    expected true to be false",
+        "    Actual",
+        "      true",
+        "    Expected",
+        "      false",
+        "    at some.line.of.code",
+        "    at another.line.of.code"
+      ])
+    }
+  })
 }
 
 invalidClaimBehavior("condition", (reporter, claimResult) => {
