@@ -1,45 +1,15 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { validate, example, effect, condition, skip, behavior, step } from '../src/index.js'
+import { validate, effect, condition, skip, behavior } from '../src/index.js'
+import anotherMultipleScripts from './fixtures/anotherMultipleScripts.js'
+import multipleScripts from './fixtures/multipleScripts.js'
 import { FakeReporter, withBehavior, withExample, withInvalidClaim, withSkippedClaim, withValidClaim } from './helpers/FakeReporter.js'
 
 test("it runs multiple scripts in one example", async () => {
   const reporter = new FakeReporter()
 
   await validate([
-    behavior("multiple scripts", [
-      example({ init: () => ({ touched: 0 }) })
-        .description("multiple scripts")
-        .script({
-          prepare: [
-            condition("it touches the context", (context) => { context.touched++ })
-          ],
-          observe: [
-            effect("the first script works", (context) => {
-              expect(context.touched).to.equal(1)
-            })
-          ]
-        })
-        .andThen({
-          prepare: [
-            condition("it touches the context again", (context) => { context.touched++ }),
-            condition("it touches the context and again", (context) => { context.touched++ })
-          ],
-          observe: [
-            effect("part of the second script works", (context) => {
-              expect(context.touched).to.equal(3)
-            }),
-            effect("the second script fails", (context) => {
-              throw {
-                expected: "a thing",
-                actual: "nothing",
-                operator: "equals",
-                stack: "cool stack"
-              }
-            })
-          ]
-        })
-    ])
+    multipleScripts
   ], { reporter })
 
   reporter.expectReport([
@@ -50,7 +20,7 @@ test("it runs multiple scripts in one example", async () => {
         withValidClaim("it touches the context again"),
         withValidClaim("it touches the context and again"),
         withValidClaim("part of the second script works"),
-        withInvalidClaim("the second script fails", {
+        withInvalidClaim("multipleScripts.ts:17:6", "the second script fails", {
           operator: "equals", expected: "a thing", actual: "nothing", stack: "cool stack"
         })
       ])
@@ -123,51 +93,7 @@ test("it skips remaining plans if any observations fail", async () => {
   const reporter = new FakeReporter()
 
   await validate([
-    behavior("multiple scripts", [
-      example({ init: () => ({ touched: 0 }) })
-        .description("first script fails")
-        .script({
-          prepare: [
-            condition("it touches the context", (context) => { context.touched++ })
-          ],
-          observe: [
-            effect("the context was touched", (context) => {
-              expect(context.touched).to.equal(1)
-            })
-          ]
-        })
-        .andThen({
-          prepare: [
-            condition("it touches the context again", (context) => { context.touched++ })
-          ],
-          perform: [
-            step("it touches the context again", (context) => { context.touched++ })
-          ],
-          observe: [
-            effect("the second script fails", (context) => {
-              throw {
-                expected: "something",
-                actual: "nothing",
-                operator: "equals",
-                stack: "stack"
-              }
-            })
-          ]
-        })
-        .andThen({
-          prepare: [
-            condition("it touches the context another time", (context) => { context.touched++ })
-          ],
-          perform: [
-            step("it touches the context for the last time", (context) => { context.touched++ })
-          ],
-          observe: [
-            effect("the second script would fail if not skipped", (context) => {
-              expect(context.touched).to.equal(888)
-            })
-          ]
-        })
-    ])
+    anotherMultipleScripts
   ], { reporter })
 
   reporter.expectReport([
@@ -177,7 +103,7 @@ test("it skips remaining plans if any observations fail", async () => {
         withValidClaim("the context was touched"),
         withValidClaim("it touches the context again"),
         withValidClaim("it touches the context again"),
-        withInvalidClaim("the second script fails", {
+        withInvalidClaim("anotherMultipleScripts.ts:17:6", "the second script fails", {
           operator: "equals", expected: "something", actual: "nothing", stack: "stack"
         }),
         withSkippedClaim("it touches the context another time"),

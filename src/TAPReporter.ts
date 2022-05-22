@@ -2,6 +2,7 @@ import { Assumption, Condition } from "./Assumption.js"
 import { ClaimResult } from "./Claim.js"
 import { ConsoleWriter } from "./ConsoleWriter.js"
 import { Effect } from "./Effect.js"
+import { ScriptContext } from "./Example.js"
 import { Failure, Reporter, Writer } from "./Reporter.js"
 import { Summary } from "./Summary.js"
 
@@ -53,7 +54,7 @@ export class TAPReporter implements Reporter {
     // nothing?
   }
 
-  recordAssumption<T>(assumption: Assumption<T>, result: ClaimResult): void {
+  recordAssumption<T>(scriptContext: ScriptContext<T>, assumption: Assumption<T>, result: ClaimResult): void {
     result.when({
       valid: () => this.recordValidClaim(`${this.assumptionDesignator(assumption)} ${assumption.description}`),
       invalid: (error) => this.recordInvalidClaim(`${this.assumptionDesignator(assumption)} ${assumption.description}`, error)
@@ -73,7 +74,7 @@ export class TAPReporter implements Reporter {
     this.writer.writeLine(`ok ${this.assumptionDesignator(assumption)} ${assumption.description} # SKIP`)
   }
 
-  recordObservation<T>(effect: Effect<T>, result: ClaimResult): void {
+  recordObservation<T>(scriptContext: ScriptContext<T>, effect: Effect<T>, result: ClaimResult): void {
     result.when({
       valid: () => this.recordValidClaim(effect.description),
       invalid: (error) => this.recordInvalidClaim(effect.description, error)

@@ -2,6 +2,7 @@ import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { example, validate, effect, condition, behavior, step } from '../src/index.js'
+import failingObservation from './fixtures/failingObservation.js'
 import { withBehavior, withExample, FakeReporter, withValidClaim, withInvalidClaim } from './helpers/FakeReporter.js'
 
 test("when a single valid claim is observed", async () => {
@@ -84,28 +85,13 @@ test("where an invalid claim is observed", async () => {
   const reporter = new FakeReporter()
 
   const actualSummary = await validate([
-    behavior("a single test", [
-      example()
-        .description("failing observation")
-        .script({
-          observe: [
-            effect("does something that fails", () => {
-              throw {
-                operator: "equals",
-                expected: "something",
-                actual: "nothing"
-              }
-            }),
-            effect("passes", () => { })
-          ]
-        })
-    ])
+    failingObservation
   ], { reporter })
 
   reporter.expectReport([
     withBehavior("a single test", [
       withExample("failing observation", [
-        withInvalidClaim("does something that fails", {
+        withInvalidClaim("failingObservation.ts:6:6", "does something that fails", {
           operator: "equals", expected: "something", actual: "nothing"
         }),
         withValidClaim("passes")

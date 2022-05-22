@@ -29,6 +29,28 @@ export interface Script<T> {
   observe?: Array<Effect<T>>
 }
 
+export interface ScriptContext<T> {
+  location: string
+  script: Script<T>
+}
+
+function scriptContext<T>(script: Script<T>): ScriptContext<T> {
+  const error = new Error()
+  const line = error.stack?.split("\n")[3]
+  if (line) {
+    const location = line.substring(line.indexOf("at") + 3)
+    return {
+      location,
+      script
+    }
+  } else {
+    return {
+      location: "Unknown script location",
+      script
+    }
+  }
+}
+
 export interface ExampleSetupBuilder<T> extends ExampleBuilder<T> {
   description(description: string): ExampleScriptBuilder<T>
   script(script: Script<T>): ExampleScriptsBuilder<T>
@@ -55,12 +77,12 @@ export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetu
   }
 
   script(script: Script<T>): ExampleScriptsBuilder<T> {
-    this.example.setScript(script)
+    this.example.setScript(scriptContext(script))
     return this
   }
 
   andThen(script: Script<T>): ExampleScriptsBuilder<T> {
-    this.example.addScript(script)
+    this.example.addScript(scriptContext(script))
     return this
   }
 
@@ -71,7 +93,7 @@ export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetu
 
 export class BehaviorExample<T> implements Example {
   private description?: string
-  private scripts: Array<Script<T>> = []
+  private scripts: Array<ScriptContext<T>> = []
 
   constructor(public runMode: RunMode, public context: Context<T>) { }
 
@@ -79,11 +101,11 @@ export class BehaviorExample<T> implements Example {
     this.description = description
   }
 
-  setScript(script: Script<T>) {
+  setScript(script: ScriptContext<T>) {
     this.scripts = [script]
   }
 
-  addScript(script: Script<T>) {
+  addScript(script: ScriptContext<T>) {
     this.scripts.push(script)
   }
 
@@ -117,8 +139,8 @@ export class BehaviorExample<T> implements Example {
 }
 
 interface Mode<T> {
-  handleAssumption(run: ExampleRun<T>, assumption: Assumption<T>): Promise<void>
-  handleObservation(run: ExampleRun<T>, effect: Effect<T>): Promise<void>
+  handleAssumption(run: ExampleRun<T>, scriptContext: ScriptContext<T>, assumption: Assumption<T>): Promise<void>
+  handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, effect: Effect<T>): Promise<void>
 }
 
 class ExampleRun<T> {
@@ -129,9 +151,9 @@ class ExampleRun<T> {
     public reporter: Reporter,
   ) {}
 
-  async execute(scripts: Array<Script<T>>): Promise<void> {
-    for (let script of scripts) {
-      await this.runScript(script)
+  async execute(scriptContexts: Array<ScriptContext<T>>): Promise<void> {
+    for (let scriptContext of scriptContexts) {
+      await this.runScript(scriptContext)
 
       if (this.summary.invalid > 0) {
         this.mode = new SkipMode()
@@ -139,17 +161,17 @@ class ExampleRun<T> {
     }
   }
 
-  private async runScript(script: Script<T>): Promise<void> {
-    for (let condition of script.prepare ?? []) {
-      await this.mode.handleAssumption(this, condition)
+  private async runScript(context: ScriptContext<T>): Promise<void> {
+    for (let condition of context.script.prepare ?? []) {
+      await this.mode.handleAssumption(this, context, condition)
     }
 
-    for (let step of script.perform ?? []) {
-      await this.mode.handleAssumption(this, step)
+    for (let step of context.script.perform ?? []) {
+      await this.mode.handleAssumption(this, context, step)
     }
 
-    for (let effect of script.observe ?? []) {
-      await this.mode.handleObservation(this, effect)
+    for (let effect of context.script.observe ?? []) {
+      await this.mode.handleObservation(this, context, effect)
     }
   }
 
@@ -162,9 +184,9 @@ class ExampleRun<T> {
 class ValidateMode<T> implements Mode<T> {
   constructor(private context: T) {}
 
-  async handleAssumption(run: ExampleRun<T>, condition: Condition<T>): Promise<void> {
+  async handleAssumption(run: ExampleRun<T>, scriptContext: ScriptContext<T>, condition: Condition<T>): Promise<void> {
     const assumptionResult = await condition.validate(this.context)
-    run.reporter.recordAssumption(condition, assumptionResult)
+    run.reporter.recordAssumption(scriptContext, condition, assumptionResult)
     assumptionResult.when({
       valid: () => {
         run.updateSummary(addValid)
@@ -176,9 +198,9 @@ class ValidateMode<T> implements Mode<T> {
     })
   }
 
-  async handleObservation(run: ExampleRun<T>, effect: Effect<T>): Promise<void> {
+  async handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, effect: Effect<T>): Promise<void> {
     const observationResult = await effect.validate(this.context)
-    run.reporter.recordObservation(effect, observationResult)
+    run.reporter.recordObservation(scriptContext, effect, observationResult)
     observationResult.when({
       valid: () => {
         run.updateSummary(addValid)
@@ -191,12 +213,12 @@ class ValidateMode<T> implements Mode<T> {
 }
 
 class SkipMode<T> implements Mode<T> {
-  async handleAssumption(run: ExampleRun<T>, condition: Condition<T>): Promise<void> {
+  async handleAssumption(run: ExampleRun<T>, _: ScriptContext<T>, condition: Condition<T>): Promise<void> {
     run.reporter.skipAssumption(condition)
     run.updateSummary(addSkipped)
   }
 
-  async handleObservation(run: ExampleRun<T>, effect: Effect<T>): Promise<void> {
+  async handleObservation(run: ExampleRun<T>, _: ScriptContext<T>, effect: Effect<T>): Promise<void> {
     run.reporter.skipObservation(effect)
     run.updateSummary(addSkipped)
   }

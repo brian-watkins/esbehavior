@@ -1,37 +1,21 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { example, effect, condition, validate, behavior, step } from '../src/index.js'
+import { validate } from '../src/index.js'
+import failingCondition from './fixtures/failingCondition.js'
+import failingStep from './fixtures/failingStep.js'
 import { FakeReporter, withBehavior, withExample, withInvalidClaim, withSkippedClaim } from './helpers/FakeReporter.js'
 
 test("failing condition", async () => {
   const reporter = new FakeReporter()
 
   const actualSummary = await validate([
-    behavior("behavior", [
-      example()
-        .description("failing condition")
-        .script({
-          prepare: [
-            condition("something throws an error", () => {
-              throw {
-                expected: "something",
-                actual: "nothing",
-                operator: "equals"
-              }
-            }),
-            condition("there is another condition", () => { })
-          ],
-          observe: [
-            effect("does something that will get skipped", () => { })
-          ]
-        })
-    ])
+    failingCondition
   ], { reporter })
 
   reporter.expectReport([
     withBehavior("behavior", [
       withExample("failing condition", [
-        withInvalidClaim("something throws an error", { 
+        withInvalidClaim("failingCondition.ts:6:6", "something throws an error", { 
           operator: "equals", expected: "something", actual: "nothing"
         }),
         withSkippedClaim("there is another condition"),
@@ -55,31 +39,13 @@ test("failing step", async () => {
   const reporter = new FakeReporter()
 
   const actualSummary = await validate([
-    behavior("behavior", [
-      example()
-        .description("failing step")
-        .script({
-          perform: [
-            step("something throws an error", () => {
-              throw {
-                expected: "a",
-                actual: "b",
-                operator: "equals"
-              }
-            }),
-            step("there is another step", () => { })
-          ],
-          observe: [
-            effect("does something that will get skipped", () => { })
-          ]
-        })
-    ])
+    failingStep
   ], { reporter })
 
   reporter.expectReport([
     withBehavior("behavior", [
       withExample("failing step", [
-        withInvalidClaim("something throws an error", {
+        withInvalidClaim("failingStep.ts:6:6", "something throws an error", {
           operator: "equals", expected: "a", actual: "b"
         }),
         withSkippedClaim("there is another step"),

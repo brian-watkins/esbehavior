@@ -100,16 +100,21 @@ const validClaimBehavior = (name: string, writeToReport: (reporter: Reporter, cl
   })  
 }
 
+const scriptContext = {
+  location: "",
+  script: {}
+}
+
 validClaimBehavior("condition", (reporter, claimResult) => {
-  reporter.recordAssumption(new Condition("some condition", () => {}), claimResult)
+  reporter.recordAssumption(scriptContext, new Condition("some condition", () => {}), claimResult)
 }, "Prepare: some condition")
 
 validClaimBehavior("step", (reporter, claimResult) => {
-  reporter.recordAssumption(new Step("some step", () => {}), claimResult)
+  reporter.recordAssumption(scriptContext, new Step("some step", () => {}), claimResult)
 }, "Perform: some step")
 
 validClaimBehavior("observation", (reporter, claimResult) => {
-  reporter.recordObservation(new Effect("some effect", () => {}), claimResult)
+  reporter.recordObservation(scriptContext, new Effect("some effect", () => {}), claimResult)
 }, "some effect")
 
 
@@ -224,15 +229,15 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
 }
 
 invalidClaimBehavior("condition", (reporter, claimResult) => {
-  reporter.recordAssumption(new Condition("failed condition", () => { }), claimResult)
+  reporter.recordAssumption(scriptContext, new Condition("failed condition", () => { }), claimResult)
 }, "Prepare: failed condition")
 
 invalidClaimBehavior("step", (reporter, claimResult) => {
-  reporter.recordAssumption(new Step("failed step", () => { }), claimResult)
+  reporter.recordAssumption(scriptContext, new Step("failed step", () => { }), claimResult)
 }, "Perform: failed step")
 
 invalidClaimBehavior("observation", (reporter, claimResult) => {
-  reporter.recordObservation(new Effect("failed observation", () => { }), claimResult)
+  reporter.recordObservation(scriptContext, new Effect("failed observation", () => { }), claimResult)
 }, "failed observation")
 
 

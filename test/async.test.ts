@@ -3,6 +3,7 @@ import * as assert from 'uvu/assert'
 import { validate, example, effect, condition, behavior } from '../src/index.js'
 import { expect } from 'chai'
 import { FakeReporter, withBehavior, withExample, withInvalidClaim, withValidClaim } from './helpers/FakeReporter.js'
+import { asyncBehavior, teardownValue } from './fixtures/asyncBehavior.js'
 
 test("it runs an example with an async given", async () => {
   const reporter = new FakeReporter()
@@ -47,49 +48,8 @@ test("it runs an example with an async given", async () => {
 test("it runs an example with an async context generator and async observation", async () => {
   const reporter = new FakeReporter()
 
-  let teardownValue = 0
-
   await validate([
-    behavior("a single test", [
-      example({
-        init: () => {
-          return new Promise<number>(resolve => {
-            setTimeout(() => resolve(7), 30)
-          })
-        },
-        teardown: async (context) => {
-          await new Promise<void>(resolve => {
-            setTimeout(() => {
-              teardownValue = context + 2
-              resolve()
-            }, 30)
-          })
-        }
-      })
-        .description("async context and observation")
-        .script({
-          observe: [
-            effect("async compares the right numbers", async (actual) => {
-              const fetchedValue = await new Promise(resolve => {
-                setTimeout(() => resolve(actual + 5), 30)
-              })
-              try {
-                expect(fetchedValue).to.equal(15)
-              } catch (err: any) {
-                throw {
-                  expected: err.expected,
-                  actual: err.actual,
-                  operator: err.operator,
-                  stack: "fake stack"
-                }
-              }
-            }),
-            effect("does something sync", (actual) => {
-              assert.equal(actual, 7)
-            })
-          ]
-        })
-    ])
+    asyncBehavior
   ], { reporter })
 
   assert.equal(teardownValue, 9, "it executes the async teardown function on the context")
@@ -97,7 +57,7 @@ test("it runs an example with an async context generator and async observation",
   reporter.expectReport([
     withBehavior("a single test", [
       withExample("async context and observation", [
-        withInvalidClaim("async compares the right numbers", {
+        withInvalidClaim("asyncBehavior.ts:23:6", "async compares the right numbers", {
           operator: "strictEqual",
           expected: 15,
           actual: 12,

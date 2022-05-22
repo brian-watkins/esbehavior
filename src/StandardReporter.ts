@@ -2,9 +2,10 @@ import { Assumption, Condition } from "./Assumption.js";
 import { ClaimResult } from "./Claim.js";
 import { ConsoleWriter } from "./ConsoleWriter.js";
 import { Effect } from "./Effect.js";
+import { ScriptContext } from "./Example.js";
 import { Failure, Reporter, Writer } from "./Reporter.js";
 import { Summary } from "./Summary.js";
-import { BrowserTimer, Timer, TimerFactory } from "./Timer.js";
+import { Timer, TimerFactory } from "./Timer.js";
 
 export interface StandardReporterOptions {
   writer?: Writer
@@ -98,13 +99,13 @@ export class StandardReporter implements Reporter {
     this.space()
   }
 
-  recordAssumption<T>(assumption: Assumption<T>, result: ClaimResult): void {
+  recordAssumption<T>(scriptContext: ScriptContext<T>, assumption: Assumption<T>, result: ClaimResult): void {
     result.when({
       valid: () => {
         this.writeValidAssumption(assumption)
       },
       invalid: (error) => {
-        this.writeInvalidClaim(assumption.description, error)
+        this.writeInvalidClaim(scriptContext, assumption.description, error)
       }
     })
   }
@@ -113,10 +114,10 @@ export class StandardReporter implements Reporter {
     this.writeSkippedClaim(assumption.description)
   }
 
-  recordObservation<T>(effect: Effect<T>, result: ClaimResult): void {
+  recordObservation<T>(scriptContext: ScriptContext<T>, effect: Effect<T>, result: ClaimResult): void {
     result.when({
       valid: () => this.writeValidClaim(effect.description),
-      invalid: (error) => this.writeInvalidClaim(effect.description, error)
+      invalid: (error) => this.writeInvalidClaim(scriptContext, effect.description, error)
     })
   }
 
@@ -136,7 +137,7 @@ export class StandardReporter implements Reporter {
     this.writer.writeLine(indent(1, this.format.green(`${check()} ${description}`)))
   }
 
-  writeInvalidClaim(description: string, error: any) {
+  writeInvalidClaim<T>(scriptContext: ScriptContext<T>, description: string, error: any) {
     this.writer.writeLine(indent(1, this.format.red(this.format.bold(`${fail()} ${description}`))))
     this.space()
     const messageLines = error.message.split(/\r?\n/);
@@ -148,6 +149,7 @@ export class StandardReporter implements Reporter {
       this.writeDetail("Actual", error.actual)
       this.writeDetail("Expected", error.expected)
     }
+    this.writeDetail("Script Failed", scriptContext.location)
     this.writeStack(error.stack)
     this.space()
   }

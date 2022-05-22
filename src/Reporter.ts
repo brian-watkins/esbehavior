@@ -1,6 +1,7 @@
 import { Assumption } from "./Assumption.js"
 import { ClaimResult } from "./Claim.js"
 import { Effect } from "./Effect.js"
+import { ScriptContext } from "./Example.js"
 import { Summary } from "./Summary.js"
 
 export interface Writer {
@@ -25,9 +26,9 @@ export interface Reporter {
   startExample(description?: string): void
   endExample(): void
 
-  recordAssumption<T>(assumption: Assumption<T>, result: ClaimResult): void
+  recordAssumption<T>(scriptContext: ScriptContext<T>, assumption: Assumption<T>, result: ClaimResult): void
   skipAssumption<T>(assumption: Assumption<T>): void
   
-  recordObservation<T>(effect: Effect<T>, result: ClaimResult): void
+  recordObservation<T>(scriptContext: ScriptContext<T>, effect: Effect<T>, result: ClaimResult): void
   skipObservation<T>(effect: Effect<T>): void
 }
