@@ -1,5 +1,5 @@
 import { Example, RunMode } from "./Example.js";
-import { Reporter } from "./Reporter.js";
+import { NullReporter, Reporter } from "./Reporter.js";
 import { addBehavior, addSummary, emptySummary, Summary } from "./Summary.js";
 
 export class BehaviorCollection {
@@ -35,31 +35,77 @@ export class Behavior {
   }
 
   async runPicked(reporter: Reporter): Promise<Summary> {
-    return this.execute((example) => example.runMode === RunMode.Picked, reporter)
+    return this.execute(new RunPickedIgnoreOthers(reporter))
   }
 
   async run(reporter: Reporter): Promise<Summary> {
-    return this.execute((example) => example.runMode !== RunMode.Skipped, reporter)
+    return this.execute(new RunButSkipIndicated(reporter))
   }
 
-  private async execute(shouldRun: (example: Example) => boolean, reporter: Reporter): Promise<Summary> {
-    reporter.startBehavior(this.description)
+  private async execute(runner: BehaviorRunner): Promise<Summary> {
+    runner.start(this)
 
     let summary = addBehavior(emptySummary())
 
     for (const example of this.examples) {
-      let exampleSummary: Summary
-      if (shouldRun(example)) {
-        exampleSummary = await example.run(reporter)
-      } else {
-        exampleSummary = await example.skip(reporter)
-      }
-
+      const exampleSummary = await runner.run(example)
       summary = addSummary(summary)(exampleSummary)
     }
 
-    reporter.endBehavior()
+    runner.end(this)
 
     return summary
+  }
+}
+
+interface BehaviorRunner {
+  start(behavior: Behavior): void
+  end(behavior: Behavior): void
+  run(example: Example): Promise<Summary>
+}
+
+class RunPickedIgnoreOthers implements BehaviorRunner {
+  private nullReporter = new NullReporter()
+
+  constructor (public reporter: Reporter) {}
+
+  start(behavior: Behavior): void {
+    if (behavior.hasPickedExamples) {
+      this.reporter.startBehavior(behavior.description)
+    }
+  }
+
+  end(behavior: Behavior): void {
+    if (behavior.hasPickedExamples) {
+      this.reporter.endBehavior()
+    }
+  }
+
+  async run(example: Example): Promise<Summary> {
+    if (example.runMode === RunMode.Picked) {
+      return await example.run(this.reporter)
+    } else {
+      return await example.skip(this.nullReporter)
+    }
+  }
+}
+
+class RunButSkipIndicated implements BehaviorRunner {
+  constructor (public reporter: Reporter) {}
+
+  start(behavior: Behavior): void {
+    this.reporter.startBehavior(behavior.description)
+  }
+
+  end(behavior: Behavior): void {
+    this.reporter.endBehavior()
+  }
+
+  async run(example: Example): Promise<Summary> {
+    if (example.runMode === RunMode.Skipped) {
+      return await example.skip(this.reporter)
+    } else {
+      return await example.run(this.reporter)
+    }
   }
 }

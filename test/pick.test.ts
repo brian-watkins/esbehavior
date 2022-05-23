@@ -3,7 +3,7 @@ import { test } from 'uvu'
 import { validate, pick, example, effect, condition, behavior } from '../src/index.js'
 import { FakeReporter, withBehavior, withExample, withSkippedClaim, withValidClaim } from './helpers/FakeReporter.js'
 
-test("it only runs the picked example", async () => {
+test("it only runs and reports on the picked example", async () => {
   const reporter = new FakeReporter()
 
   await validate([
@@ -59,21 +59,10 @@ test("it only runs the picked example", async () => {
 
   reporter.expectReport([
     withBehavior("something", [
-      withExample("not important", [
-        withSkippedClaim("it does something bad"),
-        withSkippedClaim("will never run this"),
-        withSkippedClaim("or this"),
-      ]),
       withExample("important", [
         withValidClaim("will run this")
       ])
     ]),
-    withBehavior("another", [
-      withExample("should be skipped", [
-        withSkippedClaim("it does something that it shouldn't"),
-        withSkippedClaim("just won't")
-      ])
-    ])
   ])
 
   reporter.expectSummary({
