@@ -3,6 +3,7 @@ import { addExample, addInvalid, addSkipped, addValid, emptySummary, Summary } f
 import { waitFor } from "./waitFor.js"
 import { Effect } from "./Effect.js"
 import { Assumption, Condition, Step } from "./Assumption.js"
+import * as stackTraceParser from 'stacktrace-parser';
 
 export interface Example {
   runMode: RunMode
@@ -35,19 +36,19 @@ export interface ScriptContext<T> {
 }
 
 function scriptContext<T>(script: Script<T>): ScriptContext<T> {
-  const error = new Error()
-  const line = error.stack?.split("\n")[3]
-  if (line) {
-    const location = line.substring(line.indexOf("at") + 3)
-    return {
-      location,
-      script
-    }
-  } else {
-    return {
-      location: "Unknown script location",
-      script
-    }
+  return {
+    location: scriptLocation(),
+    script
+  }
+}
+
+function scriptLocation(): string {
+  try {
+    const error = new Error()
+    const frame = stackTraceParser.parse(error.stack!)[3]
+    return `${frame.file}:${frame.lineNumber}:${frame.column}`
+  } catch (err) {
+    return "Unknown script location"
   }
 }
 
@@ -129,7 +130,7 @@ export class BehaviorExample<T> implements Example {
     reporter.startExample(this.description)
 
     const run = new ExampleRun<T>(new SkipMode(), reporter)
-    
+
     await run.execute(this.scripts)
 
     reporter.endExample()
@@ -146,10 +147,10 @@ interface Mode<T> {
 class ExampleRun<T> {
   public summary = addExample(emptySummary())
 
-  constructor (
+  constructor(
     public mode: Mode<T>,
     public reporter: Reporter,
-  ) {}
+  ) { }
 
   async execute(scriptContexts: Array<ScriptContext<T>>): Promise<void> {
     for (let scriptContext of scriptContexts) {
@@ -182,7 +183,7 @@ class ExampleRun<T> {
 
 
 class ValidateMode<T> implements Mode<T> {
-  constructor(private context: T) {}
+  constructor(private context: T) { }
 
   async handleAssumption(run: ExampleRun<T>, scriptContext: ScriptContext<T>, condition: Condition<T>): Promise<void> {
     const assumptionResult = await condition.validate(this.context)
