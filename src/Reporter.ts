@@ -1,6 +1,5 @@
 import { Assumption } from "./Assumption.js"
 import { ClaimResult } from "./Claim.js"
-import { Observable } from "./Effect.js"
 import { ScriptContext } from "./Script.js"
 import { Summary } from "./Summary.js"
 
@@ -30,7 +29,6 @@ export interface Reporter {
   skipAssumption<T>(assumption: Assumption<T>): void
   
   recordObservation<T>(result: ClaimResult): void
-  skipObservation<T>(observable: Observable<T>): void
 }
 
 export class NullReporter implements Reporter {
@@ -44,5 +42,4 @@ export class NullReporter implements Reporter {
   recordAssumption<T>(scriptContext: ScriptContext<T>, assumption: Assumption<T>, result: ClaimResult): void {}
   skipAssumption<T>(assumption: Assumption<T>): void {}
   recordObservation<T>(result: ClaimResult): void {}
-  skipObservation<T>(observable: Observable<T>): void {}
 }

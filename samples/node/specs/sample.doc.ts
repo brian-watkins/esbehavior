@@ -1,5 +1,5 @@
 import assert from 'proclaim'
-import { behavior, condition, effect, example, skip, step } from 'esbehavior'
+import { behavior, condition, effect, example, outcome, skip, step } from 'esbehavior'
 import { Thing } from '../src/Thing.js'
 
 export default
@@ -29,7 +29,11 @@ export default
         observe: [
           effect("never runs this", () => {
             assert.equal(7, 5)
-          })
+          }),
+          outcome("a skipped outcome", [
+            effect("this is skipped", () => {}),
+            effect("this is skipped also", () => {}),
+          ])
         ]
       })
   ])

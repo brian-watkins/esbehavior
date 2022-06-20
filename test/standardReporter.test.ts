@@ -4,7 +4,7 @@ import { Formatter, StandardReporter } from '../src/StandardReporter.js'
 import { behavior, condition, effect, example, skip, step, validate } from '../src/index.js'
 import { expect } from 'chai'
 import { Reporter } from '../src/Reporter.js'
-import { ClaimResult, InvalidClaim, ValidClaim } from '../src/Claim.js'
+import { ClaimResult, InvalidClaim, SkippedClaim, ValidClaim } from '../src/Claim.js'
 import { FakeTimer } from './helpers/FakeTimer.js'
 import { ScriptContext } from '../src/Script.js'
 
@@ -539,6 +539,35 @@ test("nested invalid outcome", () => {
       "    ✔ Another claim that worked",
     ])
   }
+})
+
+test("skipped nested outcome", () => {
+  const writer = new FakeReportWriter()
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+  const nestedOutcome = new SkippedClaim("Skipped Nested Outcome", "at-some-location")
+  nestedOutcome.subsumedResults = [
+    new SkippedClaim("Skipped Nested Claim 1", "at-some-location"),
+    new SkippedClaim("Skipped Nested Claim 2", "at-some-location"),
+  ]
+
+  const effect = new SkippedClaim("some funny skipped outcome", "some-location")
+  effect.subsumedResults = [
+    new SkippedClaim("Skipped Claim 1", "at-some-location"),
+    nestedOutcome,
+    new SkippedClaim("Skipped Claim 3", "at-some-location"),
+  ]
+
+  reporter.recordObservation(effect)
+
+  writer.expectLines([
+    "  - some funny skipped outcome",
+    "    - Skipped Claim 1",
+    "    - Skipped Nested Outcome",
+    "      - Skipped Nested Claim 1",
+    "      - Skipped Nested Claim 2",
+    "    - Skipped Claim 3",
+  ])
 })
 
 test.run()

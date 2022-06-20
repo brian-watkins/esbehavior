@@ -173,6 +173,9 @@ class ValidateMode<T> implements Mode<T> {
       invalid: () => {
         run.updateSummary(addInvalid)
         run.mode = new SkipMode()
+      },
+      skipped: () => {
+        // nothing
       }
     })
   }
@@ -189,8 +192,8 @@ class SkipMode<T> implements Mode<T> {
     run.updateSummary(addSkipped)
   }
 
-  async handleObservation(run: ExampleRun<T>, _: ScriptContext<T>, effect: Observable<T>): Promise<void> {
-    run.reporter.skipObservation(effect)
-    run.updateSummary(addSkipped)
+  async handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, effect: Observable<T>): Promise<void> {
+    const skippedResult = effect.skip(scriptContext)
+    run.recordObservation(skippedResult)
   }
 }

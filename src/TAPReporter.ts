@@ -57,7 +57,10 @@ export class TAPReporter implements Reporter {
   recordAssumption<T>(scriptContext: ScriptContext<T>, assumption: Assumption<T>, result: ClaimResult): void {
     result.when({
       valid: () => this.recordValidClaim(`${this.assumptionDesignator(assumption)} ${assumption.description}`),
-      invalid: (error) => this.recordInvalidClaim(`${this.assumptionDesignator(assumption)} ${assumption.description}`, error)
+      invalid: (error) => this.recordInvalidClaim(`${this.assumptionDesignator(assumption)} ${assumption.description}`, error),
+      skipped: () => {
+        // nothing yet 
+      }
     })
   }
 
@@ -77,12 +80,9 @@ export class TAPReporter implements Reporter {
   recordObservation<T>(result: ClaimResult): void {
     result.when({
       valid: () => this.recordValidClaim(result.description),
-      invalid: (error) => this.recordInvalidClaim(result.description, error)
+      invalid: (error) => this.recordInvalidClaim(result.description, error),
+      skipped: () => this.writer.writeLine(`ok ${result.description} # SKIP`)
     })
-  }
-
-  skipObservation<T>(observable: Observable<T>): void {
-    this.writer.writeLine(`ok ${observable.description} # SKIP`)
   }
 
   private recordValidClaim(description: string) {

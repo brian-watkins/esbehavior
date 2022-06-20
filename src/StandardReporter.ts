@@ -108,6 +108,11 @@ export class StandardReporter implements Reporter {
       },
       invalid: (error) => {
         this.writeInvalidClaim(scriptContext.location, assumption.description, error)
+      },
+      skipped: () => {
+        // nothing at the moment
+        // but when we implement we will need to make sure that invalid claims support
+        // skipping sub claims
       }
     })
   }
@@ -119,12 +124,9 @@ export class StandardReporter implements Reporter {
   recordObservation(result: ClaimResult): void {
     result.when({
       valid: () => this.writeValidClaimResult(result),
-      invalid: (error) => this.writeInvalidClaimResult(result, error)
+      invalid: (error) => this.writeInvalidClaimResult(result, error),
+      skipped: () => this.writeSkippedClaimResult(result)
     })
-  }
-
-  skipObservation<T>(observable: Observable<T>): void {
-    this.writeSkippedClaim(observable.description)
   }
 
   writeValidAssumption<T>(assumption: Assumption<T>) {
@@ -161,6 +163,10 @@ export class StandardReporter implements Reporter {
     return this.format.dim(this.format.red(this.format.line(25)))
   }
 
+  skippedSeparator(): string {
+    return this.format.dim(this.format.yellow(this.format.line(25)))
+  }
+
   // Note that this function can be removed when we fix Assumptions to
   // just use data in the claim result when reporting
   writeInvalidClaim(location: string, description: string, error: any) {
@@ -191,6 +197,9 @@ export class StandardReporter implements Reporter {
           },
           invalid: (subError) => {
             this.writeInvalidClaimResult(subResult, subError, indentLevel + 1)
+          },
+          skipped: () => {
+            // nothing yet
           }
         })
       }
@@ -235,6 +244,24 @@ export class StandardReporter implements Reporter {
 
   writeSkippedClaim(description: string) {
     this.writer.writeLine(indent(1, this.format.yellow(`${ignore()} ${description}`)))
+  }
+
+  writeSkippedClaimResult(result: ClaimResult, indentLevel: number = 1) {
+    const description = this.format.yellow(`${ignore()} ${result.description}`)
+
+    if (indentLevel === 1) {
+      this.writer.writeLine(indent(indentLevel, description))
+    } else {
+      this.writer.writeLine(indent(indentLevel, this.format.dim(description)))
+    }
+
+    if (result.hasSubsumedResults) {
+      this.writer.writeLine(indent(indentLevel + 1, this.skippedSeparator()))
+      for (const subResult of result.subsumedResults) {
+        this.writeSkippedClaimResult(subResult, indentLevel + 1)
+      }
+      this.writer.writeLine(indent(indentLevel + 1, this.skippedSeparator()))
+    }
   }
 
   space() {

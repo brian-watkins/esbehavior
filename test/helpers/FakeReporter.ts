@@ -91,6 +91,13 @@ function toTestClaim(result: ClaimResult): TestClaim | TestClaims {
         const location = result.location.split("/").at(-1) ?? "<LOCATION NOT FOUND>"
         return new InvalidClaim(location, result.description, failure)
       }
+    },
+    skipped: () => {
+      if (result.hasSubsumedResults) {
+        return new TestClaims(result.description, result.subsumedResults.map(toTestClaim), "skipped")
+      } else {
+        return new SkippedClaim(result.description)
+      }
     }
   })
 }
@@ -162,6 +169,10 @@ export function withInvalidClaims(description: string, claims: Array<TestClaim>)
 
 export function withInvalidClaim(scriptLocation: string, descripion: string, failure: Failure): TestClaim {
   return new InvalidClaim(scriptLocation, descripion, failure)
+}
+
+export function withSkippedClaims(description: string, claims: Array<TestClaim>): TestClaims {
+  return new TestClaims(description, claims, "skipped")
 }
 
 export function withSkippedClaim(descripion: string): TestClaim {

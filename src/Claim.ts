@@ -1,11 +1,12 @@
 import { Failure } from "./Reporter.js"
 import { ScriptContext } from "./Script.js"
-import { addInvalid, addValid, combineSummaries, emptySummary, Summary } from "./Summary.js"
+import { addInvalid, addSkipped, addValid, combineSummaries, emptySummary, Summary } from "./Summary.js"
 import { waitFor } from "./waitFor.js"
 
 export interface Claim<T> {
   description: string
   validate(scriptContext: ScriptContext<T>, context: T): Promise<ClaimResult>
+  skip(scriptContext: ScriptContext<T>): ClaimResult
 }
 
 export class SimpleClaim<T> implements Claim<T> {
@@ -18,6 +19,10 @@ export class SimpleClaim<T> implements Claim<T> {
     } catch (failure: any) {
       return new InvalidClaim(this.description, scriptContext.location, failure)
     }
+  }
+
+  skip(scriptContext: ScriptContext<T>): ClaimResult {
+    return new SkippedClaim(this.description, scriptContext.location)
   }
 }
 
@@ -34,14 +39,26 @@ export class ComplexClaim<T> implements Claim<T> {
 
     return result
   }
+
+  skip(scriptContext: ScriptContext<T>): ClaimResult {
+    let result = new SkippedClaim(this.description, scriptContext.location)
+
+    for (const claim of this.claims) {
+      const skippedResult = claim.skip(scriptContext)
+      result = result.subsume(skippedResult)
+    }
+
+    return result
+  }
 }
 
 export interface ClaimResultHandler<S> {
   valid(): S
   invalid(error: Failure): S
+  skipped(): S
 }
 
-type ClaimStatus = "Invalid" | "Valid"
+type ClaimStatus = "Invalid" | "Valid" | "Skipped"
 
 export abstract class ClaimResult {
   abstract type: ClaimStatus
@@ -61,7 +78,8 @@ export abstract class ClaimResult {
     } else {
       return this.when({
         valid: () => addValid(emptySummary()),
-        invalid: () => addInvalid(emptySummary())
+        invalid: () => addInvalid(emptySummary()),
+        skipped: () => addSkipped(emptySummary())
       })
     }
   }
@@ -79,6 +97,10 @@ export abstract class ClaimResult {
         result.subsumedResults = this.subsumedResults
         result.subsumedResults.push(subResult)
         return result
+      },
+      skipped: () => {
+        this.subsumedResults.push(subResult)
+        return this
       }
     })
   }
@@ -102,5 +124,13 @@ export class InvalidClaim extends ClaimResult {
 
   when<S>(handler: ClaimResultHandler<S>): S {
     return handler.invalid(this.error)
+  }
+}
+
+export class SkippedClaim extends ClaimResult {
+  public type: ClaimStatus = "Skipped"
+
+  when<S>(handler: ClaimResultHandler<S>): S {
+    return handler.skipped()
   }
 }

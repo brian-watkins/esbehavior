@@ -140,7 +140,8 @@ skippedClaimBehavior("step", (reporter) => {
 }, "Perform: cool step")
 
 skippedClaimBehavior("observation", (reporter) => {
-  reporter.skipObservation(new Effect("cool observation", () => {}))
+  const skippedEffect = (new Effect("cool observation", () => {})).skip(scriptContext)
+  reporter.recordObservation(skippedEffect)
 }, "cool observation")
 
 
