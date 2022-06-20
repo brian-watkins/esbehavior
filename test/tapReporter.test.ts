@@ -3,7 +3,7 @@ import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { Condition, Step } from '../src/Assumption.js'
 import { ClaimResult, InvalidClaim, ValidClaim } from '../src/Claim.js'
-import { example, effect, condition, validate, behavior, Effect, step, Script } from '../src/index.js'
+import { example, effect, condition, validate, behavior, step, Script, Effect } from '../src/index.js'
 import { Reporter } from '../src/Reporter.js'
 import { TAPReporter } from '../src/TAPReporter.js'
 import { FakeReportWriter } from './helpers/FakeReportWriter.js'
@@ -92,7 +92,7 @@ const validClaimBehavior = (name: string, writeToReport: (reporter: Reporter, cl
     const writer = new FakeReportWriter()
     const reporter = new TAPReporter(writer)
   
-    writeToReport(reporter, new ValidClaim())
+    writeToReport(reporter, new ValidClaim(description, "some-location"))
   
     writer.expectLines([
       `ok ${description}`
@@ -114,7 +114,7 @@ validClaimBehavior("step", (reporter, claimResult) => {
 }, "Perform: some step")
 
 validClaimBehavior("observation", (reporter, claimResult) => {
-  reporter.recordObservation(scriptContext, new Effect("some effect", () => {}), claimResult)
+  reporter.recordObservation(claimResult)
 }, "some effect")
 
 
@@ -149,7 +149,7 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
     const writer = new FakeReportWriter()
     const reporter = new TAPReporter(writer)
 
-    writeToReport(reporter, new InvalidClaim({ expected: "something", actual: "nothing", operator: "equals", stack: "blah" }))
+    writeToReport(reporter, new InvalidClaim(expectedDescription, "some-location", { expected: "something", actual: "nothing", operator: "equals", stack: "blah" }))
 
     writer.expectLines([
       `not ok ${expectedDescription}`,
@@ -167,7 +167,7 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
     const writer = new FakeReportWriter()
     const reporter = new TAPReporter(writer)
 
-    writeToReport(reporter, new InvalidClaim({
+    writeToReport(reporter, new InvalidClaim(expectedDescription, "some-location", {
       expected: "# Behavior: A Sample Behavior\n# Example: Comparing some numbers\n# tests 1\n# pass 1\n# fail 0\n# skip 0",
       actual: "# Behavior: A Sample Behavior\n# Example: Comparing some numbers",
       operator: "equals",
@@ -190,7 +190,7 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
     const writer = new FakeReportWriter()
     const reporter = new TAPReporter(writer)
 
-    writeToReport(reporter, new InvalidClaim({
+    writeToReport(reporter, new InvalidClaim(expectedDescription, "some-location", {
       expected: 7,
       actual: [9, 10, 11],
       operator: "equals",
@@ -216,7 +216,7 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
     const error = new Error()
     error.stack = "funny stack"
 
-    writeToReport(reporter, new InvalidClaim(error))
+    writeToReport(reporter, new InvalidClaim(expectedDescription, "some-location", error))
 
     writer.expectLines([
       `not ok ${expectedDescription}`,
@@ -237,7 +237,7 @@ invalidClaimBehavior("step", (reporter, claimResult) => {
 }, "Perform: failed step")
 
 invalidClaimBehavior("observation", (reporter, claimResult) => {
-  reporter.recordObservation(scriptContext, new Effect("failed observation", () => { }), claimResult)
+  reporter.recordObservation(claimResult)
 }, "failed observation")
 
 

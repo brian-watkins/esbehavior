@@ -40,3 +40,7 @@ export function addSummary(current: Summary): (next: Summary) => Summary {
     skipped: current.skipped + next.skipped
   })
 }
+
+export function combineSummaries(current: Summary, next: Summary): Summary {
+  return addSummary(current)(next)
+}

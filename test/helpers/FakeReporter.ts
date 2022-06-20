@@ -1,10 +1,10 @@
-import { Effect } from "../../src/index.js";
+import { Effect, Observable } from "../../src/index.js";
 import { Assumption } from "../../src/Assumption.js";
-import { Claim, ClaimResult } from "../../src/Claim.js";
+import { ClaimResult } from "../../src/Claim.js";
 import { Failure, Reporter } from "../../src/Reporter.js";
 import { Summary } from "../../src/Summary.js";
 import * as assert from 'uvu/assert'
-import { ScriptContext } from "../../src/Example.js";
+import { ScriptContext } from "../../src/Script.js";
 
 export class FakeReporter implements Reporter {
   private reports: Array<TestBehavior | TestFailure | null> = []
@@ -46,30 +46,23 @@ export class FakeReporter implements Reporter {
   }
 
   recordAssumption<T>(scriptContext: ScriptContext<T>, assumption: Assumption<T>, result: ClaimResult): void {
-    this.recordClaim(scriptContext, assumption, result)
+    this.recordClaim(result)
   }
 
   skipAssumption<T>(assumption: Assumption<T>): void {
-    this.currentExample?.claims.push(new TestClaim("", assumption.description, "skipped", null))
+    this.currentExample?.claims.push(new SkippedClaim(assumption.description))
   }
 
-  recordObservation<T>(scriptContext: ScriptContext<T>, effect: Effect<T>, result: ClaimResult): void {
-    this.recordClaim(scriptContext, effect, result)
+  recordObservation<T>(result: ClaimResult): void {
+    this.recordClaim(result)
   }
 
-  skipObservation<T>(effect: Effect<T>): void {
-    this.currentExample?.claims.push(new TestClaim("", effect.description, "skipped", null))
+  skipObservation<T>(observable: Observable<T>): void {
+    this.currentExample?.claims.push(new SkippedClaim(observable.description))
   }
 
-  private recordClaim<T>(scriptContext: ScriptContext<T>, claim: Claim<T>, result: ClaimResult): void {
-    const claimResult = result.when({
-      valid: () => new TestClaim("", claim.description, "valid", null),
-      invalid: (failure) => {
-        const location = scriptContext.location.split("/").at(-1) ?? "<LOCATION NOT FOUND>"
-        return new TestClaim(location, claim.description, "invalid", failure)
-      }
-    })
-    this.currentExample?.claims.push(claimResult)
+  private recordClaim<T>(result: ClaimResult): void {
+    this.currentExample?.claims.push(toTestClaim(result))
   }
 
   expectReport(expectedReports: Array<TestBehavior | TestFailure>) {
@@ -80,6 +73,26 @@ export class FakeReporter implements Reporter {
   expectSummary(expected: Summary) {
     assert.equal(this.summary, expected, "expected summary")
   }
+}
+
+function toTestClaim(result: ClaimResult): TestClaim | TestClaims {
+  return result.when({
+    valid: () => {
+      if (result.hasSubsumedResults) {
+        return new TestClaims(result.description, result.subsumedResults.map(toTestClaim), "valid")
+      } else {
+        return new ValidClaim(result.description)
+      }
+    },
+    invalid: (failure) => {
+      if (result.hasSubsumedResults) {
+        return new TestClaims(result.description, result.subsumedResults.map(toTestClaim), "invalid")
+      } else {
+        const location = result.location.split("/").at(-1) ?? "<LOCATION NOT FOUND>"
+        return new InvalidClaim(location, result.description, failure)
+      }
+    }
+  })
 }
 
 class TestBehavior {
@@ -95,12 +108,12 @@ export function withBehavior(description: string, examples: Array<TestExample>):
 }
 
 class TestExample {
-  public claims: Array<TestClaim> = []
+  public claims: Array<TestClaim | TestClaims> = []
 
   constructor(public description: string | null) {}
 }
 
-export function withExample(description: string | null, claims: Array<TestClaim>): TestExample {
+export function withExample(description: string | null, claims: Array<TestClaim | TestClaims>): TestExample {
   const example = new TestExample(description)
   example.claims = claims
   return example
@@ -114,18 +127,43 @@ export function withFailure(failure: Failure): TestFailure {
   return new TestFailure(failure)
 }
 
-class TestClaim {
-  constructor(public scriptLocation: string, public description: string, public result: string, public failure: Failure | null) {}
+type TestClaim = ValidClaim | InvalidClaim | SkippedClaim
+
+class ValidClaim {
+  public result = "valid"
+  constructor(public description: string) {}
+}
+
+class InvalidClaim {
+  public result = "invalid"
+  constructor(public scriptLocation: string, public description: string, public failure: Failure) {}
+}
+
+class SkippedClaim {
+  public result = "skipped"
+  constructor(public description: string) {}
+}
+
+class TestClaims {
+  constructor(public description: string, public claims: Array<TestClaim>, public result: string) {}
+}
+
+export function withValidClaims(description: string, claims: Array<TestClaim>): TestClaims {
+  return new TestClaims(description, claims, "valid")
 }
 
 export function withValidClaim(description: string): TestClaim {
-  return new TestClaim("", description, "valid", null)
+  return new ValidClaim(description)
+}
+
+export function withInvalidClaims(description: string, claims: Array<TestClaim>): TestClaims {
+  return new TestClaims(description, claims, "invalid")
 }
 
 export function withInvalidClaim(scriptLocation: string, descripion: string, failure: Failure): TestClaim {
-  return new TestClaim(scriptLocation, descripion, "invalid", failure)
+  return new InvalidClaim(scriptLocation, descripion, failure)
 }
 
 export function withSkippedClaim(descripion: string): TestClaim {
-  return new TestClaim("", descripion, "skipped", null)
+  return new SkippedClaim(descripion)
 }

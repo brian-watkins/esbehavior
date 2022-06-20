@@ -1,7 +1,7 @@
 import { Assumption } from "./Assumption.js"
 import { ClaimResult } from "./Claim.js"
-import { Effect } from "./Effect.js"
-import { ScriptContext } from "./Example.js"
+import { Observable } from "./Effect.js"
+import { ScriptContext } from "./Script.js"
 import { Summary } from "./Summary.js"
 
 export interface Writer {
@@ -29,8 +29,8 @@ export interface Reporter {
   recordAssumption<T>(scriptContext: ScriptContext<T>, assumption: Assumption<T>, result: ClaimResult): void
   skipAssumption<T>(assumption: Assumption<T>): void
   
-  recordObservation<T>(scriptContext: ScriptContext<T>, effect: Effect<T>, result: ClaimResult): void
-  skipObservation<T>(effect: Effect<T>): void
+  recordObservation<T>(result: ClaimResult): void
+  skipObservation<T>(observable: Observable<T>): void
 }
 
 export class NullReporter implements Reporter {
@@ -43,6 +43,6 @@ export class NullReporter implements Reporter {
   endExample(): void {}
   recordAssumption<T>(scriptContext: ScriptContext<T>, assumption: Assumption<T>, result: ClaimResult): void {}
   skipAssumption<T>(assumption: Assumption<T>): void {}
-  recordObservation<T>(scriptContext: ScriptContext<T>, effect: Effect<T>, result: ClaimResult): void {}
-  skipObservation<T>(effect: Effect<T>): void {}
+  recordObservation<T>(result: ClaimResult): void {}
+  skipObservation<T>(observable: Observable<T>): void {}
 }

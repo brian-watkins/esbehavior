@@ -1,9 +1,9 @@
 import { Assumption, Condition } from "./Assumption.js"
 import { ClaimResult } from "./Claim.js"
 import { ConsoleWriter } from "./ConsoleWriter.js"
-import { Effect } from "./Effect.js"
-import { ScriptContext } from "./Example.js"
+import { Observable } from "./Effect.js"
 import { Failure, Reporter, Writer } from "./Reporter.js"
+import { ScriptContext } from "./Script.js"
 import { Summary } from "./Summary.js"
 
 export class TAPReporter implements Reporter {
@@ -74,15 +74,15 @@ export class TAPReporter implements Reporter {
     this.writer.writeLine(`ok ${this.assumptionDesignator(assumption)} ${assumption.description} # SKIP`)
   }
 
-  recordObservation<T>(scriptContext: ScriptContext<T>, effect: Effect<T>, result: ClaimResult): void {
+  recordObservation<T>(result: ClaimResult): void {
     result.when({
-      valid: () => this.recordValidClaim(effect.description),
-      invalid: (error) => this.recordInvalidClaim(effect.description, error)
+      valid: () => this.recordValidClaim(result.description),
+      invalid: (error) => this.recordInvalidClaim(result.description, error)
     })
   }
 
-  skipObservation<T>(effect: Effect<T>): void {
-    this.writer.writeLine(`ok ${effect.description} # SKIP`)
+  skipObservation<T>(observable: Observable<T>): void {
+    this.writer.writeLine(`ok ${observable.description} # SKIP`)
   }
 
   private recordValidClaim(description: string) {

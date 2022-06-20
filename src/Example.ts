@@ -1,9 +1,10 @@
 import { Reporter } from "./Reporter.js"
-import { addExample, addInvalid, addSkipped, addValid, emptySummary, Summary } from "./Summary.js"
+import { addExample, addInvalid, addSkipped, addSummary, addValid, emptySummary, Summary } from "./Summary.js"
 import { waitFor } from "./waitFor.js"
-import { Effect } from "./Effect.js"
-import { Assumption, Condition, Step } from "./Assumption.js"
-import * as stackTraceParser from 'stacktrace-parser';
+import { Observable } from "./Effect.js"
+import { Assumption, Condition } from "./Assumption.js"
+import { Script, ScriptContext, scriptContext } from "./Script.js"
+import { ClaimResult } from "./Claim.js"
 
 export interface Example {
   runMode: RunMode
@@ -22,34 +23,6 @@ export enum RunMode {
 
 export interface ExampleBuilder<T> {
   build(): Example
-}
-
-export interface Script<T> {
-  prepare?: Array<Condition<T>>
-  perform?: Array<Step<T>>
-  observe?: Array<Effect<T>>
-}
-
-export interface ScriptContext<T> {
-  location: string
-  script: Script<T>
-}
-
-function scriptContext<T>(script: Script<T>): ScriptContext<T> {
-  return {
-    location: scriptLocation(),
-    script
-  }
-}
-
-function scriptLocation(): string {
-  try {
-    const error = new Error()
-    const frame = stackTraceParser.parse(error.stack!)[3]
-    return `${frame.file}:${frame.lineNumber}:${frame.column}`
-  } catch (err) {
-    return "Unknown script location"
-  }
 }
 
 export interface ExampleSetupBuilder<T> extends ExampleBuilder<T> {
@@ -141,7 +114,7 @@ export class BehaviorExample<T> implements Example {
 
 interface Mode<T> {
   handleAssumption(run: ExampleRun<T>, scriptContext: ScriptContext<T>, assumption: Assumption<T>): Promise<void>
-  handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, effect: Effect<T>): Promise<void>
+  handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, effect: Observable<T>): Promise<void>
 }
 
 class ExampleRun<T> {
@@ -179,6 +152,11 @@ class ExampleRun<T> {
   updateSummary(summarizer: (summary: Summary) => Summary) {
     this.summary = summarizer(this.summary)
   }
+
+  recordObservation(result: ClaimResult) {
+    this.reporter.recordObservation(result)
+    this.summary = addSummary(this.summary)(result.summary)
+  }
 }
 
 
@@ -186,7 +164,7 @@ class ValidateMode<T> implements Mode<T> {
   constructor(private context: T) { }
 
   async handleAssumption(run: ExampleRun<T>, scriptContext: ScriptContext<T>, condition: Condition<T>): Promise<void> {
-    const assumptionResult = await condition.validate(this.context)
+    const assumptionResult = await condition.validate(scriptContext, this.context)
     run.reporter.recordAssumption(scriptContext, condition, assumptionResult)
     assumptionResult.when({
       valid: () => {
@@ -199,17 +177,9 @@ class ValidateMode<T> implements Mode<T> {
     })
   }
 
-  async handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, effect: Effect<T>): Promise<void> {
-    const observationResult = await effect.validate(this.context)
-    run.reporter.recordObservation(scriptContext, effect, observationResult)
-    observationResult.when({
-      valid: () => {
-        run.updateSummary(addValid)
-      },
-      invalid: () => {
-        run.updateSummary(addInvalid)
-      }
-    })
+  async handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, effect: Observable<T>): Promise<void> {
+    const observationResult = await effect.validate(scriptContext, this.context)
+    run.recordObservation(observationResult)
   }
 }
 
@@ -219,7 +189,7 @@ class SkipMode<T> implements Mode<T> {
     run.updateSummary(addSkipped)
   }
 
-  async handleObservation(run: ExampleRun<T>, _: ScriptContext<T>, effect: Effect<T>): Promise<void> {
+  async handleObservation(run: ExampleRun<T>, _: ScriptContext<T>, effect: Observable<T>): Promise<void> {
     run.reporter.skipObservation(effect)
     run.updateSummary(addSkipped)
   }

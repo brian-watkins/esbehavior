@@ -3,11 +3,10 @@ import { FakeReportWriter } from './helpers/FakeReportWriter.js'
 import { Formatter, StandardReporter } from '../src/StandardReporter.js'
 import { behavior, condition, effect, example, skip, step, validate } from '../src/index.js'
 import { expect } from 'chai'
-import { InvalidClaim } from '../dist/Claim.js'
 import { Reporter } from '../src/Reporter.js'
-import { ClaimResult } from '../src/Claim.js'
+import { ClaimResult, InvalidClaim, ValidClaim } from '../src/Claim.js'
 import { FakeTimer } from './helpers/FakeTimer.js'
-import { ScriptContext } from '../src/Example.js'
+import { ScriptContext } from '../src/Script.js'
 
 test("multiple examples with valid and skipped claims", async () => {
   const writer = new FakeReportWriter()
@@ -233,7 +232,7 @@ test("when the validation run is terminated", () => {
 })
 
 
-const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporter, scriptContext: ScriptContext<T>, claimResult: ClaimResult) => void, description: string) => {
+const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporter, scriptContext: ScriptContext<T> | null, claimResult: ClaimResult) => void, description: string) => {
   test(`invalid ${name}`, () => {
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
@@ -246,7 +245,7 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
         script: {}
       }
       err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      writeToReport(reporter, scriptContext, new InvalidClaim(err))
+      writeToReport(reporter, scriptContext, new InvalidClaim(description, "file://some/file/location.ts:58:19", err))
 
       writer.expectLines([
         `  ✖ ${description}`,
@@ -276,7 +275,7 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
       message: "expected things to happen",
       stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
     }
-    writeToReport(reporter, scriptContext, new InvalidClaim(err))
+    writeToReport(reporter, scriptContext, new InvalidClaim(description, "file://some/cool/location.ts:58:19", err))
 
     writer.expectLines([
       `  ✖ ${description}`,
@@ -301,7 +300,7 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
       message: "expected things to happen\nmore information\r\neven more information.",
       stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
     }
-    writeToReport(reporter, scriptContext, new InvalidClaim(err))
+    writeToReport(reporter, scriptContext, new InvalidClaim(description, "file://some/awesome/location.ts:58:19", err))
 
     writer.expectLines([
       `  ✖ ${description}`,
@@ -328,7 +327,7 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
       }
 
       err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      writeToReport(reporter, scriptContext, new InvalidClaim(err))
+      writeToReport(reporter, scriptContext, new InvalidClaim(description, "file://some/file/location.ts:58:19", err))
 
       writer.expectLines([
         `  ✖ ${description}`,
@@ -354,7 +353,7 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
       }
 
       err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      writeToReport(reporter, scriptContext, new InvalidClaim(err))
+      writeToReport(reporter, scriptContext, new InvalidClaim(description, "file://some/file/location.ts:58:19", err))
 
       writer.expectLines([
         `  ✖ ${description}`,
@@ -384,7 +383,7 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
       }
 
       err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      writeToReport(reporter, scriptContext, new InvalidClaim(err))
+      writeToReport(reporter, scriptContext, new InvalidClaim(description, "file://some/file/location.ts:58:19", err))
 
       writer.expectLines([
         `  ✖ ${description}`,
@@ -403,17 +402,144 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
 }
 
 invalidClaimBehavior("condition", (reporter, scriptContext, claimResult) => {
-  reporter.recordAssumption(scriptContext, condition("some condition", () => { }), claimResult)
+  reporter.recordAssumption(scriptContext!, condition("some condition", () => { }), claimResult)
 }, "some condition")
 
 invalidClaimBehavior("step", (reporter, scriptContext, claimResult) => {
-  reporter.recordAssumption(scriptContext, step("some step", () => { }), claimResult)
+  reporter.recordAssumption(scriptContext!, step("some step", () => { }), claimResult)
 }, "some step")
 
 invalidClaimBehavior("observation", (reporter, scriptContext, claimResult) => {
-  reporter.recordObservation(scriptContext, effect("some observation", () => { }), claimResult)
+  reporter.recordObservation(claimResult)
 }, "some observation")
 
+test("valid outcome", () => {
+  const writer = new FakeReportWriter()
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+  const effect = new ValidClaim("some funny valid outcome", "some-location")
+  effect.subsumedResults = [
+    new ValidClaim("Valid Claim 1", "at-some-location"),
+    new ValidClaim("Valid Claim 2", "at-some-location"),
+    new ValidClaim("Valid Claim 3", "at-some-location"),
+  ]
+
+  reporter.recordObservation(effect)
+
+  writer.expectLines([
+    "  ✔ some funny valid outcome",
+    "    ✔ Valid Claim 1",
+    "    ✔ Valid Claim 2",
+    "    ✔ Valid Claim 3",
+  ])
+})
+
+test("valid nested outcome", () => {
+  const writer = new FakeReportWriter()
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+  const nestedOutcome = new ValidClaim("Valid Nested Outcome", "at-some-location")
+  nestedOutcome.subsumedResults = [
+    new ValidClaim("Valid Nested Claim 1", "at-some-location"),
+    new ValidClaim("Valid Nested Claim 2", "at-some-location"),
+  ]
+
+  const effect = new ValidClaim("some funny valid outcome", "some-location")
+  effect.subsumedResults = [
+    new ValidClaim("Valid Claim 1", "at-some-location"),
+    nestedOutcome,
+    new ValidClaim("Valid Claim 3", "at-some-location"),
+  ]
+
+  reporter.recordObservation(effect)
+
+  writer.expectLines([
+    "  ✔ some funny valid outcome",
+    "    ✔ Valid Claim 1",
+    "    ✔ Valid Nested Outcome",
+    "      ✔ Valid Nested Claim 1",
+    "      ✔ Valid Nested Claim 2",
+    "    ✔ Valid Claim 3",
+  ])
+})
+
+test("invalid outcome", () => {
+  const writer = new FakeReportWriter()
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+  try {
+    expect(7).to.be.lessThan(5)
+  } catch (err: any) {
+    err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
+
+    const effect = new InvalidClaim("bad outcome", "some-location", {})
+    effect.subsumedResults = [
+      new ValidClaim("some claim that worked", "at-some-location"),
+      new InvalidClaim("some failing claim", "at-some-location", err)
+    ]
+
+    reporter.recordObservation(effect)
+
+    writer.expectLines([
+      "  ✖ bad outcome",
+      "    ✔ some claim that worked",
+      "    ✖ some failing claim",
+      "      expected 7 to be below 5",
+      "      Actual",
+      "        7",
+      "      Expected",
+      "        5",
+      "      Script Failed",
+      "        at-some-location",
+      "      at some.line.of.code",
+      "      at another.line.of.code",
+    ])
+  }
+})
+
+test("nested invalid outcome", () => {
+  const writer = new FakeReportWriter()
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+  try {
+    expect(7).to.be.lessThan(5)
+  } catch (err: any) {
+    err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
+
+    const nestedOutcome = new InvalidClaim("bad nested outcome", "some-location", {})
+    nestedOutcome.subsumedResults = [
+      new ValidClaim("some claim that worked 2", "at-some-location"),
+      new InvalidClaim("some failing claim", "at-some-location", err)
+    ]
+
+    const effect = new InvalidClaim("bad outcome", "some-location", {})
+    effect.subsumedResults = [
+      new ValidClaim("some claim that worked 1", "at-some-location"),
+      nestedOutcome,
+      new ValidClaim("Another claim that worked", "at-some-location")
+    ]
+
+    reporter.recordObservation(effect)
+
+    writer.expectLines([
+      "  ✖ bad outcome",
+      "    ✔ some claim that worked 1",
+      "    ✖ bad nested outcome",
+      "      ✔ some claim that worked 2",
+      "      ✖ some failing claim",
+      "        expected 7 to be below 5",
+      "        Actual",
+      "          7",
+      "        Expected",
+      "          5",
+      "        Script Failed",
+      "          at-some-location",
+      "        at some.line.of.code",
+      "        at another.line.of.code",
+      "    ✔ Another claim that worked",
+    ])
+  }
+})
 
 test.run()
 
@@ -439,5 +565,8 @@ class FakeFormatter implements Formatter {
   }
   cyan(message: string): string {
     return message
+  }
+  line(length: number): string {
+    return ""
   }
 }

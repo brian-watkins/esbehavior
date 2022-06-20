@@ -1,11 +1,11 @@
 import { Context, RunMode, ExampleBuilder, BehaviorExampleBuilder, ExampleSetupBuilder } from "./Example.js"
 import { Reporter } from "./Reporter.js"
 import { Behavior, BehaviorCollection } from "./Behavior.js"
-import { Effect } from "./Effect.js"
+import { Effect, Observable, Outcome } from "./Effect.js"
 import { Condition, Step } from "./Assumption.js"
 import { StandardReporter } from "./StandardReporter.js"
 import { emptySummary, Summary } from "./Summary.js"
-export { Effect } from "./Effect.js"
+export { Observable, Effect, Outcome } from "./Effect.js"
 export { Step, Condition } from "./Assumption.js"
 export { Claim } from "./Claim.js"
 export { Behavior } from "./Behavior.js"
@@ -13,7 +13,8 @@ export { Summary } from "./Summary.js"
 export { Reporter, Writer, Failure } from "./Reporter.js"
 export { StandardReporter } from "./StandardReporter.js"
 export { TAPReporter } from "./TAPReporter.js"
-export { Example, Script, Context, ExampleBuilder, ExampleSetupBuilder, ExampleScriptBuilder, ExampleScriptsBuilder } from "./Example.js"
+export { Example, Context, ExampleBuilder, ExampleSetupBuilder, ExampleScriptBuilder, ExampleScriptsBuilder } from "./Example.js"
+export { Script } from "./Script.js"
 
 export interface ValidationOptions {
   reporter?: Reporter
@@ -66,6 +67,10 @@ export function step<T>(description: string, validate: (context: T) => void | Pr
   return new Step(description, validate)
 }
 
-export function effect<T>(description: string, validate: (context: T) => void | Promise<void>): Effect<T> {
+export function effect<T>(description: string, validate: (context: T) => void | Promise<void>): Observable<T> {
   return new Effect(description, validate)
+}
+
+export function outcome<T>(description: string, effects: Array<Observable<T>>): Observable<T> {
+  return new Outcome(description, effects)
 }

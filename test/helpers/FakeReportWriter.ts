@@ -5,7 +5,7 @@ export class FakeReportWriter implements Writer {
   public logLines: Array<string> = []
 
   writeLine(message: string): void {
-    if (message.length > 0) {
+    if (message.trim().length > 0) {
       this.logLines.push(message)
     }
   }
