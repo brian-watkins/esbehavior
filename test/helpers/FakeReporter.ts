@@ -1,10 +1,7 @@
-import { Effect, Observable } from "../../src/index.js";
-import { Assumption } from "../../src/Assumption.js";
 import { ClaimResult } from "../../src/Claim.js";
 import { Failure, Reporter } from "../../src/Reporter.js";
 import { Summary } from "../../src/Summary.js";
 import * as assert from 'uvu/assert'
-import { ScriptContext } from "../../src/Script.js";
 
 export class FakeReporter implements Reporter {
   private reports: Array<TestBehavior | TestFailure | null> = []
@@ -45,20 +42,15 @@ export class FakeReporter implements Reporter {
     this.currentExample = null
   }
 
-  recordAssumption<T>(scriptContext: ScriptContext<T>, assumption: Assumption<T>, result: ClaimResult): void {
+  recordPreparation(result: ClaimResult): void {
     this.recordClaim(result)
   }
-
-  skipAssumption<T>(assumption: Assumption<T>): void {
-    this.currentExample?.claims.push(new SkippedClaim(assumption.description))
+  recordPerformance(result: ClaimResult): void {
+    this.recordClaim(result)
   }
 
   recordObservation<T>(result: ClaimResult): void {
     this.recordClaim(result)
-  }
-
-  skipObservation<T>(observable: Observable<T>): void {
-    this.currentExample?.claims.push(new SkippedClaim(observable.description))
   }
 
   private recordClaim<T>(result: ClaimResult): void {

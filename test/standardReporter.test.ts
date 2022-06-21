@@ -6,7 +6,6 @@ import { expect } from 'chai'
 import { Reporter } from '../src/Reporter.js'
 import { ClaimResult, InvalidClaim, SkippedClaim, ValidClaim } from '../src/Claim.js'
 import { FakeTimer } from './helpers/FakeTimer.js'
-import { ScriptContext } from '../src/Script.js'
 
 test("multiple examples with valid and skipped claims", async () => {
   const writer = new FakeReportWriter()
@@ -232,7 +231,7 @@ test("when the validation run is terminated", () => {
 })
 
 
-const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporter, scriptContext: ScriptContext<T> | null, claimResult: ClaimResult) => void, description: string) => {
+const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporter, claimResult: ClaimResult) => void, description: string) => {
   test(`invalid ${name}`, () => {
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
@@ -240,12 +239,8 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
     try {
       expect(7).to.be.lessThan(5)
     } catch (err: any) {
-      const scriptContext = {
-        location: "file://some/file/location.ts:58:19",
-        script: {}
-      }
       err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      writeToReport(reporter, scriptContext, new InvalidClaim(description, "file://some/file/location.ts:58:19", err))
+      writeToReport(reporter, new InvalidClaim(description, "file://some/file/location.ts:58:19", err))
 
       writer.expectLines([
         `  ✖ ${description}`,
@@ -266,16 +261,11 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
-    const scriptContext = {
-      location: "file://some/cool/location.ts:58:19",
-      script: {}
-    }
-
     const err = {
       message: "expected things to happen",
       stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
     }
-    writeToReport(reporter, scriptContext, new InvalidClaim(description, "file://some/cool/location.ts:58:19", err))
+    writeToReport(reporter, new InvalidClaim(description, "file://some/cool/location.ts:58:19", err))
 
     writer.expectLines([
       `  ✖ ${description}`,
@@ -291,16 +281,11 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
-    const scriptContext = {
-      location: "file://some/awesome/location.ts:58:19",
-      script: {}
-    }
-
     const err = {
       message: "expected things to happen\nmore information\r\neven more information.",
       stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
     }
-    writeToReport(reporter, scriptContext, new InvalidClaim(description, "file://some/awesome/location.ts:58:19", err))
+    writeToReport(reporter, new InvalidClaim(description, "file://some/awesome/location.ts:58:19", err))
 
     writer.expectLines([
       `  ✖ ${description}`,
@@ -321,13 +306,8 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
     try {
       expect(["one", "two", "three"]).to.contain("apples")
     } catch (err: any) {
-      const scriptContext = {
-        location: "file://some/file/location.ts:58:19",
-        script: {}
-      }
-
       err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      writeToReport(reporter, scriptContext, new InvalidClaim(description, "file://some/file/location.ts:58:19", err))
+      writeToReport(reporter, new InvalidClaim(description, "file://some/file/location.ts:58:19", err))
 
       writer.expectLines([
         `  ✖ ${description}`,
@@ -347,13 +327,8 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
     try {
       expect(false).to.be.true
     } catch (err: any) {
-      const scriptContext = {
-        location: "file://some/file/location.ts:58:19",
-        script: {}
-      }
-
       err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      writeToReport(reporter, scriptContext, new InvalidClaim(description, "file://some/file/location.ts:58:19", err))
+      writeToReport(reporter, new InvalidClaim(description, "file://some/file/location.ts:58:19", err))
 
       writer.expectLines([
         `  ✖ ${description}`,
@@ -377,13 +352,8 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
     try {
       expect(true).to.be.false
     } catch (err: any) {
-      const scriptContext = {
-        location: "file://some/file/location.ts:58:19",
-        script: {}
-      }
-
       err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      writeToReport(reporter, scriptContext, new InvalidClaim(description, "file://some/file/location.ts:58:19", err))
+      writeToReport(reporter, new InvalidClaim(description, "file://some/file/location.ts:58:19", err))
 
       writer.expectLines([
         `  ✖ ${description}`,
@@ -401,15 +371,15 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
   })
 }
 
-invalidClaimBehavior("condition", (reporter, scriptContext, claimResult) => {
-  reporter.recordAssumption(scriptContext!, condition("some condition", () => { }), claimResult)
+invalidClaimBehavior("condition", (reporter, claimResult) => {
+  reporter.recordPreparation(claimResult)
 }, "some condition")
 
-invalidClaimBehavior("step", (reporter, scriptContext, claimResult) => {
-  reporter.recordAssumption(scriptContext!, step("some step", () => { }), claimResult)
+invalidClaimBehavior("step", (reporter, claimResult) => {
+  reporter.recordPerformance(claimResult)
 }, "some step")
 
-invalidClaimBehavior("observation", (reporter, scriptContext, claimResult) => {
+invalidClaimBehavior("observation", (reporter, claimResult) => {
   reporter.recordObservation(claimResult)
 }, "some observation")
 

@@ -1,10 +1,6 @@
-import { throws } from "assert";
-import { Assumption, Condition } from "./Assumption.js";
 import { ClaimResult } from "./Claim.js";
 import { ConsoleWriter } from "./ConsoleWriter.js";
-import { Observable } from "./Effect.js";
 import { Failure, Reporter, Writer } from "./Reporter.js";
-import { ScriptContext } from "./Script.js";
 import { Summary } from "./Summary.js";
 import { Timer, TimerFactory } from "./Timer.js";
 
@@ -23,6 +19,12 @@ export interface Formatter {
   green(message: string): string
   cyan(message: string): string
   line(length: number): string
+}
+
+enum SuccessIndicator {
+  Preparation = "+",
+  Performance = "•",
+  Observation = "✔"
 }
 
 export class StandardReporter implements Reporter {
@@ -101,44 +103,28 @@ export class StandardReporter implements Reporter {
     this.space()
   }
 
-  recordAssumption<T>(scriptContext: ScriptContext<T>, assumption: Assumption<T>, result: ClaimResult): void {
-    result.when({
-      valid: () => {
-        this.writeValidAssumption(assumption)
-      },
-      invalid: (error) => {
-        this.writeInvalidClaim(scriptContext.location, assumption.description, error)
-      },
-      skipped: () => {
-        // nothing at the moment
-        // but when we implement we will need to make sure that invalid claims support
-        // skipping sub claims
-      }
-    })
+  recordPreparation(result: ClaimResult): void {
+    this.recordClaimResult(SuccessIndicator.Preparation, result)
   }
 
-  skipAssumption<T>(assumption: Assumption<T>): void {
-    this.writeSkippedClaim(assumption.description)
+  recordPerformance(result: ClaimResult): void {
+    this.recordClaimResult(SuccessIndicator.Performance, result)
   }
 
   recordObservation(result: ClaimResult): void {
+    this.recordClaimResult(SuccessIndicator.Observation, result)
+  }
+
+  recordClaimResult(successIndicator: SuccessIndicator, result: ClaimResult): void {
     result.when({
-      valid: () => this.writeValidClaimResult(result),
-      invalid: (error) => this.writeInvalidClaimResult(result, error),
+      valid: () => this.writeValidClaimResult(successIndicator, result),
+      invalid: (error) => this.writeInvalidClaimResult(successIndicator, result, error),
       skipped: () => this.writeSkippedClaimResult(result)
     })
   }
 
-  writeValidAssumption<T>(assumption: Assumption<T>) {
-    if (assumption instanceof Condition) {
-      this.writer.writeLine(indent(1, this.format.green(`+ ${assumption.description}`)))
-    } else {
-      this.writer.writeLine(indent(1, this.format.green(`• ${assumption.description}`)))
-    }
-  }
-
-  writeValidClaimResult(result: ClaimResult, indentLevel: number = 1) {
-    const descriptionLine = indent(indentLevel, this.format.green(`${check()} ${result.description}`))
+  writeValidClaimResult(successIndicator: SuccessIndicator, result: ClaimResult, indentLevel: number = 1) {
+    const descriptionLine = indent(indentLevel, this.format.green(`${successIndicator} ${result.description}`))
 
     if (indentLevel == 1) {
       this.writer.writeLine(descriptionLine)
@@ -149,7 +135,7 @@ export class StandardReporter implements Reporter {
     if (result.hasSubsumedResults) {
       this.writer.writeLine(indent(indentLevel + 1, this.validSeparator()))
       for (const subResult of result.subsumedResults) {
-        this.writeValidClaimResult(subResult, indentLevel + 1)
+        this.writeValidClaimResult(successIndicator, subResult, indentLevel + 1)
       }
       this.writer.writeLine(indent(indentLevel + 1, this.validSeparator()))
     }
@@ -167,36 +153,17 @@ export class StandardReporter implements Reporter {
     return this.format.dim(this.format.yellow(this.format.line(25)))
   }
 
-  // Note that this function can be removed when we fix Assumptions to
-  // just use data in the claim result when reporting
-  writeInvalidClaim(location: string, description: string, error: any) {
-    this.writer.writeLine(indent(1, this.format.red(this.format.bold(`${fail()} ${description}`))))
-    this.space()
-    const messageLines = error.message.split(/\r?\n/);
-    for (const line of messageLines) {
-      this.writer.writeLine(indent(2, this.format.red(line)))
-    }
-    this.space()
-    if (error.expected != undefined && error.actual != undefined) {
-      this.writeDetail("Actual", error.actual)
-      this.writeDetail("Expected", error.expected)
-    }
-    this.writeDetail("Script Failed", location)
-    this.writeStack(error.stack)
-    this.space()
-  }
-
-  writeInvalidClaimResult(result: ClaimResult, error: any, indentLevel: number = 1) {
+  writeInvalidClaimResult(successIndicator: SuccessIndicator, result: ClaimResult, error: any, indentLevel: number = 1) {
     this.writer.writeLine(indent(indentLevel, this.format.red(this.format.bold(`${fail()} ${result.description}`))))
     if (result.hasSubsumedResults) {
       this.writer.writeLine(indent(indentLevel + 1, this.invalidSeparator()))
       for (const subResult of result.subsumedResults) {
         subResult.when({
           valid: () => {
-            this.writeValidClaimResult(subResult, indentLevel + 1)
+            this.writeValidClaimResult(successIndicator, subResult, indentLevel + 1)
           },
           invalid: (subError) => {
-            this.writeInvalidClaimResult(subResult, subError, indentLevel + 1)
+            this.writeInvalidClaimResult(successIndicator, subResult, subError, indentLevel + 1)
           },
           skipped: () => {
             // nothing yet
@@ -240,10 +207,6 @@ export class StandardReporter implements Reporter {
           this.writer.writeLine(indent(indentLevel, this.format.dim(line)))
         }
       })
-  }
-
-  writeSkippedClaim(description: string) {
-    this.writer.writeLine(indent(1, this.format.yellow(`${ignore()} ${description}`)))
   }
 
   writeSkippedClaimResult(result: ClaimResult, indentLevel: number = 1) {

@@ -1,6 +1,6 @@
 import { SimpleClaim, ComplexClaim } from "./Claim.js";
 
-export type Observable<T> = Effect<T> | Outcome<T>
+export type Observation<T> = Effect<T> | Outcome<T>
 
 export class Effect<T> extends SimpleClaim<T> {}
 

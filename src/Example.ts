@@ -1,8 +1,8 @@
 import { Reporter } from "./Reporter.js"
-import { addExample, addInvalid, addSkipped, addSummary, addValid, emptySummary, Summary } from "./Summary.js"
+import { addExample, addSummary, emptySummary, Summary } from "./Summary.js"
 import { waitFor } from "./waitFor.js"
-import { Observable } from "./Effect.js"
-import { Assumption, Condition } from "./Assumption.js"
+import { Observation } from "./Observation.js"
+import { Condition, Step } from "./Assumption.js"
 import { Script, ScriptContext, scriptContext } from "./Script.js"
 import { ClaimResult } from "./Claim.js"
 
@@ -113,8 +113,9 @@ export class BehaviorExample<T> implements Example {
 }
 
 interface Mode<T> {
-  handleAssumption(run: ExampleRun<T>, scriptContext: ScriptContext<T>, assumption: Assumption<T>): Promise<void>
-  handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, effect: Observable<T>): Promise<void>
+  handlePreparation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, preparation: Condition<T>): Promise<void>
+  handlePerformance(run: ExampleRun<T>, scriptContext: ScriptContext<T>, performance: Step<T>): Promise<void>
+  handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, observation: Observation<T>): Promise<void>
 }
 
 class ExampleRun<T> {
@@ -137,11 +138,11 @@ class ExampleRun<T> {
 
   private async runScript(context: ScriptContext<T>): Promise<void> {
     for (let condition of context.script.prepare ?? []) {
-      await this.mode.handleAssumption(this, context, condition)
+      await this.mode.handlePreparation(this, context, condition)
     }
 
     for (let step of context.script.perform ?? []) {
-      await this.mode.handleAssumption(this, context, step)
+      await this.mode.handlePerformance(this, context, step)
     }
 
     for (let effect of context.script.observe ?? []) {
@@ -149,13 +150,23 @@ class ExampleRun<T> {
     }
   }
 
-  updateSummary(summarizer: (summary: Summary) => Summary) {
-    this.summary = summarizer(this.summary)
+  recordPreparation(result: ClaimResult) {
+    this.reporter.recordPreparation(result)
+    this.updateSummary(result.summary)
+  }
+
+  recordPerformance(result: ClaimResult) {
+    this.reporter.recordPerformance(result)
+    this.updateSummary(result.summary)
   }
 
   recordObservation(result: ClaimResult) {
     this.reporter.recordObservation(result)
-    this.summary = addSummary(this.summary)(result.summary)
+    this.updateSummary(result.summary)
+  }
+
+  private updateSummary(summary: Summary) {
+    this.summary = addSummary(this.summary)(summary)
   }
 }
 
@@ -163,15 +174,24 @@ class ExampleRun<T> {
 class ValidateMode<T> implements Mode<T> {
   constructor(private context: T) { }
 
-  async handleAssumption(run: ExampleRun<T>, scriptContext: ScriptContext<T>, condition: Condition<T>): Promise<void> {
-    const assumptionResult = await condition.validate(scriptContext, this.context)
-    run.reporter.recordAssumption(scriptContext, condition, assumptionResult)
-    assumptionResult.when({
+  async handlePreparation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, preparation: Condition<T>): Promise<void> {
+    const result = await preparation.validate(scriptContext, this.context)
+    run.recordPreparation(result)
+    this.skipRemainingIfInvalid(run, result)
+  }
+
+  async handlePerformance(run: ExampleRun<T>, scriptContext: ScriptContext<T>, performance: Step<T>): Promise<void> {
+    const result = await performance.validate(scriptContext, this.context)
+    run.recordPerformance(result)
+    this.skipRemainingIfInvalid(run, result)
+  }
+
+  async skipRemainingIfInvalid(run: ExampleRun<T>, result: ClaimResult): Promise<void> {
+    result.when({
       valid: () => {
-        run.updateSummary(addValid)
+        // nothing
       },
       invalid: () => {
-        run.updateSummary(addInvalid)
         run.mode = new SkipMode()
       },
       skipped: () => {
@@ -180,19 +200,22 @@ class ValidateMode<T> implements Mode<T> {
     })
   }
 
-  async handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, effect: Observable<T>): Promise<void> {
+  async handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, effect: Observation<T>): Promise<void> {
     const observationResult = await effect.validate(scriptContext, this.context)
     run.recordObservation(observationResult)
   }
 }
 
 class SkipMode<T> implements Mode<T> {
-  async handleAssumption(run: ExampleRun<T>, _: ScriptContext<T>, condition: Condition<T>): Promise<void> {
-    run.reporter.skipAssumption(condition)
-    run.updateSummary(addSkipped)
+  async handlePreparation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, preparation: Condition<T>): Promise<void> {
+    run.recordPreparation(preparation.skip(scriptContext))
   }
 
-  async handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, effect: Observable<T>): Promise<void> {
+  async handlePerformance(run: ExampleRun<T>, scriptContext: ScriptContext<T>, performance: Step<T>): Promise<void> {
+    run.recordPerformance(performance.skip(scriptContext))
+  }
+
+  async handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, effect: Observation<T>): Promise<void> {
     const skippedResult = effect.skip(scriptContext)
     run.recordObservation(skippedResult)
   }

@@ -1,9 +1,6 @@
-import { Assumption, Condition } from "./Assumption.js"
 import { ClaimResult } from "./Claim.js"
 import { ConsoleWriter } from "./ConsoleWriter.js"
-import { Observable } from "./Effect.js"
 import { Failure, Reporter, Writer } from "./Reporter.js"
-import { ScriptContext } from "./Script.js"
 import { Summary } from "./Summary.js"
 
 export class TAPReporter implements Reporter {
@@ -54,27 +51,21 @@ export class TAPReporter implements Reporter {
     // nothing?
   }
 
-  recordAssumption<T>(scriptContext: ScriptContext<T>, assumption: Assumption<T>, result: ClaimResult): void {
+  recordPreparation(result: ClaimResult): void {
+    this.recordAssumption("Prepare:", result)
+  }
+  recordPerformance(result: ClaimResult): void {
+    this.recordAssumption("Perform:", result)
+  }
+
+  recordAssumption(designator: string, result: ClaimResult): void {
     result.when({
-      valid: () => this.recordValidClaim(`${this.assumptionDesignator(assumption)} ${assumption.description}`),
-      invalid: (error) => this.recordInvalidClaim(`${this.assumptionDesignator(assumption)} ${assumption.description}`, error),
+      valid: () => this.recordValidClaim(`${designator} ${result.description}`),
+      invalid: (error) => this.recordInvalidClaim(`${designator} ${result.description}`, error),
       skipped: () => {
-        // nothing yet 
+        this.writer.writeLine(`ok ${designator} ${result.description} # SKIP`)
       }
     })
-  }
-
-  private assumptionDesignator<T>(assumption: Assumption<T>): string {
-    if (assumption instanceof Condition) {
-      return "Prepare:"
-    }
-    else {
-      return "Perform:"
-    }
-  }
-
-  skipAssumption<T>(assumption: Assumption<T>): void {
-    this.writer.writeLine(`ok ${this.assumptionDesignator(assumption)} ${assumption.description} # SKIP`)
   }
 
   recordObservation<T>(result: ClaimResult): void {

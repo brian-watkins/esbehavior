@@ -87,15 +87,15 @@ test("when an example starts with no description", () => {
 })
 
 
-const validClaimBehavior = (name: string, writeToReport: (reporter: Reporter, claimResult: ClaimResult) => void, description: string) => {
+const validClaimBehavior = (name: string, writeToReport: (reporter: Reporter, claimResult: ClaimResult) => void, claimDescription: string, reportedDescription: string) => {
   test(`when a valid ${name} is reported`, () => {
     const writer = new FakeReportWriter()
     const reporter = new TAPReporter(writer)
   
-    writeToReport(reporter, new ValidClaim(description, "some-location"))
+    writeToReport(reporter, new ValidClaim(claimDescription, "some-location"))
   
     writer.expectLines([
-      `ok ${description}`
+      `ok ${reportedDescription}`
     ])
   })  
 }
@@ -106,16 +106,16 @@ const scriptContext = {
 }
 
 validClaimBehavior("condition", (reporter, claimResult) => {
-  reporter.recordAssumption(scriptContext, new Condition("some condition", () => {}), claimResult)
-}, "Prepare: some condition")
+  reporter.recordPreparation(claimResult)
+}, "some condition", "Prepare: some condition")
 
 validClaimBehavior("step", (reporter, claimResult) => {
-  reporter.recordAssumption(scriptContext, new Step("some step", () => {}), claimResult)
-}, "Perform: some step")
+  reporter.recordPerformance(claimResult)
+}, "some step", "Perform: some step")
 
 validClaimBehavior("observation", (reporter, claimResult) => {
   reporter.recordObservation(claimResult)
-}, "some effect")
+}, "some effect", "some effect")
 
 
 const skippedClaimBehavior = (name: string, writeToReport: (reporter: Reporter) => void, description: string) => {
@@ -132,28 +132,30 @@ const skippedClaimBehavior = (name: string, writeToReport: (reporter: Reporter) 
 }
 
 skippedClaimBehavior("condition", (reporter) => {
-  reporter.skipAssumption(new Condition("cool condition", () => {}))
+  const skipped = (new Condition("cool condition", () => {})).skip(scriptContext)
+  reporter.recordPreparation(skipped)
 }, "Prepare: cool condition")
 
 skippedClaimBehavior("step", (reporter) => {
-  reporter.skipAssumption(new Step("cool step", () => {}))
+  const skipped = (new Step("cool step", () => {})).skip(scriptContext)
+  reporter.recordPerformance(skipped)
 }, "Perform: cool step")
 
 skippedClaimBehavior("observation", (reporter) => {
-  const skippedEffect = (new Effect("cool observation", () => {})).skip(scriptContext)
-  reporter.recordObservation(skippedEffect)
+  const skipped = (new Effect("cool observation", () => {})).skip(scriptContext)
+  reporter.recordObservation(skipped)
 }, "cool observation")
 
 
-const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, claim: ClaimResult) => void, expectedDescription: string) => {
+const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, claim: ClaimResult) => void, claimDescription: string, reportedDescription: string) => {
   test(`when an invalid ${name} is reported`, () => {
     const writer = new FakeReportWriter()
     const reporter = new TAPReporter(writer)
 
-    writeToReport(reporter, new InvalidClaim(expectedDescription, "some-location", { expected: "something", actual: "nothing", operator: "equals", stack: "blah" }))
+    writeToReport(reporter, new InvalidClaim(claimDescription, "some-location", { expected: "something", actual: "nothing", operator: "equals", stack: "blah" }))
 
     writer.expectLines([
-      `not ok ${expectedDescription}`,
+      `not ok ${reportedDescription}`,
       "  ---",
       "  operator: equals",
       "  expected: \"something\"",
@@ -168,7 +170,7 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
     const writer = new FakeReportWriter()
     const reporter = new TAPReporter(writer)
 
-    writeToReport(reporter, new InvalidClaim(expectedDescription, "some-location", {
+    writeToReport(reporter, new InvalidClaim(claimDescription, "some-location", {
       expected: "# Behavior: A Sample Behavior\n# Example: Comparing some numbers\n# tests 1\n# pass 1\n# fail 0\n# skip 0",
       actual: "# Behavior: A Sample Behavior\n# Example: Comparing some numbers",
       operator: "equals",
@@ -176,7 +178,7 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
     }))
 
     writer.expectLines([
-      `not ok ${expectedDescription}`,
+      `not ok ${reportedDescription}`,
       "  ---",
       "  operator: equals",
       "  expected: \"# Behavior: A Sample Behavior\\n# Example: Comparing some numbers\\n# tests 1\\n# pass 1\\n# fail 0\\n# skip 0\"",
@@ -191,7 +193,7 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
     const writer = new FakeReportWriter()
     const reporter = new TAPReporter(writer)
 
-    writeToReport(reporter, new InvalidClaim(expectedDescription, "some-location", {
+    writeToReport(reporter, new InvalidClaim(claimDescription, "some-location", {
       expected: 7,
       actual: [9, 10, 11],
       operator: "equals",
@@ -199,7 +201,7 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
     }))
 
     writer.expectLines([
-      `not ok ${expectedDescription}`,
+      `not ok ${reportedDescription}`,
       "  ---",
       "  operator: equals",
       "  expected: 7",
@@ -217,10 +219,10 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
     const error = new Error()
     error.stack = "funny stack"
 
-    writeToReport(reporter, new InvalidClaim(expectedDescription, "some-location", error))
+    writeToReport(reporter, new InvalidClaim(claimDescription, "some-location", error))
 
     writer.expectLines([
-      `not ok ${expectedDescription}`,
+      `not ok ${reportedDescription}`,
       "  ---",
       "  stack: |-",
       "    funny stack",
@@ -230,16 +232,16 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
 }
 
 invalidClaimBehavior("condition", (reporter, claimResult) => {
-  reporter.recordAssumption(scriptContext, new Condition("failed condition", () => { }), claimResult)
-}, "Prepare: failed condition")
+  reporter.recordPreparation(claimResult)
+}, "failed condition", "Prepare: failed condition")
 
 invalidClaimBehavior("step", (reporter, claimResult) => {
-  reporter.recordAssumption(scriptContext, new Step("failed step", () => { }), claimResult)
-}, "Perform: failed step")
+  reporter.recordPerformance(claimResult)
+}, "failed step", "Perform: failed step")
 
 invalidClaimBehavior("observation", (reporter, claimResult) => {
   reporter.recordObservation(claimResult)
-}, "failed observation")
+}, "failed observation", "failed observation")
 
 
 const noErrorBehavior = (name: string, failingScriptWith: (error: any) => Script<void>, expectedDescription: string) => {
