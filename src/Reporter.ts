@@ -24,7 +24,7 @@ export interface Reporter {
   endExample(): void
 
   recordPreparation(result: ClaimResult): void
-  recordPerformance(result: ClaimResult): void
+  recordAction(result: ClaimResult): void
   recordObservation(result: ClaimResult): void
 }
 
@@ -37,6 +37,6 @@ export class NullReporter implements Reporter {
   startExample(description?: string): void {}
   endExample(): void {}
   recordPreparation(result: ClaimResult): void {}
-  recordPerformance(result: ClaimResult): void {}
+  recordAction(result: ClaimResult): void {}
   recordObservation(result: ClaimResult): void {}
 }

@@ -54,7 +54,7 @@ export class TAPReporter implements Reporter {
   recordPreparation(result: ClaimResult): void {
     this.recordAssumption("Prepare:", result)
   }
-  recordPerformance(result: ClaimResult): void {
+  recordAction(result: ClaimResult): void {
     this.recordAssumption("Perform:", result)
   }
 

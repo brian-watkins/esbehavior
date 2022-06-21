@@ -376,7 +376,7 @@ invalidClaimBehavior("condition", (reporter, claimResult) => {
 }, "some condition")
 
 invalidClaimBehavior("step", (reporter, claimResult) => {
-  reporter.recordPerformance(claimResult)
+  reporter.recordAction(claimResult)
 }, "some step")
 
 invalidClaimBehavior("observation", (reporter, claimResult) => {

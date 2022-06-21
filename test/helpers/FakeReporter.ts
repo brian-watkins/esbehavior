@@ -45,7 +45,8 @@ export class FakeReporter implements Reporter {
   recordPreparation(result: ClaimResult): void {
     this.recordClaim(result)
   }
-  recordPerformance(result: ClaimResult): void {
+  
+  recordAction(result: ClaimResult): void {
     this.recordClaim(result)
   }
 

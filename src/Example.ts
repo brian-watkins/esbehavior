@@ -114,7 +114,7 @@ export class BehaviorExample<T> implements Example {
 
 interface Mode<T> {
   handlePreparation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, preparation: Condition<T>): Promise<void>
-  handlePerformance(run: ExampleRun<T>, scriptContext: ScriptContext<T>, performance: Step<T>): Promise<void>
+  handleAction(run: ExampleRun<T>, scriptContext: ScriptContext<T>, action: Step<T>): Promise<void>
   handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, observation: Observation<T>): Promise<void>
 }
 
@@ -142,7 +142,7 @@ class ExampleRun<T> {
     }
 
     for (let step of context.script.perform ?? []) {
-      await this.mode.handlePerformance(this, context, step)
+      await this.mode.handleAction(this, context, step)
     }
 
     for (let effect of context.script.observe ?? []) {
@@ -155,8 +155,8 @@ class ExampleRun<T> {
     this.updateSummary(result.summary)
   }
 
-  recordPerformance(result: ClaimResult) {
-    this.reporter.recordPerformance(result)
+  recordAction(result: ClaimResult) {
+    this.reporter.recordAction(result)
     this.updateSummary(result.summary)
   }
 
@@ -180,9 +180,9 @@ class ValidateMode<T> implements Mode<T> {
     this.skipRemainingIfInvalid(run, result)
   }
 
-  async handlePerformance(run: ExampleRun<T>, scriptContext: ScriptContext<T>, performance: Step<T>): Promise<void> {
-    const result = await performance.validate(scriptContext, this.context)
-    run.recordPerformance(result)
+  async handleAction(run: ExampleRun<T>, scriptContext: ScriptContext<T>, action: Step<T>): Promise<void> {
+    const result = await action.validate(scriptContext, this.context)
+    run.recordAction(result)
     this.skipRemainingIfInvalid(run, result)
   }
 
@@ -211,8 +211,8 @@ class SkipMode<T> implements Mode<T> {
     run.recordPreparation(preparation.skip(scriptContext))
   }
 
-  async handlePerformance(run: ExampleRun<T>, scriptContext: ScriptContext<T>, performance: Step<T>): Promise<void> {
-    run.recordPerformance(performance.skip(scriptContext))
+  async handleAction(run: ExampleRun<T>, scriptContext: ScriptContext<T>, action: Step<T>): Promise<void> {
+    run.recordAction(action.skip(scriptContext))
   }
 
   async handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, effect: Observation<T>): Promise<void> {

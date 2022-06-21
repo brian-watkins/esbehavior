@@ -110,7 +110,7 @@ validClaimBehavior("condition", (reporter, claimResult) => {
 }, "some condition", "Prepare: some condition")
 
 validClaimBehavior("step", (reporter, claimResult) => {
-  reporter.recordPerformance(claimResult)
+  reporter.recordAction(claimResult)
 }, "some step", "Perform: some step")
 
 validClaimBehavior("observation", (reporter, claimResult) => {
@@ -138,7 +138,7 @@ skippedClaimBehavior("condition", (reporter) => {
 
 skippedClaimBehavior("step", (reporter) => {
   const skipped = (new Step("cool step", () => {})).skip(scriptContext)
-  reporter.recordPerformance(skipped)
+  reporter.recordAction(skipped)
 }, "Perform: cool step")
 
 skippedClaimBehavior("observation", (reporter) => {
@@ -236,7 +236,7 @@ invalidClaimBehavior("condition", (reporter, claimResult) => {
 }, "failed condition", "Prepare: failed condition")
 
 invalidClaimBehavior("step", (reporter, claimResult) => {
-  reporter.recordPerformance(claimResult)
+  reporter.recordAction(claimResult)
 }, "failed step", "Perform: failed step")
 
 invalidClaimBehavior("observation", (reporter, claimResult) => {
