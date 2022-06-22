@@ -2,11 +2,13 @@ import { Context, RunMode, ExampleBuilder, BehaviorExampleBuilder, ExampleSetupB
 import { Reporter } from "./Reporter.js"
 import { Behavior, BehaviorCollection } from "./Behavior.js"
 import { Effect, Observation, Outcome } from "./Observation.js"
-import { Condition, Step } from "./Assumption.js"
+import { Condition } from "./Assumption.js"
 import { StandardReporter } from "./StandardReporter.js"
 import { emptySummary, Summary } from "./Summary.js"
+import { Action, Procedure, Step } from "./Action.js"
 export { Observation, Effect, Outcome } from "./Observation.js"
-export { Step, Condition } from "./Assumption.js"
+export { Condition } from "./Assumption.js"
+export { Action, Procedure, Step } from "./Action.js"
 export { Claim } from "./Claim.js"
 export { Behavior } from "./Behavior.js"
 export { Summary } from "./Summary.js"
@@ -63,8 +65,12 @@ export function condition<T>(description: string, validate: (context: T) => void
   return new Condition(description, validate)
 }
 
-export function step<T>(description: string, validate: (context: T) => void | Promise<void>): Step<T> {
+export function step<T>(description: string, validate: (context: T) => void | Promise<void>): Action<T> {
   return new Step(description, validate)
+}
+
+export function procedure<T>(descripion: string, steps: Array<Action<T>>): Action<T> {
+  return new Procedure(descripion, steps)
 }
 
 export function effect<T>(description: string, validate: (context: T) => void | Promise<void>): Observation<T> {

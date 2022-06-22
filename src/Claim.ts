@@ -26,14 +26,16 @@ export class SimpleClaim<T> implements Claim<T> {
   }
 }
 
-export class ComplexClaim<T> implements Claim<T> {
+export abstract class ComplexClaim<T> implements Claim<T> {
   constructor(public description: string, private claims: Array<Claim<T>>) {}
+
+  abstract evaluateSubsumedClaim(claim: Claim<T>, scriptContext: ScriptContext<T>, context: T): Promise<ClaimResult>
 
   async validate(scriptContext: ScriptContext<T>, context: T): Promise<ClaimResult> {
     let result = new ValidClaim(this.description, scriptContext.location)
 
     for (const claim of this.claims) {
-      const claimResult = await claim.validate(scriptContext, context)
+      const claimResult = await this.evaluateSubsumedClaim(claim, scriptContext, context)
       result = result.subsume(claimResult)
     }
 

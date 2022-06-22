@@ -1,10 +1,11 @@
 import * as stackTraceParser from 'stacktrace-parser';
-import { Condition, Step } from './Assumption';
+import { Action } from './Action';
+import { Condition } from './Assumption';
 import { Observation } from './Observation';
 
 export interface Script<T> {
   prepare?: Array<Condition<T>>
-  perform?: Array<Step<T>>
+  perform?: Array<Action<T>>
   observe?: Array<Observation<T>>
 }
 

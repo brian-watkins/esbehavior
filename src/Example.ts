@@ -2,9 +2,10 @@ import { Reporter } from "./Reporter.js"
 import { addExample, addSummary, emptySummary, Summary } from "./Summary.js"
 import { waitFor } from "./waitFor.js"
 import { Observation } from "./Observation.js"
-import { Condition, Step } from "./Assumption.js"
+import { Condition } from "./Assumption.js"
 import { Script, ScriptContext, scriptContext } from "./Script.js"
 import { ClaimResult } from "./Claim.js"
+import { Action } from "./Action.js"
 
 export interface Example {
   runMode: RunMode
@@ -114,7 +115,7 @@ export class BehaviorExample<T> implements Example {
 
 interface Mode<T> {
   handlePreparation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, preparation: Condition<T>): Promise<void>
-  handleAction(run: ExampleRun<T>, scriptContext: ScriptContext<T>, action: Step<T>): Promise<void>
+  handleAction(run: ExampleRun<T>, scriptContext: ScriptContext<T>, action: Action<T>): Promise<void>
   handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, observation: Observation<T>): Promise<void>
 }
 
@@ -180,7 +181,7 @@ class ValidateMode<T> implements Mode<T> {
     this.skipRemainingIfInvalid(run, result)
   }
 
-  async handleAction(run: ExampleRun<T>, scriptContext: ScriptContext<T>, action: Step<T>): Promise<void> {
+  async handleAction(run: ExampleRun<T>, scriptContext: ScriptContext<T>, action: Action<T>): Promise<void> {
     const result = await action.validate(scriptContext, this.context)
     run.recordAction(result)
     this.skipRemainingIfInvalid(run, result)
@@ -211,7 +212,7 @@ class SkipMode<T> implements Mode<T> {
     run.recordPreparation(preparation.skip(scriptContext))
   }
 
-  async handleAction(run: ExampleRun<T>, scriptContext: ScriptContext<T>, action: Step<T>): Promise<void> {
+  async handleAction(run: ExampleRun<T>, scriptContext: ScriptContext<T>, action: Action<T>): Promise<void> {
     run.recordAction(action.skip(scriptContext))
   }
 
