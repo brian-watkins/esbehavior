@@ -20,7 +20,7 @@ behaviors specific to their app.
 
 esbehavior *encourages* documentation authors to model their examples in terms of small,
 reusable functions, and to describe, with human readable phrases, each part of their
-examples -- the conditions that must be true for it to run, the steps that are
+examples -- the presuppositions that must be true for it to run, the actions that are
 performed, as well as the effects that should be observed.
 
 In addition, esbehavior *discourages* some testing practices that tend to make test suites
@@ -37,15 +37,16 @@ const appBehavior =
     example({ init: () => new TestApp() })
       .description("a particular case")
       .script({
-        prepare: [
-          condition("the app loads", (app) => app.start())
+        suppose: [
+          fact("there are things", (app) => app.setThings(["a", "b", "c"]))
+          fact("the app is loaded", (app) => app.start())
         ],
         perform: [
           step("the user clicks", (app) => app.doClick())
         ],
         observe: [
           effect("things are shown", (app) => {
-            expect(app.display.things).to.equal(expectedThings)
+            expect(app.display.things).to.equal(["a", "b", "c"])
           })
         ]
       })
@@ -65,24 +66,24 @@ The script is a sequence of `Claims`; each claim has a description and a functio
 takes the context as an argument and returns `void` or `Promise<void>`. esbehavior will
 wait for any returned promise to resolve before evaluating the next claim.
 
-There are three types of claims: `Conditions`, `Steps`, and `Effects`. esbehavior
-exposes `condition`, `step`, and `effect` functions to generate these types of claims.
-But it's possible to extend the relevant class to make domain specific claims.
+There are three types of claims: `Presuppositions`, `Actions`, and `Observations`. esbehavior
+exposes `fact`, `step`, and `effect` functions to generate these types of claims. You can group
+these for more complex claims using `situation`, `procedure`, and `outcome`, respectively.
 
-A script is organized into three parts, each of which is optional. `prepare` specifies
-one or more `Conditions` that should be run first, `perform` specifies
-one or more `Steps` that are executed as part of the example, and
-`observe` specifies one or more `Effects` that should be observable as
+A script is organized into three parts, each of which is optional. `suppose` specifies
+one or more `Presuppositions` that should be validated first, `perform` specifies
+one or more `Actions` that are executed as part of the example, and
+`observe` specifies one or more `Observations` that should be true as
 a result of performing the steps. Use `andThen` to chain multiple scripts as
 part of one example.
 
-If any exception is thrown when executing a `Condition`
-or a `Step`, then the example is considered invalid, an error will be reported, and
+If any exception is thrown when executing a `Presupposition`
+or a `Action`, then the example is considered invalid, an error will be reported, and
 the remainder of the script will be skipped. By contrast, an attempt will be made to
-observe each `Effect`, no matter if doing so results in an exception. So, a single
-example can have multiple invalid effects.
+check each `Observation`, no matter if doing so results in an exception. So, a single
+example can have multiple invalid observations.
 
-Generally speaking, `Effect` functions make assertions about the state of things,
+Generally speaking, `Observation` functions make assertions about the state of things,
 but you can include assertions in conditions and steps, as well, if it makes
 sense to do so.
 

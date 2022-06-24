@@ -1,5 +1,5 @@
 import assert from 'proclaim'
-import { behavior, fact, effect, example, outcome, procedure, skip, step } from 'esbehavior'
+import { behavior, fact, effect, example, outcome, procedure, skip, step, situation } from 'esbehavior'
 import { Thing } from '../src/Thing.js'
 
 export default
@@ -8,6 +8,10 @@ export default
       .script({
         suppose: [
           fact("something happens", () => { }),
+          situation("some situation", [
+            fact("a cool fact", () => {}),
+            fact("another cool fact", () => {})
+          ]),
           fact("something else happens", () => { })
         ],
         perform: [
