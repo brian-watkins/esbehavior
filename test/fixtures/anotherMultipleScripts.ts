@@ -1,12 +1,12 @@
 import { expect } from "chai"
-import { behavior, condition, effect, example, step } from "../../src/index.js"
+import { behavior, fact, effect, example, step } from "../../src/index.js"
 
 export default behavior("multiple scripts", [
   example({ init: () => ({ touched: 0 }) })
     .description("first script fails")
     .script({
-      prepare: [
-        condition("it touches the context", (context) => { context.touched++ })
+      suppose: [
+        fact("it touches the context", (context) => { context.touched++ })
       ],
       observe: [
         effect("the context was touched", (context) => {
@@ -15,8 +15,8 @@ export default behavior("multiple scripts", [
       ]
     })
     .andThen({
-      prepare: [
-        condition("it touches the context again", (context) => { context.touched++ })
+      suppose: [
+        fact("it touches the context again", (context) => { context.touched++ })
       ],
       perform: [
         step("it touches the context again", (context) => { context.touched++ })
@@ -33,8 +33,8 @@ export default behavior("multiple scripts", [
       ]
     })
     .andThen({
-      prepare: [
-        condition("it touches the context another time", (context) => { context.touched++ })
+      suppose: [
+        fact("it touches the context another time", (context) => { context.touched++ })
       ],
       perform: [
         step("it touches the context for the last time", (context) => { context.touched++ })

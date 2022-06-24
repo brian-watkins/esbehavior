@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { validate, skip, effect, example, condition, behavior, step } from '../src/index.js'
+import { validate, skip, effect, example, fact, behavior, step } from '../src/index.js'
 import { FakeReporter, withBehavior, withExample, withSkippedClaim, withValidClaim } from './helpers/FakeReporter.js'
 
 test("it skips an example", async () => {
@@ -16,8 +16,8 @@ test("it skips an example", async () => {
       })
         .description("not important")
         .script({
-          prepare: [
-            condition("it does something bad", () => {
+          suppose: [
+            fact("it does something bad", () => {
               throw new Error("BAD WHEN!!")
             })
           ],

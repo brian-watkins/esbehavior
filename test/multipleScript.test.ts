@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { validate, effect, condition, skip, behavior } from '../src/index.js'
+import { validate, effect, fact, skip, behavior } from '../src/index.js'
 import anotherMultipleScripts from './fixtures/anotherMultipleScripts.js'
 import multipleScripts from './fixtures/multipleScripts.js'
 import { FakeReporter, withBehavior, withExample, withInvalidClaim, withSkippedClaim, withValidClaim } from './helpers/FakeReporter.js'
@@ -44,8 +44,8 @@ test("it skips all scripts when the example is skipped", async () => {
       skip.example({ init: () => ({ touched: 0 }) })
         .description("example is skipped")
         .script({
-          prepare: [
-            condition("it touches the context", (context) => { context.touched++ })
+          suppose: [
+            fact("it touches the context", (context) => { context.touched++ })
           ],
           observe: [
             effect("the first script works", (context) => {
@@ -54,9 +54,9 @@ test("it skips all scripts when the example is skipped", async () => {
           ]
         })
         .andThen({
-          prepare: [
-            condition("it touches the context again", (context) => { context.touched++ }),
-            condition("it touches the context and again", (context) => { context.touched++ })
+          suppose: [
+            fact("it touches the context again", (context) => { context.touched++ }),
+            fact("it touches the context and again", (context) => { context.touched++ })
           ],
           observe: [
             effect("the second script works", (context) => {

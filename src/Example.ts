@@ -2,7 +2,7 @@ import { Reporter } from "./Reporter.js"
 import { addExample, addSummary, emptySummary, Summary } from "./Summary.js"
 import { waitFor } from "./waitFor.js"
 import { Observation } from "./Observation.js"
-import { Condition } from "./Assumption.js"
+import { Fact, Presupposition } from "./Presupposition.js"
 import { Script, ScriptContext, scriptContext } from "./Script.js"
 import { ClaimResult } from "./Claim.js"
 import { Action } from "./Action.js"
@@ -114,7 +114,7 @@ export class BehaviorExample<T> implements Example {
 }
 
 interface Mode<T> {
-  handlePreparation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, preparation: Condition<T>): Promise<void>
+  handlePresupposition(run: ExampleRun<T>, scriptContext: ScriptContext<T>, presupposition: Presupposition<T>): Promise<void>
   handleAction(run: ExampleRun<T>, scriptContext: ScriptContext<T>, action: Action<T>): Promise<void>
   handleObservation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, observation: Observation<T>): Promise<void>
 }
@@ -138,16 +138,16 @@ class ExampleRun<T> {
   }
 
   private async runScript(context: ScriptContext<T>): Promise<void> {
-    for (let condition of context.script.prepare ?? []) {
-      await this.mode.handlePreparation(this, context, condition)
+    for (let presupposition of context.script.suppose ?? []) {
+      await this.mode.handlePresupposition(this, context, presupposition)
     }
 
     for (let step of context.script.perform ?? []) {
       await this.mode.handleAction(this, context, step)
     }
 
-    for (let effect of context.script.observe ?? []) {
-      await this.mode.handleObservation(this, context, effect)
+    for (let observation of context.script.observe ?? []) {
+      await this.mode.handleObservation(this, context, observation)
     }
   }
 
@@ -175,8 +175,8 @@ class ExampleRun<T> {
 class ValidateMode<T> implements Mode<T> {
   constructor(private context: T) { }
 
-  async handlePreparation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, preparation: Condition<T>): Promise<void> {
-    const result = await preparation.validate(scriptContext, this.context)
+  async handlePresupposition(run: ExampleRun<T>, scriptContext: ScriptContext<T>, presupposition: Presupposition<T>): Promise<void> {
+    const result = await presupposition.validate(scriptContext, this.context)
     run.recordPreparation(result)
     this.skipRemainingIfInvalid(run, result)
   }
@@ -208,8 +208,8 @@ class ValidateMode<T> implements Mode<T> {
 }
 
 class SkipMode<T> implements Mode<T> {
-  async handlePreparation(run: ExampleRun<T>, scriptContext: ScriptContext<T>, preparation: Condition<T>): Promise<void> {
-    run.recordPreparation(preparation.skip(scriptContext))
+  async handlePresupposition(run: ExampleRun<T>, scriptContext: ScriptContext<T>, presupposition: Presupposition<T>): Promise<void> {
+    run.recordPreparation(presupposition.skip(scriptContext))
   }
 
   async handleAction(run: ExampleRun<T>, scriptContext: ScriptContext<T>, action: Action<T>): Promise<void> {

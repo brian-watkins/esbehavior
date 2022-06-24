@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { validate, example, effect, condition, behavior } from '../src/index.js'
+import { validate, example, effect, fact, behavior } from '../src/index.js'
 import { FakeReporter } from './helpers/FakeReporter.js'
 
 test("it tears down the context", async () => {
@@ -24,8 +24,8 @@ test("it tears down the context", async () => {
       })
         .description("teardown context")
         .script({
-          prepare: [
-            condition("it touches the context", (context) => { context.touched++ })
+          suppose: [
+            fact("it touches the context", (context) => { context.touched++ })
           ],
           observe: [
             effect("it works", (context) => {

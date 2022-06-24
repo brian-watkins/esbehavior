@@ -1,10 +1,10 @@
 import * as stackTraceParser from 'stacktrace-parser';
 import { Action } from './Action';
-import { Condition } from './Assumption';
+import { Presupposition } from './Presupposition';
 import { Observation } from './Observation';
 
 export interface Script<T> {
-  prepare?: Array<Condition<T>>
+  suppose?: Array<Presupposition<T>>
   perform?: Array<Action<T>>
   observe?: Array<Observation<T>>
 }

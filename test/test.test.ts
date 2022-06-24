@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { example, validate, effect, condition, behavior, step } from '../src/index.js'
+import { example, validate, effect, fact, behavior, step } from '../src/index.js'
 import failingObservation from './fixtures/failingObservation.js'
 import { withBehavior, withExample, FakeReporter, withValidClaim, withInvalidClaim } from './helpers/FakeReporter.js'
 
@@ -118,8 +118,8 @@ test("when the example has valid assumptions", async () => {
       example({ init: () => ({ val: 0 }) })
         .description("multiple assumptions")
         .script({
-          prepare: [
-            condition("the value is set", (context) => { context.val = 8 })
+          suppose: [
+            fact("the value is set", (context) => { context.val = 8 })
           ],
           perform: [
             step("the value is incremented", (context) => { context.val++ }),
@@ -163,8 +163,8 @@ test("it runs example with no description", async () => {
     behavior("a single test", [
       example({ init: () => ({ val: 0 }) })
         .script({
-          prepare: [
-            condition("the value is set", (context) => { context.val = 8 })
+          suppose: [
+            fact("the value is set", (context) => { context.val = 8 })
           ],
           perform: [
             step("the value is incremented", (context) => { context.val++ }),

@@ -1,9 +1,9 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { Condition } from '../src/Assumption.js'
+import { Fact } from '../src/Presupposition.js'
 import { ClaimResult, InvalidClaim, ValidClaim } from '../src/Claim.js'
-import { example, effect, condition, validate, behavior, step, Script, Effect, Step } from '../src/index.js'
+import { example, effect, fact, validate, behavior, step, Script, Effect, Step } from '../src/index.js'
 import { Reporter } from '../src/Reporter.js'
 import { TAPReporter } from '../src/TAPReporter.js'
 import { FakeReportWriter } from './helpers/FakeReportWriter.js'
@@ -132,7 +132,7 @@ const skippedClaimBehavior = (name: string, writeToReport: (reporter: Reporter) 
 }
 
 skippedClaimBehavior("condition", (reporter) => {
-  const skipped = (new Condition("cool condition", () => {})).skip(scriptContext)
+  const skipped = (new Fact("cool condition", () => {})).skip(scriptContext)
   reporter.recordPreparation(skipped)
 }, "Prepare: cool condition")
 
@@ -278,8 +278,8 @@ const noErrorBehavior = (name: string, failingScriptWith: (error: any) => Script
 
 noErrorBehavior("condition", (error) => {
   return {
-    prepare: [
-      condition<void>("failing condition", () => { throw error })
+    suppose: [
+      fact<void>("failing condition", () => { throw error })
     ]
   }
 }, "Prepare: failing condition")
@@ -324,8 +324,8 @@ const errorLocationBehavior = (name: string, failingScript: () => Script<void>) 
 
 errorLocationBehavior("condition", () => {
   return {
-    prepare: [
-      condition("something throws an error", () => {
+    suppose: [
+      fact("something throws an error", () => {
         expect(7).to.equal(9)
       }),
     ]

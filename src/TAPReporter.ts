@@ -105,7 +105,7 @@ export class TAPReporter implements Reporter {
 
   private writeClaimReference(stack: string) {
     const lines = stack.split("\n")
-    const claim = lines.findIndex((line) => line.includes("Condition.execute") || line.includes("Step.execute") || line.includes("Effect.execute"))
+    const claim = lines.findIndex((line) => line.includes("Fact.execute") || line.includes("Step.execute") || line.includes("Effect.execute"))
     if (claim > -1) {
       const start = lines[claim].indexOf("at ")
       this.writer.writeLine(`  at: ${lines[claim].substring(start + 3)}`)

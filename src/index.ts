@@ -2,12 +2,12 @@ import { Context, RunMode, ExampleBuilder, BehaviorExampleBuilder, ExampleSetupB
 import { Reporter } from "./Reporter.js"
 import { Behavior, BehaviorCollection } from "./Behavior.js"
 import { Effect, Observation, Outcome } from "./Observation.js"
-import { Condition } from "./Assumption.js"
+import { Fact, Presupposition } from "./Presupposition.js"
 import { StandardReporter } from "./StandardReporter.js"
 import { emptySummary, Summary } from "./Summary.js"
 import { Action, Procedure, Step } from "./Action.js"
 export { Observation, Effect, Outcome } from "./Observation.js"
-export { Condition } from "./Assumption.js"
+export { Presupposition, Fact } from "./Presupposition.js"
 export { Action, Procedure, Step } from "./Action.js"
 export { Claim } from "./Claim.js"
 export { Behavior } from "./Behavior.js"
@@ -61,8 +61,8 @@ export const pick = {
   }
 }
 
-export function condition<T>(description: string, validate: (context: T) => void | Promise<void>): Condition<T> {
-  return new Condition(description, validate)
+export function fact<T>(description: string, validate: (context: T) => void | Promise<void>): Presupposition<T> {
+  return new Fact(description, validate)
 }
 
 export function step<T>(description: string, validate: (context: T) => void | Promise<void>): Action<T> {

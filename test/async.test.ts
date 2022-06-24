@@ -1,6 +1,6 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { validate, example, effect, condition, behavior } from '../src/index.js'
+import { validate, example, fact, effect, behavior } from '../src/index.js'
 import { expect } from 'chai'
 import { FakeReporter, withBehavior, withExample, withInvalidClaim, withValidClaim } from './helpers/FakeReporter.js'
 import { asyncBehavior, teardownValue } from './fixtures/asyncBehavior.js'
@@ -87,9 +87,9 @@ test("it runs async conditions", async () => {
       })
         .description("multiple conditions")
         .script({
-          prepare: [
-            condition("the value is incremented", (context) => { context.val++ }),
-            condition("the value is incremented asynchronously", (context) => {
+          suppose: [
+            fact("the value is incremented", (context) => { context.val++ }),
+            fact("the value is incremented asynchronously", (context) => {
               return new Promise(resolve => {
                 setTimeout(() => {
                   context.val++
@@ -97,7 +97,7 @@ test("it runs async conditions", async () => {
                 }, 30)
               })
             }),
-            condition("the value is incremented", (context) => { context.val++ })
+            fact("the value is incremented", (context) => { context.val++ })
           ],
           observe: [
             effect("compares the correct number", (context) => {

@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { validate, pick, example, effect, condition, behavior } from '../src/index.js'
+import { validate, pick, example, effect, fact, behavior } from '../src/index.js'
 import { FakeReporter, withBehavior, withExample, withSkippedClaim, withValidClaim } from './helpers/FakeReporter.js'
 
 test("it only runs and reports on the picked example", async () => {
@@ -11,8 +11,8 @@ test("it only runs and reports on the picked example", async () => {
       example()
         .description("not important")
         .script({
-          prepare: [
-            condition("it does something bad", () => {
+          suppose: [
+            fact("it does something bad", () => {
               throw new Error("BAD WHEN!!")
             })
           ],
@@ -43,8 +43,8 @@ test("it only runs and reports on the picked example", async () => {
       })
         .description("should be skipped")
         .script({
-          prepare: [
-            condition("it does something that it shouldn't", () => {
+          suppose: [
+            fact("it does something that it shouldn't", () => {
               throw new Error("BAD!")
             })
           ],

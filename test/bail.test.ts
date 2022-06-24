@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { validate, example, effect, condition, behavior } from '../src/index.js'
+import { validate, example, effect, fact, behavior } from '../src/index.js'
 import { FakeReporter, withBehavior, withExample, withFailure, withValidClaim } from './helpers/FakeReporter.js'
 
 test("failing context generator function", async () => {
@@ -17,8 +17,8 @@ test("failing context generator function", async () => {
       })
         .description("context generator throws exception")
         .script({
-          prepare: [
-            condition("it does nothing", (context) => { })
+          suppose: [
+            fact("it does nothing", (context) => { })
           ],
           observe: [
             effect("it works", (context) => {
@@ -52,8 +52,8 @@ test("failing context teardown function", async () => {
       })
         .description("context teardown throws exception")
         .script({
-          prepare: [
-            condition("it does nothing", (context) => { })
+          suppose: [
+            fact("it does nothing", (context) => { })
           ],
           observe: [
             effect("it works", (context) => {

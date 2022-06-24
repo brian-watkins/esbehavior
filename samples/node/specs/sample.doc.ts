@@ -1,14 +1,14 @@
 import assert from 'proclaim'
-import { behavior, condition, effect, example, outcome, procedure, skip, step } from 'esbehavior'
+import { behavior, fact, effect, example, outcome, procedure, skip, step } from 'esbehavior'
 import { Thing } from '../src/Thing.js'
 
 export default
   behavior("a sample spec", [
     example({ init: () => new Thing() })
       .script({
-        prepare: [
-          condition("something happens", () => { }),
-          condition("something else happens", () => { })
+        suppose: [
+          fact("something happens", () => { }),
+          fact("something else happens", () => { })
         ],
         perform: [
           step("first step", () => {}),
