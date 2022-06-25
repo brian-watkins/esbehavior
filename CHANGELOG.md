@@ -1,5 +1,14 @@
 # Changelog
 
+### 6/25/2022
+
+esbehavior 2.0.0, 2.0.1
+
+#### Added
+- Support for grouped claims
+- Prepare is now Suppose when writing scripts
+
+
 ### 3/2/2022
 
 esbehavior 1.2.0
