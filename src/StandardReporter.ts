@@ -166,7 +166,7 @@ export class StandardReporter implements Reporter {
             this.writeInvalidClaimResult(successIndicator, subResult, subError, indentLevel + 1)
           },
           skipped: () => {
-            // nothing yet
+            this.writeSkippedClaimResult(subResult, indentLevel + 1)
           }
         })
       }

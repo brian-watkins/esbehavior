@@ -383,162 +383,149 @@ invalidClaimBehavior("observation", (reporter, claimResult) => {
   reporter.recordObservation(claimResult)
 }, "some observation")
 
-test("valid outcome", () => {
-  const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
-  const effect = new ValidClaim("some funny valid outcome", "some-location")
-  effect.subsumedResults = [
-    new ValidClaim("Valid Claim 1", "at-some-location"),
-    new ValidClaim("Valid Claim 2", "at-some-location"),
-    new ValidClaim("Valid Claim 3", "at-some-location"),
-  ]
+const validGroupedClaimBehavior = (name: string, writeToReport: (reporter: Reporter, claimResult: ClaimResult) => void, expectedIdentifier: string) => {
+  test(`when a valid ${name} is reported`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
-  reporter.recordObservation(effect)
-
-  writer.expectLines([
-    "  ✔ some funny valid outcome",
-    "    ✔ Valid Claim 1",
-    "    ✔ Valid Claim 2",
-    "    ✔ Valid Claim 3",
-  ])
-})
-
-test("valid nested outcome", () => {
-  const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
-
-  const nestedOutcome = new ValidClaim("Valid Nested Outcome", "at-some-location")
-  nestedOutcome.subsumedResults = [
-    new ValidClaim("Valid Nested Claim 1", "at-some-location"),
-    new ValidClaim("Valid Nested Claim 2", "at-some-location"),
-  ]
-
-  const effect = new ValidClaim("some funny valid outcome", "some-location")
-  effect.subsumedResults = [
-    new ValidClaim("Valid Claim 1", "at-some-location"),
-    nestedOutcome,
-    new ValidClaim("Valid Claim 3", "at-some-location"),
-  ]
-
-  reporter.recordObservation(effect)
-
-  writer.expectLines([
-    "  ✔ some funny valid outcome",
-    "    ✔ Valid Claim 1",
-    "    ✔ Valid Nested Outcome",
-    "      ✔ Valid Nested Claim 1",
-    "      ✔ Valid Nested Claim 2",
-    "    ✔ Valid Claim 3",
-  ])
-})
-
-test("invalid outcome", () => {
-  const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
-
-  try {
-    expect(7).to.be.lessThan(5)
-  } catch (err: any) {
-    err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-
-    const effect = new InvalidClaim("bad outcome", "some-location", {})
-    effect.subsumedResults = [
-      new ValidClaim("some claim that worked", "at-some-location"),
-      new InvalidClaim("some failing claim", "at-some-location", err)
-    ]
-
-    reporter.recordObservation(effect)
-
-    writer.expectLines([
-      "  ✖ bad outcome",
-      "    ✔ some claim that worked",
-      "    ✖ some failing claim",
-      "      expected 7 to be below 5",
-      "      Actual",
-      "        7",
-      "      Expected",
-      "        5",
-      "      Script Failed",
-      "        at-some-location",
-      "      at some.line.of.code",
-      "      at another.line.of.code",
-    ])
-  }
-})
-
-test("nested invalid outcome", () => {
-  const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
-
-  try {
-    expect(7).to.be.lessThan(5)
-  } catch (err: any) {
-    err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-
-    const nestedOutcome = new InvalidClaim("bad nested outcome", "some-location", {})
+    const nestedOutcome = new ValidClaim("nested grouped claim", "some-location")
     nestedOutcome.subsumedResults = [
-      new ValidClaim("some claim that worked 2", "at-some-location"),
-      new InvalidClaim("some failing claim", "at-some-location", err)
+      new ValidClaim("nested claim 1", "some-location"),
+      new ValidClaim("nested claim 2", "some-location")
     ]
 
-    const effect = new InvalidClaim("bad outcome", "some-location", {})
-    effect.subsumedResults = [
-      new ValidClaim("some claim that worked 1", "at-some-location"),
+    const outcome = new ValidClaim("some grouped claim", "some-location")
+    outcome.subsumedResults = [
+      new ValidClaim("sub-claim 1", "some-location"),
       nestedOutcome,
-      new ValidClaim("Another claim that worked", "at-some-location")
+      new ValidClaim("sub-claim 2", "some-location")
     ]
 
-    reporter.recordObservation(effect)
+    writeToReport(reporter, outcome)
 
     writer.expectLines([
-      "  ✖ bad outcome",
-      "    ✔ some claim that worked 1",
-      "    ✖ bad nested outcome",
-      "      ✔ some claim that worked 2",
-      "      ✖ some failing claim",
-      "        expected 7 to be below 5",
+      `  ${expectedIdentifier} some grouped claim`,
+      `    ${expectedIdentifier} sub-claim 1`,
+      `    ${expectedIdentifier} nested grouped claim`,
+      `      ${expectedIdentifier} nested claim 1`,
+      `      ${expectedIdentifier} nested claim 2`,
+      `    ${expectedIdentifier} sub-claim 2`
+    ])
+  })
+}
+
+validGroupedClaimBehavior("outcome", (reporter, claimResult) => {
+  reporter.recordObservation(claimResult)
+}, "✔")
+
+validGroupedClaimBehavior("procedure", (reporter, claimResult) => {
+  reporter.recordAction(claimResult)
+}, "•")
+
+validGroupedClaimBehavior("situation", (reporter, claimResult) => {
+  reporter.recordPreparation(claimResult)
+}, "+")
+
+
+const skippedGroupedClaimBehavior = (name: string, writeToReport: (reporter: Reporter, claimResult: ClaimResult) => void) => {
+  test(`when a skipped ${name} is reported`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+    const nestedOutcome = new SkippedClaim("nested grouped claim", "some-location")
+    nestedOutcome.subsumedResults = [
+      new SkippedClaim("nested claim 1", "some-location"),
+      new SkippedClaim("nested claim 2", "some-location")
+    ]
+
+    const outcome = new SkippedClaim("some grouped claim", "some-location")
+    outcome.subsumedResults = [
+      new SkippedClaim("sub-claim 1", "some-location"),
+      nestedOutcome,
+      new SkippedClaim("sub-claim 2", "some-location")
+    ]
+
+    writeToReport(reporter, outcome)
+
+    writer.expectLines([
+      `  - some grouped claim`,
+      `    - sub-claim 1`,
+      `    - nested grouped claim`,
+      `      - nested claim 1`,
+      `      - nested claim 2`,
+      `    - sub-claim 2`,
+    ])
+  })
+}
+
+skippedGroupedClaimBehavior("outcome", (reporter, claimResult) => {
+  reporter.recordObservation(claimResult)
+})
+
+skippedGroupedClaimBehavior("procedure", (reporter, claimResult) => {
+  reporter.recordAction(claimResult)
+})
+
+skippedGroupedClaimBehavior("situation", (reporter, claimResult) => {
+  reporter.recordPreparation(claimResult)
+})
+
+
+const invalidGroupedClaimBehavior = (name: string, writeToReport: (reporter: Reporter, claimResult: ClaimResult) => void, expectedIdentifier: string) => {
+  test(`when an invalid ${name} is reported`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+    const nestedOutcome = new InvalidClaim("nested grouped claim", "some-location", {})
+    nestedOutcome.subsumedResults = [
+      new ValidClaim("nested claim 1", "some-location"),
+      new InvalidClaim("failing nested claim", "some-location", { message: "some message", expected: "something", actual: "nothing", operator: "equals", stack: "some message\n   at some.line.of.code\n   at another.line.of.code" }),
+      new SkippedClaim("skipped nested claim", "some-location")
+    ]
+
+    const outcome = new InvalidClaim("grouped claim", "some-location", {})
+    outcome.subsumedResults = [
+      new ValidClaim("sub-claim 1", "some-location"),
+      nestedOutcome,
+      new SkippedClaim("sub-claim 2", "some-location")
+    ]
+
+    writeToReport(reporter, outcome)
+
+    writer.expectLines([
+      `  ✖ grouped claim`,
+      `    ${expectedIdentifier} sub-claim 1`,
+      `    ✖ nested grouped claim`,
+      `      ${expectedIdentifier} nested claim 1`,
+      `      ✖ failing nested claim`,
+      "        some message",
       "        Actual",
-      "          7",
+      "          nothing",
       "        Expected",
-      "          5",
+      "          something",
       "        Script Failed",
-      "          at-some-location",
+      "          some-location",
       "        at some.line.of.code",
       "        at another.line.of.code",
-      "    ✔ Another claim that worked",
+      `      - skipped nested claim`,
+      `    - sub-claim 2`,
     ])
-  }
-})
+  })
+}
 
-test("skipped nested outcome", () => {
-  const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+invalidGroupedClaimBehavior("outcome", (reporter, claimResult) => {
+  reporter.recordObservation(claimResult)
+}, "✔")
 
-  const nestedOutcome = new SkippedClaim("Skipped Nested Outcome", "at-some-location")
-  nestedOutcome.subsumedResults = [
-    new SkippedClaim("Skipped Nested Claim 1", "at-some-location"),
-    new SkippedClaim("Skipped Nested Claim 2", "at-some-location"),
-  ]
+invalidGroupedClaimBehavior("procedure", (reporter, claimResult) => {
+  reporter.recordAction(claimResult)
+}, "•")
 
-  const effect = new SkippedClaim("some funny skipped outcome", "some-location")
-  effect.subsumedResults = [
-    new SkippedClaim("Skipped Claim 1", "at-some-location"),
-    nestedOutcome,
-    new SkippedClaim("Skipped Claim 3", "at-some-location"),
-  ]
+invalidGroupedClaimBehavior("situation", (reporter, claimResult) => {
+  reporter.recordPreparation(claimResult)
+}, "+")
 
-  reporter.recordObservation(effect)
-
-  writer.expectLines([
-    "  - some funny skipped outcome",
-    "    - Skipped Claim 1",
-    "    - Skipped Nested Outcome",
-    "      - Skipped Nested Claim 1",
-    "      - Skipped Nested Claim 2",
-    "    - Skipped Claim 3",
-  ])
-})
 
 test.run()
 
