@@ -52,32 +52,51 @@ export class TAPReporter implements Reporter {
   }
 
   recordPreparation(result: ClaimResult): void {
-    this.recordAssumption("Prepare:", result)
+    this.recordAssumption("Suppose:", result)
   }
   recordAction(result: ClaimResult): void {
     this.recordAssumption("Perform:", result)
   }
 
   recordAssumption(designator: string, result: ClaimResult): void {
-    result.when({
-      valid: () => this.recordValidClaim(`${designator} ${result.description}`),
-      invalid: (error) => this.recordInvalidClaim(`${designator} ${result.description}`, error),
-      skipped: () => {
-        this.writer.writeLine(`ok ${designator} ${result.description} # SKIP`)
-      }
-    })
+    this.recordClaimResult(result, designator)
   }
 
   recordObservation<T>(result: ClaimResult): void {
-    result.when({
-      valid: () => this.recordValidClaim(result.description),
-      invalid: (error) => this.recordInvalidClaim(result.description, error),
-      skipped: () => this.writer.writeLine(`ok ${result.description} # SKIP`)
-    })
+    this.recordClaimResult(result)
   }
 
   private recordValidClaim(description: string) {
     this.writer.writeLine(`ok ${description}`)
+  }
+
+  private recordSkippedClaim(description: string) {
+    this.writer.writeLine(`ok ${description} # SKIP`)
+  }
+
+  private recordClaimResult(result: ClaimResult, designator?: string) {
+    if (result.hasSubsumedResults) {
+      if (designator) {
+        this.writeComment(`> ${designator} ${result.description}`)
+      } else {
+        this.writeComment(`> ${result.description}`)
+      }
+      for (const subResult of result.subsumedResults) {
+        this.recordClaimResult(subResult, designator ? `> ${designator}` : ">")
+      }
+    } else {
+      let description: string
+      if (designator) {
+        description = `${designator} ${result.description}`
+      } else {
+        description = result.description
+      }
+      result.when({
+        valid: () => this.recordValidClaim(description),
+        invalid: (error) => this.recordInvalidClaim(description, error),
+        skipped: () => this.recordSkippedClaim(description)
+      })
+    }
   }
 
   private recordInvalidClaim(description: string, failure: Failure) {
