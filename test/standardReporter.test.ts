@@ -372,7 +372,7 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
 }
 
 invalidClaimBehavior("condition", (reporter, claimResult) => {
-  reporter.recordPreparation(claimResult)
+  reporter.recordPresupposition(claimResult)
 }, "some condition")
 
 invalidClaimBehavior("step", (reporter, claimResult) => {
@@ -424,7 +424,7 @@ validGroupedClaimBehavior("procedure", (reporter, claimResult) => {
 }, "•")
 
 validGroupedClaimBehavior("situation", (reporter, claimResult) => {
-  reporter.recordPreparation(claimResult)
+  reporter.recordPresupposition(claimResult)
 }, "+")
 
 
@@ -468,7 +468,7 @@ skippedGroupedClaimBehavior("procedure", (reporter, claimResult) => {
 })
 
 skippedGroupedClaimBehavior("situation", (reporter, claimResult) => {
-  reporter.recordPreparation(claimResult)
+  reporter.recordPresupposition(claimResult)
 })
 
 
@@ -523,7 +523,7 @@ invalidGroupedClaimBehavior("procedure", (reporter, claimResult) => {
 }, "•")
 
 invalidGroupedClaimBehavior("situation", (reporter, claimResult) => {
-  reporter.recordPreparation(claimResult)
+  reporter.recordPresupposition(claimResult)
 }, "+")
 
 

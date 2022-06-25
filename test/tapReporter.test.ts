@@ -106,7 +106,7 @@ const scriptContext = {
 }
 
 validClaimBehavior("condition", (reporter, claimResult) => {
-  reporter.recordPreparation(claimResult)
+  reporter.recordPresupposition(claimResult)
 }, "some condition", "Suppose: some condition")
 
 validClaimBehavior("step", (reporter, claimResult) => {
@@ -158,7 +158,7 @@ validGroupedClaimBehavior("procedure", (reporter, claimResult) => {
 }, "Perform: ")
 
 validGroupedClaimBehavior("situation", (reporter, claimResult) => {
-  reporter.recordPreparation(claimResult)
+  reporter.recordPresupposition(claimResult)
 }, "Suppose: ")
 
 
@@ -177,7 +177,7 @@ const skippedClaimBehavior = (name: string, writeToReport: (reporter: Reporter) 
 
 skippedClaimBehavior("condition", (reporter) => {
   const skipped = (new Fact("cool condition", () => {})).skip(scriptContext)
-  reporter.recordPreparation(skipped)
+  reporter.recordPresupposition(skipped)
 }, "Suppose: cool condition")
 
 skippedClaimBehavior("step", (reporter) => {
@@ -231,7 +231,7 @@ skippedGroupedClaimBehavior("procedure", (reporter, claimResult) => {
 }, "Perform: ")
 
 skippedGroupedClaimBehavior("situation", (reporter, claimResult) => {
-  reporter.recordPreparation(claimResult)
+  reporter.recordPresupposition(claimResult)
 }, "Suppose: ")
 
 
@@ -320,7 +320,7 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
 }
 
 invalidClaimBehavior("condition", (reporter, claimResult) => {
-  reporter.recordPreparation(claimResult)
+  reporter.recordPresupposition(claimResult)
 }, "failed condition", "Suppose: failed condition")
 
 invalidClaimBehavior("step", (reporter, claimResult) => {
@@ -490,7 +490,7 @@ invalidGroupedClaimBehavior("procedure", (reporter, claimResult) => {
 }, "Perform: ")
 
 invalidGroupedClaimBehavior("situation", (reporter, claimResult) => {
-  reporter.recordPreparation(claimResult)
+  reporter.recordPresupposition(claimResult)
 }, "Suppose: ")
 
 

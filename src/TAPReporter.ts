@@ -51,7 +51,7 @@ export class TAPReporter implements Reporter {
     // nothing?
   }
 
-  recordPreparation(result: ClaimResult): void {
+  recordPresupposition(result: ClaimResult): void {
     this.recordAssumption("Suppose:", result)
   }
   recordAction(result: ClaimResult): void {

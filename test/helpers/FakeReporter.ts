@@ -42,7 +42,7 @@ export class FakeReporter implements Reporter {
     this.currentExample = null
   }
 
-  recordPreparation(result: ClaimResult): void {
+  recordPresupposition(result: ClaimResult): void {
     this.recordClaim(result)
   }
   

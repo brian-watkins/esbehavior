@@ -22,7 +22,7 @@ export interface Formatter {
 }
 
 enum SuccessIndicator {
-  Preparation = "+",
+  Presupposition = "+",
   Action = "•",
   Observation = "✔"
 }
@@ -103,8 +103,8 @@ export class StandardReporter implements Reporter {
     this.space()
   }
 
-  recordPreparation(result: ClaimResult): void {
-    this.recordClaimResult(SuccessIndicator.Preparation, result)
+  recordPresupposition(result: ClaimResult): void {
+    this.recordClaimResult(SuccessIndicator.Presupposition, result)
   }
 
   recordAction(result: ClaimResult): void {

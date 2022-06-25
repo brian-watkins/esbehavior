@@ -151,8 +151,8 @@ class ExampleRun<T> {
     }
   }
 
-  recordPreparation(result: ClaimResult) {
-    this.reporter.recordPreparation(result)
+  recordPresupposition(result: ClaimResult) {
+    this.reporter.recordPresupposition(result)
     this.updateSummary(result.summary)
   }
 
@@ -177,7 +177,7 @@ class ValidateMode<T> implements Mode<T> {
 
   async handlePresupposition(run: ExampleRun<T>, scriptContext: ScriptContext<T>, presupposition: Presupposition<T>): Promise<void> {
     const result = await presupposition.validate(scriptContext, this.context)
-    run.recordPreparation(result)
+    run.recordPresupposition(result)
     this.skipRemainingIfInvalid(run, result)
   }
 
@@ -209,7 +209,7 @@ class ValidateMode<T> implements Mode<T> {
 
 class SkipMode<T> implements Mode<T> {
   async handlePresupposition(run: ExampleRun<T>, scriptContext: ScriptContext<T>, presupposition: Presupposition<T>): Promise<void> {
-    run.recordPreparation(presupposition.skip(scriptContext))
+    run.recordPresupposition(presupposition.skip(scriptContext))
   }
 
   async handleAction(run: ExampleRun<T>, scriptContext: ScriptContext<T>, action: Action<T>): Promise<void> {
