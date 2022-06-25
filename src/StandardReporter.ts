@@ -18,13 +18,13 @@ export interface Formatter {
   yellow(message: string): string
   green(message: string): string
   cyan(message: string): string
-  line(length: number): string
 }
 
 enum SuccessIndicator {
   Presupposition = "+",
   Action = "•",
-  Observation = "✔"
+  Observation = "✔",
+  Nested = "➜"
 }
 
 export class StandardReporter implements Reporter {
@@ -118,7 +118,7 @@ export class StandardReporter implements Reporter {
   recordClaimResult(successIndicator: SuccessIndicator, result: ClaimResult): void {
     result.when({
       valid: () => this.writeValidClaimResult(successIndicator, result),
-      invalid: (error) => this.writeInvalidClaimResult(successIndicator, result, error),
+      invalid: (error) => this.writeInvalidClaimResult(result, error),
       skipped: () => this.writeSkippedClaimResult(result)
     })
   }
@@ -133,44 +133,28 @@ export class StandardReporter implements Reporter {
     }
     
     if (result.hasSubsumedResults) {
-      this.writer.writeLine(indent(indentLevel + 1, this.validSeparator()))
       for (const subResult of result.subsumedResults) {
-        this.writeValidClaimResult(successIndicator, subResult, indentLevel + 1)
+        this.writeValidClaimResult(SuccessIndicator.Nested, subResult, indentLevel + 1)
       }
-      this.writer.writeLine(indent(indentLevel + 1, this.validSeparator()))
     }
   }
 
-  validSeparator(): string {
-    return this.format.dim(this.format.green(this.format.line(25)))
-  }
-
-  invalidSeparator(): string {
-    return this.format.dim(this.format.red(this.format.line(25)))
-  }
-
-  skippedSeparator(): string {
-    return this.format.dim(this.format.yellow(this.format.line(25)))
-  }
-
-  writeInvalidClaimResult(successIndicator: SuccessIndicator, result: ClaimResult, error: any, indentLevel: number = 1) {
+  writeInvalidClaimResult(result: ClaimResult, error: any, indentLevel: number = 1) {
     this.writer.writeLine(indent(indentLevel, this.format.red(this.format.bold(`${fail()} ${result.description}`))))
     if (result.hasSubsumedResults) {
-      this.writer.writeLine(indent(indentLevel + 1, this.invalidSeparator()))
       for (const subResult of result.subsumedResults) {
         subResult.when({
           valid: () => {
-            this.writeValidClaimResult(successIndicator, subResult, indentLevel + 1)
+            this.writeValidClaimResult(SuccessIndicator.Nested, subResult, indentLevel + 1)
           },
           invalid: (subError) => {
-            this.writeInvalidClaimResult(successIndicator, subResult, subError, indentLevel + 1)
+            this.writeInvalidClaimResult(subResult, subError, indentLevel + 1)
           },
           skipped: () => {
             this.writeSkippedClaimResult(subResult, indentLevel + 1)
           }
         })
       }
-      this.writer.writeLine(indent(indentLevel + 1, this.invalidSeparator()))
     } else {
       this.space()
       const messageLines = error.message.split(/\r?\n/);
@@ -210,20 +194,16 @@ export class StandardReporter implements Reporter {
   }
 
   writeSkippedClaimResult(result: ClaimResult, indentLevel: number = 1) {
-    const description = this.format.yellow(`${ignore()} ${result.description}`)
-
     if (indentLevel === 1) {
-      this.writer.writeLine(indent(indentLevel, description))
+      this.writer.writeLine(indent(indentLevel, this.format.yellow(`${ignore()} ${result.description}`)))
     } else {
-      this.writer.writeLine(indent(indentLevel, this.format.dim(description)))
+      this.writer.writeLine(indent(indentLevel, this.format.dim(this.format.yellow(`${SuccessIndicator.Nested} ${result.description}`))))
     }
 
     if (result.hasSubsumedResults) {
-      this.writer.writeLine(indent(indentLevel + 1, this.skippedSeparator()))
       for (const subResult of result.subsumedResults) {
         this.writeSkippedClaimResult(subResult, indentLevel + 1)
       }
-      this.writer.writeLine(indent(indentLevel + 1, this.skippedSeparator()))
     }
   }
 
@@ -259,14 +239,6 @@ class ANSIFormatter implements Formatter {
   }
   cyan(message: string): string {
     return this.wrapColor("36", message)
-  }
-  line(length: number): string {
-    let line = ""
-    for (let i = 0; i < length; i++) {
-      line += "\x1b(0\x71"
-    }
-    line += "\x1b(B"
-    return line
   }
 }
 

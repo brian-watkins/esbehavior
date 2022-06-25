@@ -406,11 +406,11 @@ const validGroupedClaimBehavior = (name: string, writeToReport: (reporter: Repor
 
     writer.expectLines([
       `  ${expectedIdentifier} some grouped claim`,
-      `    ${expectedIdentifier} sub-claim 1`,
-      `    ${expectedIdentifier} nested grouped claim`,
-      `      ${expectedIdentifier} nested claim 1`,
-      `      ${expectedIdentifier} nested claim 2`,
-      `    ${expectedIdentifier} sub-claim 2`
+      `    ➜ sub-claim 1`,
+      `    ➜ nested grouped claim`,
+      `      ➜ nested claim 1`,
+      `      ➜ nested claim 2`,
+      `    ➜ sub-claim 2`
     ])
   })
 }
@@ -450,11 +450,11 @@ const skippedGroupedClaimBehavior = (name: string, writeToReport: (reporter: Rep
 
     writer.expectLines([
       `  - some grouped claim`,
-      `    - sub-claim 1`,
-      `    - nested grouped claim`,
-      `      - nested claim 1`,
-      `      - nested claim 2`,
-      `    - sub-claim 2`,
+      `    ➜ sub-claim 1`,
+      `    ➜ nested grouped claim`,
+      `      ➜ nested claim 1`,
+      `      ➜ nested claim 2`,
+      `    ➜ sub-claim 2`,
     ])
   })
 }
@@ -495,9 +495,9 @@ const invalidGroupedClaimBehavior = (name: string, writeToReport: (reporter: Rep
 
     writer.expectLines([
       `  ✖ grouped claim`,
-      `    ${expectedIdentifier} sub-claim 1`,
+      `    ➜ sub-claim 1`,
       `    ✖ nested grouped claim`,
-      `      ${expectedIdentifier} nested claim 1`,
+      `      ➜ nested claim 1`,
       `      ✖ failing nested claim`,
       "        some message",
       "        Actual",
@@ -508,8 +508,8 @@ const invalidGroupedClaimBehavior = (name: string, writeToReport: (reporter: Rep
       "          some-location",
       "        at some.line.of.code",
       "        at another.line.of.code",
-      `      - skipped nested claim`,
-      `    - sub-claim 2`,
+      `      ➜ skipped nested claim`,
+      `    ➜ sub-claim 2`,
     ])
   })
 }
@@ -551,8 +551,5 @@ class FakeFormatter implements Formatter {
   }
   cyan(message: string): string {
     return message
-  }
-  line(length: number): string {
-    return ""
   }
 }
