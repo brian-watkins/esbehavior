@@ -1,11 +1,12 @@
 import { Context, RunMode, ExampleBuilder, BehaviorExampleBuilder, ExampleSetupBuilder } from "./Example.js"
 import { Reporter } from "./Reporter.js"
-import { Behavior, BehaviorCollection } from "./Behavior.js"
+import { Behavior } from "./Behavior.js"
 import { Effect, Observation, Outcome } from "./Observation.js"
 import { Fact, Presupposition, Situation } from "./Presupposition.js"
 import { StandardReporter } from "./StandardReporter.js"
 import { emptySummary, Summary } from "./Summary.js"
 import { Action, Procedure, Step } from "./Action.js"
+import { Documentation } from "./Documentation.js"
 export { Observation, Effect, Outcome } from "./Observation.js"
 export { Presupposition, Fact, Situation } from "./Presupposition.js"
 export { Action, Procedure, Step } from "./Action.js"
@@ -19,7 +20,8 @@ export { Example, Context, ExampleBuilder, ExampleSetupBuilder, ExampleScriptBui
 export { Script } from "./Script.js"
 
 export interface ValidationOptions {
-  reporter?: Reporter
+  reporter?: Reporter,
+  failFast?: boolean
 }
 
 export async function validate<T>(behaviors: Array<Behavior>, options: ValidationOptions = {}): Promise<Summary> {
@@ -27,10 +29,10 @@ export async function validate<T>(behaviors: Array<Behavior>, options: Validatio
 
   reporter.start()
 
-  const behaviorCollection = new BehaviorCollection(behaviors)
+  const documentation = new Documentation(behaviors)
 
   try {
-    const summary = await behaviorCollection.run(reporter)
+    const summary = await documentation.validate(reporter, { failFast: options.failFast ?? false })
     reporter.end(summary)
     return summary
   } catch (err: any) {

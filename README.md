@@ -1,4 +1,4 @@
-## esbehavior
+# esbehavior
 
 esbehavior is a framework for writing executable documentation.
 
@@ -91,9 +91,6 @@ Use any assertion library you like (chai, power assert, proclaim, node assert, e
 
 esbehavior can run in node or the browser.
 
-esbehavior produces TAP output, so you can use any TAP reporter (tap-spec,
-tap-mocha-reporter, tap-difflet, etc) to display validation output.
-
 esbehavior works well with Typescript; type hints should (hopefully) provide some
 documentation of the dsl.
 
@@ -109,10 +106,47 @@ which will run each example in sequence and print the results in TAP output to
 the console. 
 
 This 'runner' script could be executed with node, or it could be executed in a
-browser context. Typically, you will then pipe the output to a TAP reporter so that
-it's easy to read.
+browser context.
 
 You can use `pick` to run selected examples or `skip` to ignore selected examples.
 
 Here's a sample with [behaviors evaluated in node](https://github.com/brian-watkins/esbehavior/tree/main/samples/node) and here's
 a sample for a React app with [behaviors evaluated in a browser](https://github.com/brian-watkins/esbehavior/tree/main/samples/react).
+
+
+## Public API
+
+### validate(behaviors: Array<Behavior>, options: ValidationOptions): Promise<Summary> 
+
+This function validates a list of behaviors and returns a summary. Use the DSL functions
+to create `Behaviors`.
+
+### ValidationOptions
+
+The `ValidationOptions` are:
+
+```
+{
+  reporter?: Reporter, // By default this is StandardReporter
+  failFast?: boolean // By default this is false
+}
+```
+
+#### reporter
+
+You can use the `reporter` option to pass in a `Reporter` to use during validation. There
+are two options at the moment:
+
+1. `StandardReporter` -- This reporter will be used by default if none is specified. It
+prints nicely formatted output to the console.
+2. `TAPReporter` -- This reporter prints TAP formatted output to the console. Use this to tie
+into the larger ecosystem of tools that use TAP, which includes other reporters (tap-spec,
+tap-mocha-reporter, tap-difflet, etc) as well as other tools.
+
+You could also provide your own reporter that conforms to the `Reporter` interface.
+
+#### failFast
+
+If this option is set then the validation run will stop after the first example that contains
+a failed claim. Remaining examples will be skipped. No more output will be generated, but
+the summary will contain the total number of examples skipped.
