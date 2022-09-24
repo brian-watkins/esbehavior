@@ -231,7 +231,7 @@ test("when the validation run is terminated", () => {
 })
 
 
-const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporter, claimResult: ClaimResult) => void, description: string) => {
+const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporter, scriptLocation: string, claimResult: ClaimResult) => void, description: string) => {
   test(`invalid ${name}`, () => {
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
@@ -240,7 +240,7 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
       expect(7).to.be.lessThan(5)
     } catch (err: any) {
       err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      writeToReport(reporter, new InvalidClaim(description, "file://some/file/location.ts:58:19", err))
+      writeToReport(reporter, "file://some/file/location.ts:58:19", new InvalidClaim(description, err))
 
       writer.expectLines([
         `  ✖ ${description}`,
@@ -265,7 +265,7 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
       message: "expected things to happen",
       stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
     }
-    writeToReport(reporter, new InvalidClaim(description, "file://some/cool/location.ts:58:19", err))
+    writeToReport(reporter, "file://some/cool/location.ts:58:19", new InvalidClaim(description, err))
 
     writer.expectLines([
       `  ✖ ${description}`,
@@ -285,7 +285,7 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
       message: "expected things to happen\nmore information\r\neven more information.",
       stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
     }
-    writeToReport(reporter, new InvalidClaim(description, "file://some/awesome/location.ts:58:19", err))
+    writeToReport(reporter, "file://some/awesome/location.ts:58:19", new InvalidClaim(description, err))
 
     writer.expectLines([
       `  ✖ ${description}`,
@@ -307,7 +307,7 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
       expect(["one", "two", "three"]).to.contain("apples")
     } catch (err: any) {
       err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      writeToReport(reporter, new InvalidClaim(description, "file://some/file/location.ts:58:19", err))
+      writeToReport(reporter, "file://some/file/location.ts:58:19", new InvalidClaim(description, err))
 
       writer.expectLines([
         `  ✖ ${description}`,
@@ -328,7 +328,7 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
       expect(false).to.be.true
     } catch (err: any) {
       err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      writeToReport(reporter, new InvalidClaim(description, "file://some/file/location.ts:58:19", err))
+      writeToReport(reporter, "file://some/file/location.ts:58:19", new InvalidClaim(description, err))
 
       writer.expectLines([
         `  ✖ ${description}`,
@@ -353,7 +353,7 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
       expect(true).to.be.false
     } catch (err: any) {
       err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      writeToReport(reporter, new InvalidClaim(description, "file://some/file/location.ts:58:19", err))
+      writeToReport(reporter, "file://some/file/location.ts:58:19", new InvalidClaim(description, err))
 
       writer.expectLines([
         `  ✖ ${description}`,
@@ -371,16 +371,22 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
   })
 }
 
-invalidClaimBehavior("condition", (reporter, claimResult) => {
+invalidClaimBehavior("condition", (reporter, scriptLocation, claimResult) => {
+  reporter.startScript(scriptLocation)
   reporter.recordPresupposition(claimResult)
+  reporter.endScript()
 }, "some condition")
 
-invalidClaimBehavior("step", (reporter, claimResult) => {
+invalidClaimBehavior("step", (reporter, scriptLocation, claimResult) => {
+  reporter.startScript(scriptLocation)
   reporter.recordAction(claimResult)
+  reporter.endScript()
 }, "some step")
 
-invalidClaimBehavior("observation", (reporter, claimResult) => {
+invalidClaimBehavior("observation", (reporter, scriptLocation, claimResult) => {
+  reporter.startScript(scriptLocation)
   reporter.recordObservation(claimResult)
+  reporter.endScript()
 }, "some observation")
 
 
@@ -389,17 +395,17 @@ const validGroupedClaimBehavior = (name: string, writeToReport: (reporter: Repor
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
-    const nestedOutcome = new ValidClaim("nested grouped claim", "some-location")
+    const nestedOutcome = new ValidClaim("nested grouped claim")
     nestedOutcome.subsumedResults = [
-      new ValidClaim("nested claim 1", "some-location"),
-      new ValidClaim("nested claim 2", "some-location")
+      new ValidClaim("nested claim 1"),
+      new ValidClaim("nested claim 2")
     ]
 
-    const outcome = new ValidClaim("some grouped claim", "some-location")
+    const outcome = new ValidClaim("some grouped claim")
     outcome.subsumedResults = [
-      new ValidClaim("sub-claim 1", "some-location"),
+      new ValidClaim("sub-claim 1"),
       nestedOutcome,
-      new ValidClaim("sub-claim 2", "some-location")
+      new ValidClaim("sub-claim 2")
     ]
 
     writeToReport(reporter, outcome)
@@ -416,15 +422,21 @@ const validGroupedClaimBehavior = (name: string, writeToReport: (reporter: Repor
 }
 
 validGroupedClaimBehavior("outcome", (reporter, claimResult) => {
+  reporter.startScript("some-location")
   reporter.recordObservation(claimResult)
+  reporter.endScript()
 }, "✔")
 
 validGroupedClaimBehavior("procedure", (reporter, claimResult) => {
+  reporter.startScript("some-location")
   reporter.recordAction(claimResult)
+  reporter.endScript()
 }, "•")
 
 validGroupedClaimBehavior("situation", (reporter, claimResult) => {
+  reporter.startScript("some-location")
   reporter.recordPresupposition(claimResult)
+  reporter.endScript()
 }, "+")
 
 
@@ -433,17 +445,17 @@ const skippedGroupedClaimBehavior = (name: string, writeToReport: (reporter: Rep
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
-    const nestedOutcome = new SkippedClaim("nested grouped claim", "some-location")
+    const nestedOutcome = new SkippedClaim("nested grouped claim")
     nestedOutcome.subsumedResults = [
-      new SkippedClaim("nested claim 1", "some-location"),
-      new SkippedClaim("nested claim 2", "some-location")
+      new SkippedClaim("nested claim 1"),
+      new SkippedClaim("nested claim 2")
     ]
 
-    const outcome = new SkippedClaim("some grouped claim", "some-location")
+    const outcome = new SkippedClaim("some grouped claim")
     outcome.subsumedResults = [
-      new SkippedClaim("sub-claim 1", "some-location"),
+      new SkippedClaim("sub-claim 1"),
       nestedOutcome,
-      new SkippedClaim("sub-claim 2", "some-location")
+      new SkippedClaim("sub-claim 2")
     ]
 
     writeToReport(reporter, outcome)
@@ -460,38 +472,44 @@ const skippedGroupedClaimBehavior = (name: string, writeToReport: (reporter: Rep
 }
 
 skippedGroupedClaimBehavior("outcome", (reporter, claimResult) => {
+  reporter.startScript("some-location")
   reporter.recordObservation(claimResult)
+  reporter.endScript()
 })
 
 skippedGroupedClaimBehavior("procedure", (reporter, claimResult) => {
+  reporter.startScript("some-location")
   reporter.recordAction(claimResult)
+  reporter.endScript()
 })
 
 skippedGroupedClaimBehavior("situation", (reporter, claimResult) => {
+  reporter.startScript("some-location")
   reporter.recordPresupposition(claimResult)
+  reporter.endScript()
 })
 
 
-const invalidGroupedClaimBehavior = (name: string, writeToReport: (reporter: Reporter, claimResult: ClaimResult) => void, expectedIdentifier: string) => {
+const invalidGroupedClaimBehavior = (name: string, writeToReport: (reporter: Reporter, scriptLocation: string, claimResult: ClaimResult) => void) => {
   test(`when an invalid ${name} is reported`, () => {
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
-    const nestedOutcome = new InvalidClaim("nested grouped claim", "some-location", {})
+    const nestedOutcome = new InvalidClaim("nested grouped claim", {})
     nestedOutcome.subsumedResults = [
-      new ValidClaim("nested claim 1", "some-location"),
-      new InvalidClaim("failing nested claim", "some-location", { message: "some message", expected: "something", actual: "nothing", operator: "equals", stack: "some message\n   at some.line.of.code\n   at another.line.of.code" }),
-      new SkippedClaim("skipped nested claim", "some-location")
+      new ValidClaim("nested claim 1"),
+      new InvalidClaim("failing nested claim", { message: "some message", expected: "something", actual: "nothing", operator: "equals", stack: "some message\n   at some.line.of.code\n   at another.line.of.code" }),
+      new SkippedClaim("skipped nested claim")
     ]
 
-    const outcome = new InvalidClaim("grouped claim", "some-location", {})
+    const outcome = new InvalidClaim("grouped claim", {})
     outcome.subsumedResults = [
-      new ValidClaim("sub-claim 1", "some-location"),
+      new ValidClaim("sub-claim 1"),
       nestedOutcome,
-      new SkippedClaim("sub-claim 2", "some-location")
+      new SkippedClaim("sub-claim 2")
     ]
 
-    writeToReport(reporter, outcome)
+    writeToReport(reporter, "some-location", outcome)
 
     writer.expectLines([
       `  ✖ grouped claim`,
@@ -514,17 +532,23 @@ const invalidGroupedClaimBehavior = (name: string, writeToReport: (reporter: Rep
   })
 }
 
-invalidGroupedClaimBehavior("outcome", (reporter, claimResult) => {
+invalidGroupedClaimBehavior("outcome", (reporter, scriptLocation, claimResult) => {
+  reporter.startScript(scriptLocation)
   reporter.recordObservation(claimResult)
-}, "✔")
+  reporter.endScript()
+})
 
-invalidGroupedClaimBehavior("procedure", (reporter, claimResult) => {
+invalidGroupedClaimBehavior("procedure", (reporter, scriptLocation, claimResult) => {
+  reporter.startScript(scriptLocation)
   reporter.recordAction(claimResult)
-}, "•")
+  reporter.endScript()
+})
 
-invalidGroupedClaimBehavior("situation", (reporter, claimResult) => {
+invalidGroupedClaimBehavior("situation", (reporter, scriptLocation, claimResult) => {
+  reporter.startScript(scriptLocation)
   reporter.recordPresupposition(claimResult)
-}, "+")
+  reporter.endScript()
+})
 
 
 test.run()

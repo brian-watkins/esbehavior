@@ -1,5 +1,4 @@
 import { Claim, ClaimResult, ComplexClaim, SimpleClaim } from "./Claim.js";
-import { ScriptContext } from "./Script.js";
 
 export type Presupposition<T> = Fact<T> | Situation<T>
 
@@ -8,9 +7,9 @@ export class Fact<T> extends SimpleClaim<T> {}
 export class Situation<T> extends ComplexClaim<T> {
   private shouldValidate = true
 
-  async evaluateSubsumedClaim(claim: Claim<T>, scriptContext: ScriptContext<T>, context: T): Promise<ClaimResult> {
+  async evaluateSubsumedClaim(claim: Claim<T>, context: T): Promise<ClaimResult> {
     if (this.shouldValidate) {
-      const result = await claim.validate(scriptContext, context)
+      const result = await claim.validate(context)
       result.when({
         valid: () => {},
         invalid: () => { this.shouldValidate = false },
@@ -18,7 +17,7 @@ export class Situation<T> extends ComplexClaim<T> {
       })
       return result
     } else {
-      return claim.skip(scriptContext)
+      return claim.skip()
     }
   }
 }

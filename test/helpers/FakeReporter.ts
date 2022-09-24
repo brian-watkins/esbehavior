@@ -7,6 +7,7 @@ export class FakeReporter implements Reporter {
   private reports: Array<TestBehavior | TestFailure | null> = []
   private currentBehavior: TestBehavior | null = null
   private currentExample: TestExample | null = null
+  private currentScript: TestScript = new TestScript("UNKNOWN")
   private summary: Summary | null = null
   private calledStart: boolean = false
 
@@ -33,6 +34,14 @@ export class FakeReporter implements Reporter {
     this.currentBehavior = null  
   }
 
+  startScript(location: string): void {
+    this.currentScript = new TestScript(location)
+  }
+
+  endScript(): void {
+    this.currentScript = new TestScript("UNKNOWN")
+  }
+
   startExample(description?: string): void {
     this.currentExample = new TestExample(description || null)
   }
@@ -55,7 +64,7 @@ export class FakeReporter implements Reporter {
   }
 
   private recordClaim<T>(result: ClaimResult): void {
-    this.currentExample?.claims.push(toTestClaim(result))
+    this.currentExample?.claims.push(toTestClaim(this.currentScript, result))
   }
 
   expectReport(expectedReports: Array<TestBehavior | TestFailure>) {
@@ -68,26 +77,28 @@ export class FakeReporter implements Reporter {
   }
 }
 
-function toTestClaim(result: ClaimResult): TestClaim | TestClaims {
+function toTestClaim(script: TestScript, result: ClaimResult): TestClaim | TestClaims {
+  const toTestClaimForScript = (subResult: ClaimResult) => toTestClaim(script, subResult)
+
   return result.when({
     valid: () => {
       if (result.hasSubsumedResults) {
-        return new TestClaims(result.description, result.subsumedResults.map(toTestClaim), "valid")
+        return new TestClaims(result.description, result.subsumedResults.map(toTestClaimForScript), "valid")
       } else {
         return new ValidClaim(result.description)
       }
     },
     invalid: (failure) => {
       if (result.hasSubsumedResults) {
-        return new TestClaims(result.description, result.subsumedResults.map(toTestClaim), "invalid")
+        return new TestClaims(result.description, result.subsumedResults.map(toTestClaimForScript), "invalid")
       } else {
-        const location = result.location.split("/").at(-1) ?? "<LOCATION NOT FOUND>"
+        const location = script.location.split("/").at(-1) ?? "<LOCATION NOT FOUND>"
         return new InvalidClaim(location, result.description, failure)
       }
     },
     skipped: () => {
       if (result.hasSubsumedResults) {
-        return new TestClaims(result.description, result.subsumedResults.map(toTestClaim), "skipped")
+        return new TestClaims(result.description, result.subsumedResults.map(toTestClaimForScript), "skipped")
       } else {
         return new SkippedClaim(result.description)
       }
@@ -117,6 +128,10 @@ export function withExample(description: string | null, claims: Array<TestClaim 
   const example = new TestExample(description)
   example.claims = claims
   return example
+}
+
+class TestScript {
+  constructor (public location: string) {}
 }
 
 class TestFailure {

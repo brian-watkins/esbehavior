@@ -31,6 +31,7 @@ export class StandardReporter implements Reporter {
   private writer: Writer
   private format: Formatter
   private timer: Timer
+  private currentScriptLocation = "UNKNOWN"
 
   constructor(options: StandardReporterOptions = {}) {
     this.writer = options.writer ?? new ConsoleWriter()
@@ -103,6 +104,14 @@ export class StandardReporter implements Reporter {
     this.space()
   }
 
+  startScript(location: string): void {
+    this.currentScriptLocation = location
+  }
+
+  endScript(): void {
+    this.currentScriptLocation = "UNKNOWN"
+  }
+
   recordPresupposition(result: ClaimResult): void {
     this.recordClaimResult(SuccessIndicator.Presupposition, result)
   }
@@ -166,7 +175,7 @@ export class StandardReporter implements Reporter {
         this.writeDetail("Actual", error.actual, indentLevel + 1)
         this.writeDetail("Expected", error.expected, indentLevel + 1)
       }
-      this.writeDetail("Script Failed", result.location, indentLevel + 1)
+      this.writeDetail("Script Failed", this.currentScriptLocation, indentLevel + 1)
       this.writeStack(error.stack, { indentLevel: indentLevel + 1 })
       this.space()  
     }

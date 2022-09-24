@@ -1,52 +1,51 @@
 import { Failure } from "./Reporter.js"
-import { ScriptContext } from "./Script.js"
 import { addInvalid, addSkipped, addValid, combineSummaries, emptySummary, Summary } from "./Summary.js"
 import { waitFor } from "./waitFor.js"
 
 export interface Claim<T> {
   description: string
-  validate(scriptContext: ScriptContext<T>, context: T): Promise<ClaimResult>
-  skip(scriptContext: ScriptContext<T>): ClaimResult
+  validate(context: T): Promise<ClaimResult>
+  skip(): ClaimResult
 }
 
 export class SimpleClaim<T> implements Claim<T> {
   constructor(public description: string, private execute: (context: T) => void | Promise<void>) {}
   
-  async validate(scriptContext: ScriptContext<T>, context: T): Promise<ClaimResult> {
+  async validate(context: T): Promise<ClaimResult> {
     try {
       await waitFor(this.execute(context))
-      return new ValidClaim(this.description, scriptContext.location)
+      return new ValidClaim(this.description)
     } catch (failure: any) {
-      return new InvalidClaim(this.description, scriptContext.location, failure)
+      return new InvalidClaim(this.description, failure)
     }
   }
 
-  skip(scriptContext: ScriptContext<T>): ClaimResult {
-    return new SkippedClaim(this.description, scriptContext.location)
+  skip(): ClaimResult {
+    return new SkippedClaim(this.description)
   }
 }
 
 export abstract class ComplexClaim<T> implements Claim<T> {
   constructor(public description: string, private claims: Array<Claim<T>>) {}
 
-  abstract evaluateSubsumedClaim(claim: Claim<T>, scriptContext: ScriptContext<T>, context: T): Promise<ClaimResult>
+  abstract evaluateSubsumedClaim(claim: Claim<T>, context: T): Promise<ClaimResult>
 
-  async validate(scriptContext: ScriptContext<T>, context: T): Promise<ClaimResult> {
-    let result = new ValidClaim(this.description, scriptContext.location)
+  async validate(context: T): Promise<ClaimResult> {
+    let result = new ValidClaim(this.description)
 
     for (const claim of this.claims) {
-      const claimResult = await this.evaluateSubsumedClaim(claim, scriptContext, context)
+      const claimResult = await this.evaluateSubsumedClaim(claim, context)
       result = result.subsume(claimResult)
     }
 
     return result
   }
 
-  skip(scriptContext: ScriptContext<T>): ClaimResult {
-    let result = new SkippedClaim(this.description, scriptContext.location)
+  skip(): ClaimResult {
+    let result = new SkippedClaim(this.description)
 
     for (const claim of this.claims) {
-      const skippedResult = claim.skip(scriptContext)
+      const skippedResult = claim.skip()
       result = result.subsume(skippedResult)
     }
 
@@ -66,7 +65,7 @@ export abstract class ClaimResult {
   abstract type: ClaimStatus
   public subsumedResults: Array<ClaimResult> = []
   
-  constructor(public description: string, public location: string) {}
+  constructor(public description: string) {}
 
   get hasSubsumedResults(): boolean {
     return this.subsumedResults.length > 0
@@ -95,7 +94,7 @@ export abstract class ClaimResult {
         return this
       },
       invalid: () => {
-        const result = new InvalidClaim(this.description, this.location, { message: "One or more claims are invalid" })
+        const result = new InvalidClaim(this.description, { message: "One or more claims are invalid" })
         result.subsumedResults = this.subsumedResults
         result.subsumedResults.push(subResult)
         return result
@@ -120,8 +119,8 @@ export class ValidClaim extends ClaimResult {
 export class InvalidClaim extends ClaimResult {
   public type: ClaimStatus = "Invalid"
   
-  constructor (description: string, location: string, public error: Failure) {
-    super(description, location)
+  constructor (description: string, public error: Failure) {
+    super(description)
   }
 
   when<S>(handler: ClaimResultHandler<S>): S {

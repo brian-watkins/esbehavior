@@ -51,6 +51,14 @@ export class TAPReporter implements Reporter {
     // nothing?
   }
 
+  startScript(location: string): void {
+    // nothing
+  }
+
+  endScript(): void {
+    // nothing
+  }
+
   recordPresupposition(result: ClaimResult): void {
     this.recordAssumption("Suppose:", result)
   }

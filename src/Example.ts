@@ -118,9 +118,9 @@ interface ModeDelegate<T> {
 }
 
 interface Mode<T> {
-  handlePresupposition(run: ModeDelegate<T>, scriptContext: ScriptContext<T>, presupposition: Presupposition<T>): Promise<ClaimResult>
-  handleAction(run: ModeDelegate<T>, scriptContext: ScriptContext<T>, action: Action<T>): Promise<ClaimResult>
-  handleObservation(run: ModeDelegate<T>, scriptContext: ScriptContext<T>, observation: Observation<T>): Promise<ClaimResult>
+  handlePresupposition(run: ModeDelegate<T>, presupposition: Presupposition<T>): Promise<ClaimResult>
+  handleAction(run: ModeDelegate<T>, action: Action<T>): Promise<ClaimResult>
+  handleObservation(run: ModeDelegate<T>, observation: Observation<T>): Promise<ClaimResult>
 }
 
 class ExampleRun<T> implements ModeDelegate<T> {
@@ -134,7 +134,9 @@ class ExampleRun<T> implements ModeDelegate<T> {
 
   async execute(scriptContexts: Array<ScriptContext<T>>): Promise<void> {
     for (let scriptContext of scriptContexts) {
-      await this.runScript(scriptContext)
+      this.reporter.startScript(scriptContext.location)
+      await this.runScript(scriptContext.script)
+      this.reporter.endScript()
 
       if (this.summary.invalid > 0) {
         this.mode = new SkipMode()
@@ -142,21 +144,21 @@ class ExampleRun<T> implements ModeDelegate<T> {
     }
   }
 
-  private async runScript(context: ScriptContext<T>): Promise<void> {
-    for (let presupposition of context.script.suppose ?? []) {
-      const result = await this.mode.handlePresupposition(this, context, presupposition)
+  private async runScript(script: Script<T>): Promise<void> {
+    for (let presupposition of script.suppose ?? []) {
+      const result = await this.mode.handlePresupposition(this, presupposition)
       this.reporter.recordPresupposition(result)
       this.updateSummary(result.summary)
     }
 
-    for (let step of context.script.perform ?? []) {
-      const result = await this.mode.handleAction(this, context, step)
+    for (let step of script.perform ?? []) {
+      const result = await this.mode.handleAction(this, step)
       this.reporter.recordAction(result)
       this.updateSummary(result.summary)
     }
 
-    for (let observation of context.script.observe ?? []) {
-      const result = await this.mode.handleObservation(this, context, observation)
+    for (let observation of script.observe ?? []) {
+      const result = await this.mode.handleObservation(this, observation)
       this.reporter.recordObservation(result)
       this.updateSummary(result.summary)
     }
@@ -171,20 +173,20 @@ class ExampleRun<T> implements ModeDelegate<T> {
 class ValidateMode<T> implements Mode<T> {
   constructor(private context: T) { }
 
-  async handlePresupposition(delegate: ModeDelegate<T>, scriptContext: ScriptContext<T>, presupposition: Presupposition<T>): Promise<ClaimResult> {
-    const result = await presupposition.validate(scriptContext, this.context)
+  async handlePresupposition(delegate: ModeDelegate<T>, presupposition: Presupposition<T>): Promise<ClaimResult> {
+    const result = await presupposition.validate(this.context)
     this.skipRemainingIfInvalid(delegate, result)
     return result
   }
 
-  async handleAction(delegate: ModeDelegate<T>, scriptContext: ScriptContext<T>, action: Action<T>): Promise<ClaimResult> {
-    const result = await action.validate(scriptContext, this.context)
+  async handleAction(delegate: ModeDelegate<T>, action: Action<T>): Promise<ClaimResult> {
+    const result = await action.validate(this.context)
     this.skipRemainingIfInvalid(delegate, result)
     return result
   }
 
-  async handleObservation(delegate: ModeDelegate<T>, scriptContext: ScriptContext<T>, effect: Observation<T>): Promise<ClaimResult> {
-    return await effect.validate(scriptContext, this.context)
+  async handleObservation(delegate: ModeDelegate<T>, effect: Observation<T>): Promise<ClaimResult> {
+    return await effect.validate(this.context)
   }
 
   skipRemainingIfInvalid(delegate: ModeDelegate<T>, result: ClaimResult) {
@@ -203,15 +205,15 @@ class ValidateMode<T> implements Mode<T> {
 }
 
 class SkipMode<T> implements Mode<T> {
-  async handlePresupposition(delegate: ModeDelegate<T>, scriptContext: ScriptContext<T>, presupposition: Presupposition<T>): Promise<ClaimResult> {
-    return presupposition.skip(scriptContext)
+  async handlePresupposition(delegate: ModeDelegate<T>, presupposition: Presupposition<T>): Promise<ClaimResult> {
+    return presupposition.skip()
   }
 
-  async handleAction(delegate: ModeDelegate<T>, scriptContext: ScriptContext<T>, action: Action<T>): Promise<ClaimResult> {
-    return action.skip(scriptContext)
+  async handleAction(delegate: ModeDelegate<T>, action: Action<T>): Promise<ClaimResult> {
+    return action.skip()
   }
 
-  async handleObservation(delegate: ModeDelegate<T>, scriptContext: ScriptContext<T>, effect: Observation<T>): Promise<ClaimResult> {
-    return effect.skip(scriptContext)
+  async handleObservation(delegate: ModeDelegate<T>, effect: Observation<T>): Promise<ClaimResult> {
+    return effect.skip()
   }
 }
