@@ -91,13 +91,13 @@ export class BehaviorExample<T> implements Example {
 
     const run = new ExampleRun<T>(new ValidateMode(context), reporter)
 
-    await run.execute(this.scripts)
+    const summary = await run.execute(this.scripts)
 
     await waitFor(this.context.teardown?.(context))
 
     reporter.endExample()
 
-    return run.summary
+    return summary
   }
 
   async skip(reporter: Reporter): Promise<Summary> {
@@ -105,11 +105,11 @@ export class BehaviorExample<T> implements Example {
 
     const run = new ExampleRun<T>(new SkipMode(), reporter)
 
-    await run.execute(this.scripts)
+    const summary = await run.execute(this.scripts)
 
     reporter.endExample()
 
-    return run.summary
+    return summary
   }
 }
 
@@ -124,48 +124,52 @@ interface Mode<T> {
 }
 
 class ExampleRun<T> implements ModeDelegate<T> {
-  public summary = addExample(emptySummary())
-
   constructor(private mode: Mode<T>, private reporter: Reporter) {}
 
   setMode(mode: Mode<T>): void {
     this.mode = mode
   }
 
-  async execute(scriptContexts: Array<ScriptContext<T>>): Promise<void> {
+  async execute(scriptContexts: Array<ScriptContext<T>>): Promise<Summary> {
+    let summary = addExample(emptySummary())
+
     for (let scriptContext of scriptContexts) {
       this.reporter.startScript(scriptContext.location)
-      await this.runScript(scriptContext.script)
+      const scriptSummary = await this.runScript(scriptContext.script)
       this.reporter.endScript()
 
-      if (this.summary.invalid > 0) {
+      if (scriptSummary.invalid > 0) {
         this.mode = new SkipMode()
       }
+
+      summary = addSummary(summary)(scriptSummary)
     }
+
+    return summary
   }
 
-  private async runScript(script: Script<T>): Promise<void> {
+  private async runScript(script: Script<T>): Promise<Summary> {
+    let summary = emptySummary()
+
     for (let presupposition of script.suppose ?? []) {
       const result = await this.mode.handlePresupposition(this, presupposition)
       this.reporter.recordPresupposition(result)
-      this.updateSummary(result.summary)
+      summary = addSummary(summary)(result.summary)
     }
 
     for (let step of script.perform ?? []) {
       const result = await this.mode.handleAction(this, step)
       this.reporter.recordAction(result)
-      this.updateSummary(result.summary)
+      summary = addSummary(summary)(result.summary)
     }
 
     for (let observation of script.observe ?? []) {
       const result = await this.mode.handleObservation(this, observation)
       this.reporter.recordObservation(result)
-      this.updateSummary(result.summary)
+      summary = addSummary(summary)(result.summary)
     }
-  }
 
-  private updateSummary(summary: Summary) {
-    this.summary = addSummary(this.summary)(summary)
+    return summary
   }
 }
 
