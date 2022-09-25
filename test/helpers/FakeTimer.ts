@@ -9,3 +9,7 @@ export class FakeTimer implements Timer {
     return this.time
   }
 }
+
+export function fakeTimer(duration: number): FakeTimer {
+  return new FakeTimer(duration)
+}

@@ -1,5 +1,6 @@
 import { Failure } from "./Reporter.js"
 import { addInvalid, addSkipped, addValid, combineSummaries, emptySummary, Summary } from "./Summary.js"
+import { Timer } from "./Timer.js"
 import { waitFor } from "./waitFor.js"
 
 export interface Claim<T> {
@@ -9,15 +10,25 @@ export interface Claim<T> {
 }
 
 export class SimpleClaim<T> implements Claim<T> {
-  constructor(public description: string, private execute: (context: T) => void | Promise<void>) {}
+  constructor(public description: string, private execute: (context: T) => void | Promise<void>, private timer: Timer) {}
   
   async validate(context: T): Promise<ClaimResult> {
+    let claimResult: ClaimResult
+
+    this.timer.start()
+
     try {
       await waitFor(this.execute(context))
-      return new ValidClaim(this.description)
-    } catch (failure: any) {
-      return new InvalidClaim(this.description, failure)
-    }
+      claimResult = new ValidClaim(this.description)
+    } catch (failure: any) {  
+      claimResult = new InvalidClaim(this.description, failure)
+    } 
+
+    this.timer.stop()
+
+    claimResult.duration = this.timer.durationInMillis()
+
+    return claimResult
   }
 
   skip(): ClaimResult {
@@ -64,7 +75,8 @@ type ClaimStatus = "Invalid" | "Valid" | "Skipped"
 export abstract class ClaimResult {
   abstract type: ClaimStatus
   public subsumedResults: Array<ClaimResult> = []
-  
+  public duration: number | undefined
+
   constructor(public description: string) {}
 
   get hasSubsumedResults(): boolean {

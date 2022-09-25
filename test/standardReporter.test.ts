@@ -1,18 +1,18 @@
 import { test } from 'uvu'
 import { FakeReportWriter } from './helpers/FakeReportWriter.js'
 import { Formatter, StandardReporter } from '../src/StandardReporter.js'
-import { behavior, fact, effect, example, skip, step, validate } from '../src/index.js'
+import { behavior, fact, effect, example, skip, step, validate, Fact, Step, Effect } from '../src/index.js'
 import { expect } from 'chai'
-import { Reporter } from '../src/Reporter.js'
+import { Failure, Reporter } from '../src/Reporter.js'
 import { ClaimResult, InvalidClaim, SkippedClaim, ValidClaim } from '../src/Claim.js'
-import { FakeTimer } from './helpers/FakeTimer.js'
+import { fakeTimer } from './helpers/FakeTimer.js'
 
 test("multiple examples with valid and skipped claims", async () => {
   const writer = new FakeReportWriter()
   const reporter = new StandardReporter({
     writer,
     formatter: new FakeFormatter(),
-    timer: new FakeTimer(13)
+    timer: fakeTimer(13)
   })
 
   await validate([
@@ -21,37 +21,37 @@ test("multiple examples with valid and skipped claims", async () => {
         .description("doing two things")
         .script({
           suppose: [
-            fact("Do this first", (actual) => {
+            new Fact("Do this first", (actual) => {
               actual.number = 6
-            })
+            }, fakeTimer(1200))
           ],
           perform: [
-            step("Add to the number", (actual) => {
+            new Step("Add to the number", (actual) => {
               actual.number++
-            })
+            }, fakeTimer(4))
           ],
           observe: [
-            effect("it compares the correct number", (actual) => {
+            new Effect("it compares the correct number", (actual) => {
               expect(actual.number).to.equal(7)
-            }),
-            effect("it compares other numbers", (actual) => {
+            }, fakeTimer(600)),
+            new Effect("it compares other numbers", (actual) => {
               expect(18).to.equal(18)
-            }),
+            }, fakeTimer(6)),
           ]
         }),
       skip.example()
         .description("skipped case")
         .script({
           suppose: [
-            fact("some skipped condition", () => { })
+            new Fact("some skipped condition", () => { }, fakeTimer(2))
           ],
           perform: [
-            step("some skipped step", () => { })
+            new Step("some skipped step", () => { }, fakeTimer(2))
           ],
           observe: [
-            effect("it does not much", () => {
+            new Effect("it does not much", () => {
               expect(7).to.equal(7)
-            })
+            }, fakeTimer(2))
           ]
         })
     ])
@@ -60,10 +60,10 @@ test("multiple examples with valid and skipped claims", async () => {
   writer.expectLines([
     "cool behavior",
     "  doing two things",
-    "  + Do this first",
-    "  • Add to the number",
-    "  ✔ it compares the correct number",
-    "  ✔ it compares other numbers",
+    "  + Do this first (1.2s)",
+    "  • Add to the number (4ms)",
+    "  ✔ it compares the correct number (0.6s)",
+    "  ✔ it compares other numbers (6ms)",
     "  skipped case",
     "  - some skipped condition",
     "  - some skipped step",
@@ -76,7 +76,7 @@ test("multiple examples with valid and skipped claims", async () => {
 
 test("multiple behaviors, multiple examples, multiple claims", () => {
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: new FakeTimer(8) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(8) })
 
   reporter.end({
     behaviors: 3, examples: 4, valid: 12, invalid: 0, skipped: 0
@@ -91,7 +91,7 @@ test("multiple behaviors, multiple examples, multiple claims", () => {
 
 test("multiple behaviors, multiple examples, multiple claims, one skipped", () => {
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: new FakeTimer(8) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(8) })
 
   reporter.end({
     behaviors: 3, examples: 4, valid: 11, invalid: 0, skipped: 1
@@ -106,7 +106,7 @@ test("multiple behaviors, multiple examples, multiple claims, one skipped", () =
 
 test("multiple behaviors, multiple examples, multiple claims, one invalid", () => {
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: new FakeTimer(8) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(8) })
 
   reporter.end({
     behaviors: 3, examples: 4, valid: 11, invalid: 1, skipped: 0
@@ -121,7 +121,7 @@ test("multiple behaviors, multiple examples, multiple claims, one invalid", () =
 
 test("multiple behaviors, multiple examples, multiple claims, multiple invalid", () => {
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: new FakeTimer(8) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(8) })
 
   reporter.end({
     behaviors: 3, examples: 4, valid: 10, invalid: 2, skipped: 0
@@ -136,7 +136,7 @@ test("multiple behaviors, multiple examples, multiple claims, multiple invalid",
 
 test("multiple behaviors, multiple examples, multiple claims, one invalid, one skipped", () => {
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: new FakeTimer(8) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(8) })
 
   reporter.end({
     behaviors: 3, examples: 4, valid: 10, invalid: 1, skipped: 1
@@ -153,7 +153,7 @@ test("multiple behaviors, multiple examples, multiple claims, one invalid, one s
 
 test("one behavior, one example, one claim", () => {
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: new FakeTimer(14) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(14) })
 
   reporter.end({
     behaviors: 1, examples: 1, valid: 1, invalid: 0, skipped: 0
@@ -168,7 +168,7 @@ test("one behavior, one example, one claim", () => {
 
 test("duration at 499", () => {
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: new FakeTimer(499) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(499) })
 
   reporter.end({
     behaviors: 1, examples: 1, valid: 1, invalid: 0, skipped: 0
@@ -183,7 +183,7 @@ test("duration at 499", () => {
 
 test("duration at 500ms", () => {
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: new FakeTimer(500) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(500) })
 
   reporter.end({
     behaviors: 1, examples: 1, valid: 1, invalid: 0, skipped: 0
@@ -198,7 +198,7 @@ test("duration at 500ms", () => {
 
 test("duration above 1 second", () => {
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: new FakeTimer(1765) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(1765) })
 
   reporter.end({
     behaviors: 1, examples: 1, valid: 1, invalid: 0, skipped: 0
@@ -369,6 +369,60 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
       ])
     }
   })
+
+  test(`invalid ${name} with duration less than 500ms`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+    try {
+      expect(true).to.be.false
+    } catch (err: any) {
+      err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
+      const claim = new InvalidClaim(description, err)
+      claim.duration = 323
+      writeToReport(reporter, "file://some/file/location.ts:58:19", claim)
+
+      writer.expectLines([
+        `  ✖ ${description} (323ms)`,
+        "    expected true to be false",
+        "    Actual",
+        "      true",
+        "    Expected",
+        "      false",
+        "    Script Failed",
+        "      file://some/file/location.ts:58:19",
+        "    at some.line.of.code",
+        "    at another.line.of.code"
+      ])
+    }
+  })
+
+  test(`invalid ${name} with duration greater than 500ms`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+    try {
+      expect(true).to.be.false
+    } catch (err: any) {
+      err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
+      const claim = new InvalidClaim(description, err)
+      claim.duration = 1243
+      writeToReport(reporter, "file://some/file/location.ts:58:19", claim)
+
+      writer.expectLines([
+        `  ✖ ${description} (1.24s)`,
+        "    expected true to be false",
+        "    Actual",
+        "      true",
+        "    Expected",
+        "      false",
+        "    Script Failed",
+        "      file://some/file/location.ts:58:19",
+        "    at some.line.of.code",
+        "    at another.line.of.code"
+      ])
+    }
+  })
 }
 
 invalidClaimBehavior("condition", (reporter, scriptLocation, claimResult) => {
@@ -389,6 +443,17 @@ invalidClaimBehavior("observation", (reporter, scriptLocation, claimResult) => {
   reporter.endScript()
 }, "some observation")
 
+const validTestClaim = (description: string, duration: number) => {
+  const claim = new ValidClaim(description)
+  claim.duration = duration
+  return claim
+}
+
+const invalidTestClaim = (description: string, failure: Failure, duration: number) => {
+  const claim = new InvalidClaim(description, failure)
+  claim.duration = duration
+  return claim
+}
 
 const validGroupedClaimBehavior = (name: string, writeToReport: (reporter: Reporter, claimResult: ClaimResult) => void, expectedIdentifier: string) => {
   test(`when a valid ${name} is reported`, () => {
@@ -397,26 +462,26 @@ const validGroupedClaimBehavior = (name: string, writeToReport: (reporter: Repor
 
     const nestedOutcome = new ValidClaim("nested grouped claim")
     nestedOutcome.subsumedResults = [
-      new ValidClaim("nested claim 1"),
-      new ValidClaim("nested claim 2")
+      validTestClaim("nested claim 1", 20),
+      validTestClaim("nested claim 2", 200)
     ]
 
     const outcome = new ValidClaim("some grouped claim")
     outcome.subsumedResults = [
-      new ValidClaim("sub-claim 1"),
+      validTestClaim("sub-claim 1", 40),
       nestedOutcome,
-      new ValidClaim("sub-claim 2")
+      validTestClaim("sub-claim 2", 600)
     ]
 
     writeToReport(reporter, outcome)
 
     writer.expectLines([
       `  ${expectedIdentifier} some grouped claim`,
-      `    ➜ sub-claim 1`,
+      `    ➜ sub-claim 1 (40ms)`,
       `    ➜ nested grouped claim`,
-      `      ➜ nested claim 1`,
-      `      ➜ nested claim 2`,
-      `    ➜ sub-claim 2`
+      `      ➜ nested claim 1 (20ms)`,
+      `      ➜ nested claim 2 (200ms)`,
+      `    ➜ sub-claim 2 (0.6s)`
     ])
   })
 }
@@ -497,14 +562,14 @@ const invalidGroupedClaimBehavior = (name: string, writeToReport: (reporter: Rep
 
     const nestedOutcome = new InvalidClaim("nested grouped claim", {})
     nestedOutcome.subsumedResults = [
-      new ValidClaim("nested claim 1"),
-      new InvalidClaim("failing nested claim", { message: "some message", expected: "something", actual: "nothing", operator: "equals", stack: "some message\n   at some.line.of.code\n   at another.line.of.code" }),
+      validTestClaim("nested claim 1", 30),
+      invalidTestClaim("failing nested claim", { message: "some message", expected: "something", actual: "nothing", operator: "equals", stack: "some message\n   at some.line.of.code\n   at another.line.of.code" }, 35),
       new SkippedClaim("skipped nested claim")
     ]
 
     const outcome = new InvalidClaim("grouped claim", {})
     outcome.subsumedResults = [
-      new ValidClaim("sub-claim 1"),
+      validTestClaim("sub-claim 1", 400),
       nestedOutcome,
       new SkippedClaim("sub-claim 2")
     ]
@@ -513,10 +578,10 @@ const invalidGroupedClaimBehavior = (name: string, writeToReport: (reporter: Rep
 
     writer.expectLines([
       `  ✖ grouped claim`,
-      `    ➜ sub-claim 1`,
+      `    ➜ sub-claim 1 (400ms)`,
       `    ✖ nested grouped claim`,
-      `      ➜ nested claim 1`,
-      `      ✖ failing nested claim`,
+      `      ➜ nested claim 1 (30ms)`,
+      `      ✖ failing nested claim (35ms)`,
       "        some message",
       "        Actual",
       "          nothing",

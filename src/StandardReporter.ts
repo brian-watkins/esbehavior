@@ -132,8 +132,18 @@ export class StandardReporter implements Reporter {
     })
   }
 
+  formatClaimDuration(duration: number): string {
+    return this.format.cyan(` (${formatTime(duration)})`)
+  }
+
   writeValidClaimResult(successIndicator: SuccessIndicator, result: ClaimResult, indentLevel: number = 1) {
-    const descriptionLine = indent(indentLevel, this.format.green(`${successIndicator} ${result.description}`))
+    let description = this.format.green(`${successIndicator} ${result.description}`)
+    
+    if (result.duration !== undefined) {
+      description += this.formatClaimDuration(result.duration)
+    }
+
+    const descriptionLine = indent(indentLevel, description)
 
     if (indentLevel == 1) {
       this.writer.writeLine(descriptionLine)
@@ -149,7 +159,13 @@ export class StandardReporter implements Reporter {
   }
 
   writeInvalidClaimResult(result: ClaimResult, error: any, indentLevel: number = 1) {
-    this.writer.writeLine(indent(indentLevel, this.format.red(this.format.bold(`${fail()} ${result.description}`))))
+    let description = this.format.red(this.format.bold(`${fail()} ${result.description}`))
+
+    if (result.duration !== undefined) {
+      description += this.formatClaimDuration(result.duration)
+    }
+
+    this.writer.writeLine(indent(indentLevel, description))
     if (result.hasSubsumedResults) {
       for (const subResult of result.subsumedResults) {
         subResult.when({

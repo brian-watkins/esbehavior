@@ -7,6 +7,7 @@ import { example, effect, fact, validate, behavior, step, Script, Effect, Step }
 import { Reporter } from '../src/Reporter.js'
 import { TAPReporter } from '../src/TAPReporter.js'
 import { FakeReportWriter } from './helpers/FakeReportWriter.js'
+import { fakeTimer } from './helpers/FakeTimer.js'
 
 test("when a report starts", async () => {
   const writer = new FakeReportWriter()
@@ -176,17 +177,17 @@ const skippedClaimBehavior = (name: string, writeToReport: (reporter: Reporter) 
 }
 
 skippedClaimBehavior("condition", (reporter) => {
-  const skipped = (new Fact("cool condition", () => {})).skip()
+  const skipped = (new Fact("cool condition", () => {}, fakeTimer(20))).skip()
   reporter.recordPresupposition(skipped)
 }, "Suppose: cool condition")
 
 skippedClaimBehavior("step", (reporter) => {
-  const skipped = (new Step("cool step", () => {})).skip()
+  const skipped = (new Step("cool step", () => {}, fakeTimer(20))).skip()
   reporter.recordAction(skipped)
 }, "Perform: cool step")
 
 skippedClaimBehavior("observation", (reporter) => {
-  const skipped = (new Effect("cool observation", () => {})).skip()
+  const skipped = (new Effect("cool observation", () => {}, fakeTimer(20))).skip()
   reporter.recordObservation(skipped)
 }, "cool observation")
 

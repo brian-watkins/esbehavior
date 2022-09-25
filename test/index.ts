@@ -1,6 +1,7 @@
 import "./async.test.js"
 import "./bail.test.js"
 import "./assumption.test.js"
+import "./claimTimer.test.js"
 import "./multipleBehavior.test.js"
 import "./multipleScript.test.js"
 import "./outcome.test.js"

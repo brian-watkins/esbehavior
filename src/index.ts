@@ -7,6 +7,7 @@ import { StandardReporter } from "./StandardReporter.js"
 import { emptySummary, Summary } from "./Summary.js"
 import { Action, Procedure, Step } from "./Action.js"
 import { Documentation } from "./Documentation.js"
+import { TimerFactory } from "./Timer.js"
 export { Observation, Effect, Outcome } from "./Observation.js"
 export { Presupposition, Fact, Situation } from "./Presupposition.js"
 export { Action, Procedure, Step } from "./Action.js"
@@ -64,7 +65,7 @@ export const pick = {
 }
 
 export function fact<T>(description: string, validate: (context: T) => void | Promise<void>): Presupposition<T> {
-  return new Fact(description, validate)
+  return new Fact(description, validate, TimerFactory.newTimer())
 }
 
 export function situation<T>(descripion: string, presuppositions: Array<Presupposition<T>>): Presupposition<T> {
@@ -72,7 +73,7 @@ export function situation<T>(descripion: string, presuppositions: Array<Presuppo
 }
 
 export function step<T>(description: string, validate: (context: T) => void | Promise<void>): Action<T> {
-  return new Step(description, validate)
+  return new Step(description, validate, TimerFactory.newTimer())
 }
 
 export function procedure<T>(descripion: string, steps: Array<Action<T>>): Action<T> {
@@ -80,7 +81,7 @@ export function procedure<T>(descripion: string, steps: Array<Action<T>>): Actio
 }
 
 export function effect<T>(description: string, validate: (context: T) => void | Promise<void>): Observation<T> {
-  return new Effect(description, validate)
+  return new Effect(description, validate, TimerFactory.newTimer())
 }
 
 export function outcome<T>(description: string, effects: Array<Observation<T>>): Observation<T> {
