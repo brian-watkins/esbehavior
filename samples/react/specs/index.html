@@ -2,12 +2,18 @@
 <html>
   <head>
     <script type="module">
-      import { validate } from 'esbehavior'
+      import { StandardReporter, validate } from 'esbehavior'
 
       const load = async (path) => (await import(`./${path}`)).default
 
+      const reporter = new StandardReporter({ slowClaim: 0 })
+
       window.esbehavior_run = (files) => {
-        return Promise.all(files.map(load)).then(validate)
+        return Promise.all(files.map(load)).then((behaviors) => {
+          return validate(behaviors, {
+            reporter
+          })
+        })
       }
     </script>
   </head>

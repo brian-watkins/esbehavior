@@ -14,7 +14,7 @@ const simpleClaimTimerBehavior = (name: string, generators: Generators) => {
     const claim = generators.validClaim(fakeTimer)
     const result = await claim.validate()
   
-    assert.equal(result.duration, 27)
+    assert.equal(result.durationInMillis, 27)
   })
 
   test(`timing an invalid ${name}`, async () => {
@@ -22,7 +22,7 @@ const simpleClaimTimerBehavior = (name: string, generators: Generators) => {
     const effect = generators.invalidClaim(fakeTimer)
     const result = await effect.validate()
   
-    assert.equal(result.duration, 35)
+    assert.equal(result.durationInMillis, 35)
   })  
 }
 

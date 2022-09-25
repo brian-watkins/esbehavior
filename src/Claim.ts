@@ -26,7 +26,7 @@ export class SimpleClaim<T> implements Claim<T> {
 
     this.timer.stop()
 
-    claimResult.duration = this.timer.durationInMillis()
+    claimResult.durationInMillis = this.timer.durationInMillis()
 
     return claimResult
   }
@@ -75,7 +75,7 @@ type ClaimStatus = "Invalid" | "Valid" | "Skipped"
 export abstract class ClaimResult {
   abstract type: ClaimStatus
   public subsumedResults: Array<ClaimResult> = []
-  public duration: number | undefined
+  public durationInMillis: number | undefined
 
   constructor(public description: string) {}
 

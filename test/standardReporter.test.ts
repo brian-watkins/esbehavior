@@ -12,7 +12,8 @@ test("multiple examples with valid and skipped claims", async () => {
   const reporter = new StandardReporter({
     writer,
     formatter: new FakeFormatter(),
-    timer: fakeTimer(13)
+    timer: fakeTimer(13),
+    slowClaimInMillis: 100
   })
 
   await validate([
@@ -28,7 +29,7 @@ test("multiple examples with valid and skipped claims", async () => {
           perform: [
             new Step("Add to the number", (actual) => {
               actual.number++
-            }, fakeTimer(4))
+            }, fakeTimer(250))
           ],
           observe: [
             new Effect("it compares the correct number", (actual) => {
@@ -61,9 +62,9 @@ test("multiple examples with valid and skipped claims", async () => {
     "cool behavior",
     "  doing two things",
     "  + Do this first (1.2s)",
-    "  • Add to the number (4ms)",
+    "  • Add to the number (250ms)",
     "  ✔ it compares the correct number (0.6s)",
-    "  ✔ it compares other numbers (6ms)",
+    "  ✔ it compares other numbers",
     "  skipped case",
     "  - some skipped condition",
     "  - some skipped step",
@@ -230,6 +231,65 @@ test("when the validation run is terminated", () => {
   ])
 })
 
+const validClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporter, claimResult: ClaimResult) => void, mark: string, description: string) => {
+  test(`valid ${name} with duration below slow claim limit`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), slowClaimInMillis: 300 })
+    const claim = new ValidClaim(description)
+    claim.durationInMillis = 120
+
+    writeToReport(reporter, claim)
+
+    writer.expectLines([
+      `  ${mark} ${description}`
+    ])
+  })
+
+  test(`valid ${name} with duration equal to slow claim limit`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), slowClaimInMillis: 300 })
+    const claim = new ValidClaim(description)
+    claim.durationInMillis = 300
+
+    writeToReport(reporter, claim)
+
+    writer.expectLines([
+      `  ${mark} ${description} (300ms)`
+    ])
+  })
+
+  test(`valid ${name} with duration above slow claim limit`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), slowClaimInMillis: 300 })
+    const claim = new ValidClaim(description)
+    claim.durationInMillis = 500
+
+    writeToReport(reporter, claim)
+
+    writer.expectLines([
+      `  ${mark} ${description} (0.5s)`
+    ])
+  })
+}
+
+validClaimBehavior("condition", (reporter, claimResult) => {
+  reporter.startScript("some-location")
+  reporter.recordPresupposition(claimResult)
+  reporter.endScript()
+}, "+", "some condition")
+
+validClaimBehavior("step", (reporter, claimResult) => {
+  reporter.startScript("some-location")
+  reporter.recordAction(claimResult)
+  reporter.endScript()
+}, "•", "some step")
+
+validClaimBehavior("observation", (reporter, claimResult) => {
+  reporter.startScript("some-location")
+  reporter.recordObservation(claimResult)
+  reporter.endScript()
+}, "✔", "some observation")
+
 
 const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporter, scriptLocation: string, claimResult: ClaimResult) => void, description: string) => {
   test(`invalid ${name}`, () => {
@@ -370,16 +430,16 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
     }
   })
 
-  test(`invalid ${name} with duration less than 500ms`, () => {
+  test(`invalid ${name} with duration less than 500ms and above slow claim limit`, () => {
     const writer = new FakeReportWriter()
-    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), slowClaimInMillis: 100 })
 
     try {
       expect(true).to.be.false
     } catch (err: any) {
       err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
       const claim = new InvalidClaim(description, err)
-      claim.duration = 323
+      claim.durationInMillis = 323
       writeToReport(reporter, "file://some/file/location.ts:58:19", claim)
 
       writer.expectLines([
@@ -397,20 +457,47 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
     }
   })
 
-  test(`invalid ${name} with duration greater than 500ms`, () => {
+  test(`invalid ${name} with duration greater than 500ms and above slow claim limit`, () => {
     const writer = new FakeReportWriter()
-    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), slowClaimInMillis: 100 })
 
     try {
       expect(true).to.be.false
     } catch (err: any) {
       err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
       const claim = new InvalidClaim(description, err)
-      claim.duration = 1243
+      claim.durationInMillis = 1243
       writeToReport(reporter, "file://some/file/location.ts:58:19", claim)
 
       writer.expectLines([
         `  ✖ ${description} (1.24s)`,
+        "    expected true to be false",
+        "    Actual",
+        "      true",
+        "    Expected",
+        "      false",
+        "    Script Failed",
+        "      file://some/file/location.ts:58:19",
+        "    at some.line.of.code",
+        "    at another.line.of.code"
+      ])
+    }
+  })
+
+  test(`invalid ${name} with duration less than slow claim limit`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), slowClaimInMillis: 100 })
+
+    try {
+      expect(true).to.be.false
+    } catch (err: any) {
+      err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
+      const claim = new InvalidClaim(description, err)
+      claim.durationInMillis = 30
+      writeToReport(reporter, "file://some/file/location.ts:58:19", claim)
+
+      writer.expectLines([
+        `  ✖ ${description}`,
         "    expected true to be false",
         "    Actual",
         "      true",
@@ -445,20 +532,20 @@ invalidClaimBehavior("observation", (reporter, scriptLocation, claimResult) => {
 
 const validTestClaim = (description: string, duration: number) => {
   const claim = new ValidClaim(description)
-  claim.duration = duration
+  claim.durationInMillis = duration
   return claim
 }
 
 const invalidTestClaim = (description: string, failure: Failure, duration: number) => {
   const claim = new InvalidClaim(description, failure)
-  claim.duration = duration
+  claim.durationInMillis = duration
   return claim
 }
 
 const validGroupedClaimBehavior = (name: string, writeToReport: (reporter: Reporter, claimResult: ClaimResult) => void, expectedIdentifier: string) => {
   test(`when a valid ${name} is reported`, () => {
     const writer = new FakeReportWriter()
-    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), slowClaimInMillis: 100 })
 
     const nestedOutcome = new ValidClaim("nested grouped claim")
     nestedOutcome.subsumedResults = [
@@ -477,9 +564,9 @@ const validGroupedClaimBehavior = (name: string, writeToReport: (reporter: Repor
 
     writer.expectLines([
       `  ${expectedIdentifier} some grouped claim`,
-      `    ➜ sub-claim 1 (40ms)`,
+      `    ➜ sub-claim 1`,
       `    ➜ nested grouped claim`,
-      `      ➜ nested claim 1 (20ms)`,
+      `      ➜ nested claim 1`,
       `      ➜ nested claim 2 (200ms)`,
       `    ➜ sub-claim 2 (0.6s)`
     ])
@@ -558,12 +645,12 @@ skippedGroupedClaimBehavior("situation", (reporter, claimResult) => {
 const invalidGroupedClaimBehavior = (name: string, writeToReport: (reporter: Reporter, scriptLocation: string, claimResult: ClaimResult) => void) => {
   test(`when an invalid ${name} is reported`, () => {
     const writer = new FakeReportWriter()
-    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), slowClaimInMillis: 100 })
 
     const nestedOutcome = new InvalidClaim("nested grouped claim", {})
     nestedOutcome.subsumedResults = [
       validTestClaim("nested claim 1", 30),
-      invalidTestClaim("failing nested claim", { message: "some message", expected: "something", actual: "nothing", operator: "equals", stack: "some message\n   at some.line.of.code\n   at another.line.of.code" }, 35),
+      invalidTestClaim("failing nested claim", { message: "some message", expected: "something", actual: "nothing", operator: "equals", stack: "some message\n   at some.line.of.code\n   at another.line.of.code" }, 350),
       new SkippedClaim("skipped nested claim")
     ]
 
@@ -580,8 +667,8 @@ const invalidGroupedClaimBehavior = (name: string, writeToReport: (reporter: Rep
       `  ✖ grouped claim`,
       `    ➜ sub-claim 1 (400ms)`,
       `    ✖ nested grouped claim`,
-      `      ➜ nested claim 1 (30ms)`,
-      `      ✖ failing nested claim (35ms)`,
+      `      ➜ nested claim 1`,
+      `      ✖ failing nested claim (350ms)`,
       "        some message",
       "        Actual",
       "          nothing",

@@ -8,6 +8,7 @@ export interface StandardReporterOptions {
   writer?: Writer
   formatter?: Formatter
   timer?: Timer
+  slowClaimInMillis?: number
 }
 
 export interface Formatter {
@@ -31,12 +32,14 @@ export class StandardReporter implements Reporter {
   private writer: Writer
   private format: Formatter
   private timer: Timer
+  private slowClaimInMillis: number
   private currentScriptLocation = "UNKNOWN"
 
   constructor(options: StandardReporterOptions = {}) {
     this.writer = options.writer ?? new ConsoleWriter()
     this.format = options.formatter ?? new ANSIFormatter()
     this.timer = options.timer ?? TimerFactory.newTimer()
+    this.slowClaimInMillis = options.slowClaimInMillis ?? 100
   }
 
   start(): void {
@@ -136,11 +139,15 @@ export class StandardReporter implements Reporter {
     return this.format.cyan(` (${formatTime(duration)})`)
   }
 
+  shouldDisplayDuration(result: ClaimResult): result is ClaimResult & { durationInMillis: number } {
+    return result.durationInMillis !== undefined && result.durationInMillis >= this.slowClaimInMillis
+  }
+
   writeValidClaimResult(successIndicator: SuccessIndicator, result: ClaimResult, indentLevel: number = 1) {
     let description = this.format.green(`${successIndicator} ${result.description}`)
     
-    if (result.duration !== undefined) {
-      description += this.formatClaimDuration(result.duration)
+    if (this.shouldDisplayDuration(result)) {
+      description += this.formatClaimDuration(result.durationInMillis)
     }
 
     const descriptionLine = indent(indentLevel, description)
@@ -161,8 +168,8 @@ export class StandardReporter implements Reporter {
   writeInvalidClaimResult(result: ClaimResult, error: any, indentLevel: number = 1) {
     let description = this.format.red(this.format.bold(`${fail()} ${result.description}`))
 
-    if (result.duration !== undefined) {
-      description += this.formatClaimDuration(result.duration)
+    if (this.shouldDisplayDuration(result)) {
+      description += this.formatClaimDuration(result.durationInMillis)
     }
 
     this.writer.writeLine(indent(indentLevel, description))
