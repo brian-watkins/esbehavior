@@ -13,19 +13,19 @@ export class Behavior {
     this.hasPickedExamples = this.examples.find(example => example.runMode === RunMode.Picked) !== undefined
   }
 
-  async runPicked(reporter: Reporter, options: BehaviorRunOptions): Promise<Summary> {
-    return this.executeWithOptions(new RunPickedIgnoreOthers(reporter), options)
+  async validatePicked(reporter: Reporter, options: BehaviorRunOptions): Promise<Summary> {
+    return this.executeWithOptions(new ValidatePickedIgnoreOthers(reporter), options)
   }
 
-  async run(reporter: Reporter, options: BehaviorRunOptions): Promise<Summary> {
-    return this.executeWithOptions(new RunButSkipIndicated(reporter), options)
+  async validate(reporter: Reporter, options: BehaviorRunOptions): Promise<Summary> {
+    return this.executeWithOptions(new ValidateButSkipIndicated(reporter), options)
   }
 
   async skip(reporter: Reporter): Promise<Summary> {
     return this.execute(new SkipAll(reporter))
   }
 
-  private async executeWithOptions(runner: BehaviorRunner, options: BehaviorRunOptions): Promise<Summary> {
+  private async executeWithOptions(runner: BehaviorValidator, options: BehaviorRunOptions): Promise<Summary> {
     if (options.failFast) {
       return this.execute(new FailFastRunner(runner))
     } else {
@@ -33,13 +33,13 @@ export class Behavior {
     }
   }
 
-  private async execute(runner: BehaviorRunner): Promise<Summary> {
+  private async execute(runner: BehaviorValidator): Promise<Summary> {
     runner.start(this)
 
     let summary = addBehavior(emptySummary())
 
     for (const example of this.examples) {
-      const exampleSummary = await runner.run(example)
+      const exampleSummary = await runner.validate(example)
       summary = addSummary(summary)(exampleSummary)
     }
 
@@ -49,13 +49,13 @@ export class Behavior {
   }
 }
 
-interface BehaviorRunner {
+interface BehaviorValidator {
   start(behavior: Behavior): void
   end(behavior: Behavior): void
-  run(example: Example): Promise<Summary>
+  validate(example: Example): Promise<Summary>
 }
 
-class RunPickedIgnoreOthers implements BehaviorRunner {
+class ValidatePickedIgnoreOthers implements BehaviorValidator {
   private nullReporter = new NullReporter()
 
   constructor (public reporter: Reporter) {}
@@ -72,7 +72,7 @@ class RunPickedIgnoreOthers implements BehaviorRunner {
     }
   }
 
-  async run(example: Example): Promise<Summary> {
+  async validate(example: Example): Promise<Summary> {
     if (example.runMode === RunMode.Picked) {
       return await example.run(this.reporter)
     } else {
@@ -81,7 +81,7 @@ class RunPickedIgnoreOthers implements BehaviorRunner {
   }
 }
 
-class RunButSkipIndicated implements BehaviorRunner {
+class ValidateButSkipIndicated implements BehaviorValidator {
   constructor (public reporter: Reporter) {}
 
   start(behavior: Behavior): void {
@@ -92,7 +92,7 @@ class RunButSkipIndicated implements BehaviorRunner {
     this.reporter.endBehavior()
   }
 
-  async run(example: Example): Promise<Summary> {
+  async validate(example: Example): Promise<Summary> {
     if (example.runMode === RunMode.Skipped) {
       return await example.skip(this.reporter)
     } else {
@@ -101,7 +101,7 @@ class RunButSkipIndicated implements BehaviorRunner {
   }
 }
 
-class SkipAll implements BehaviorRunner {
+class SkipAll implements BehaviorValidator {
   constructor (public reporter: Reporter) {}
 
   start(behavior: Behavior): void {
@@ -112,15 +112,15 @@ class SkipAll implements BehaviorRunner {
     this.reporter.endBehavior()
   }
 
-  async run(example: Example): Promise<Summary> {
+  async validate(example: Example): Promise<Summary> {
     return await example.skip(this.reporter)
   }
 }
 
-class FailFastRunner implements BehaviorRunner {
+class FailFastRunner implements BehaviorValidator {
   private hasFailed: boolean = false
 
-  constructor (private runner: BehaviorRunner) {}
+  constructor (private runner: BehaviorValidator) {}
 
   start(behavior: Behavior): void {
     this.runner.start(behavior)
@@ -130,12 +130,12 @@ class FailFastRunner implements BehaviorRunner {
     this.runner.end(behavior)
   }
 
-  async run(example: Example): Promise<Summary> {
+  async validate(example: Example): Promise<Summary> {
     if (this.hasFailed) {
       return await example.skip(new NullReporter())
     }
 
-    const summary = await this.runner.run(example)
+    const summary = await this.runner.validate(example)
     if (summary.invalid > 0) {
       this.hasFailed = true
     }

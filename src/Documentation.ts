@@ -49,7 +49,7 @@ class AllBehaviorsValidator implements DocumentationValidator {
   constructor (private reporter: Reporter, private options: BehaviorRunOptions) {}
   
   async validate(behavior: Behavior): Promise<Summary> {
-    return await behavior.run(this.reporter, this.options)
+    return await behavior.validate(this.reporter, this.options)
   }
 }
 
@@ -57,7 +57,7 @@ class PickedExamplesValidator implements DocumentationValidator {
   constructor (private reporter: Reporter, private options: BehaviorRunOptions) {}
   
   async validate(behavior: Behavior): Promise<Summary> {
-    return await behavior.runPicked(this.reporter, this.options)
+    return await behavior.validatePicked(this.reporter, this.options)
   }
 }
 
