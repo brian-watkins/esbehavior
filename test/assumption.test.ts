@@ -1,6 +1,6 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { validate } from '../src/index.js'
+import { defaultOrder, validate } from '../src/index.js'
 import failingCondition from './fixtures/failingCondition.js'
 import failingStep from './fixtures/failingStep.js'
 import { FakeReporter, withBehavior, withExample, withInvalidClaim, withSkippedClaim } from './helpers/FakeReporter.js'
@@ -10,7 +10,7 @@ test("failing condition", async () => {
 
   const actualSummary = await validate([
     failingCondition
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("behavior", [
@@ -40,7 +40,7 @@ test("failing step", async () => {
 
   const actualSummary = await validate([
     failingStep
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("behavior", [

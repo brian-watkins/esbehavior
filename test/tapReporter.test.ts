@@ -3,7 +3,7 @@ import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { Fact } from '../src/Presupposition.js'
 import { ClaimResult, InvalidClaim, SkippedClaim, ValidClaim } from '../src/Claim.js'
-import { example, effect, fact, validate, behavior, step, Script, Effect, Step } from '../src/index.js'
+import { example, effect, fact, validate, behavior, step, Script, Effect, Step, defaultOrder } from '../src/index.js'
 import { Reporter } from '../src/Reporter.js'
 import { TAPReporter } from '../src/TAPReporter.js'
 import { FakeReportWriter } from './helpers/FakeReportWriter.js'
@@ -346,7 +346,7 @@ const noErrorBehavior = (name: string, failingScriptWith: (error: any) => Script
           .description("some object thrown that is not an error")
           .script(failingScriptWith(error))
       ])
-    ], { reporter })
+    ], { reporter, order: defaultOrder() })
 
     writer.expectLines([
       "TAP version 13",
@@ -401,7 +401,7 @@ const errorLocationBehavior = (name: string, failingScript: () => Script<void>) 
           .description("failing condition")
           .script(failingScript())
       ])
-    ], { reporter })
+    ], { reporter, order: defaultOrder() })
   
     const atLines = writer.logLines.filter((line) => {
       return line.startsWith("  at:")

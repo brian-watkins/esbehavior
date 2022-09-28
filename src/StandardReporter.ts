@@ -1,5 +1,6 @@
 import { ClaimResult } from "./Claim.js";
 import { ConsoleWriter } from "./ConsoleWriter.js";
+import { OrderProvider } from "./OrderProvider.js";
 import { Failure, Reporter, Writer } from "./Reporter.js";
 import { Summary } from "./Summary.js";
 import { Timer, TimerFactory } from "./Timer.js";
@@ -34,6 +35,7 @@ export class StandardReporter implements Reporter {
   private timer: Timer
   private slowClaimInMillis: number
   private currentScriptLocation = "UNKNOWN"
+  private orderProvider: OrderProvider | null = null
 
   constructor(options: StandardReporterOptions = {}) {
     this.writer = options.writer ?? new ConsoleWriter()
@@ -42,7 +44,8 @@ export class StandardReporter implements Reporter {
     this.slowClaimInMillis = options.slowClaimInMillis ?? 100
   }
 
-  start(): void {
+  start(orderProvider: OrderProvider): void {
+    this.orderProvider = orderProvider
     this.timer.start()
   }
 
@@ -57,6 +60,10 @@ export class StandardReporter implements Reporter {
     const claims = pluralize(total, 'claim')
     const duration = '(' + formatTime(this.timer.durationInMillis()) + ')'
     this.writer.writeLine(this.format.bold(`${behaviors}, ${examples}, ${claims} ${this.format.dim(duration)}`))
+    if (this.orderProvider) {
+      this.space()
+      this.writer.writeLine(this.format.dim(this.orderProvider.description))
+    }
     this.space()
 
     if (summary.skipped == 0 && summary.invalid == 0) {
@@ -77,6 +84,10 @@ export class StandardReporter implements Reporter {
   terminate(error: Failure): void {
     this.writer.writeLine(this.format.bold(this.format.red("Failed to validate behaviors!")))
     this.space()
+    if (this.orderProvider) {
+      this.writer.writeLine(this.format.dim(this.orderProvider.description))
+      this.space()
+    }
     if (error.message) {
       this.writer.writeLine(indent(1, this.format.red(error.message)))
       this.space()

@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { example, validate, effect, fact, behavior, step } from '../src/index.js'
+import { example, validate, effect, fact, behavior, step, defaultOrder } from '../src/index.js'
 import failingObservation from './fixtures/failingObservation.js'
 import { withBehavior, withExample, FakeReporter, withValidClaim, withInvalidClaim } from './helpers/FakeReporter.js'
 
@@ -20,7 +20,7 @@ test("when a single valid claim is observed", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("a single test", [
@@ -59,7 +59,7 @@ test("when multiple valid claims are observed", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("a single test", [
@@ -86,7 +86,7 @@ test("where an invalid claim is observed", async () => {
 
   const actualSummary = await validate([
     failingObservation
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("a single test", [
@@ -132,7 +132,7 @@ test("when the example has valid assumptions", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("a single test", [
@@ -177,7 +177,7 @@ test("it runs example with no description", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("a single test", [

@@ -1,6 +1,6 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { validate, example, fact, effect, behavior } from '../src/index.js'
+import { validate, example, fact, effect, behavior, defaultOrder } from '../src/index.js'
 import { expect } from 'chai'
 import { FakeReporter, withBehavior, withExample, withInvalidClaim, withValidClaim } from './helpers/FakeReporter.js'
 import { asyncBehavior, teardownValue } from './fixtures/asyncBehavior.js'
@@ -26,7 +26,7 @@ test("it runs an example with an async given", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("a single test", [
@@ -50,7 +50,7 @@ test("it runs an example with an async context generator and async observation",
 
   await validate([
     asyncBehavior
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   assert.equal(teardownValue, 9, "it executes the async teardown function on the context")
 
@@ -106,7 +106,7 @@ test("it runs async conditions", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("a single test", [

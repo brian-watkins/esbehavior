@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { validate, effect, fact, skip, behavior } from '../src/index.js'
+import { validate, effect, fact, skip, behavior, defaultOrder } from '../src/index.js'
 import anotherMultipleScripts from './fixtures/anotherMultipleScripts.js'
 import multipleScripts from './fixtures/multipleScripts.js'
 import { FakeReporter, withBehavior, withExample, withInvalidClaim, withSkippedClaim, withValidClaim } from './helpers/FakeReporter.js'
@@ -10,7 +10,7 @@ test("it runs multiple scripts in one example", async () => {
 
   await validate([
     multipleScripts
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("multiple scripts", [
@@ -65,7 +65,7 @@ test("it skips all scripts when the example is skipped", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("example with multiple scripts", [
@@ -94,7 +94,7 @@ test("it skips remaining plans if any observations fail", async () => {
 
   await validate([
     anotherMultipleScripts
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("multiple scripts", [

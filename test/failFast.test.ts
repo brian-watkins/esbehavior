@@ -1,6 +1,6 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { behavior, effect, example, validate } from '../src/index.js'
+import { behavior, defaultOrder, effect, example, validate } from '../src/index.js'
 import multipleExamplesOneFails from './fixtures/multipleExamplesOneFails.js'
 import multiplePickedExamplesOneFails from './fixtures/multiplePickedExamplesOneFails.js'
 import { FakeReporter, withBehavior, withExample, withInvalidClaim, withValidClaim } from './helpers/FakeReporter.js'
@@ -23,7 +23,7 @@ test("where an invalid claim is observed and the validation should fail fast", a
     multipleExamplesOneFails,
     someOtherPassingBehavior,
     someOtherPassingBehavior
-  ], { reporter, failFast: true })
+  ], { reporter, order: defaultOrder(), failFast: true })
 
   reporter.expectReport([
     withBehavior("some other passing behavior", [
@@ -59,7 +59,7 @@ test("where an invalid picked claim is observed and the validation should fail f
     someOtherPassingBehavior,
     multiplePickedExamplesOneFails,
     someOtherPassingBehavior
-  ], { reporter, failFast: true })
+  ], { reporter, order: defaultOrder(), failFast: true })
 
   reporter.expectReport([
     withBehavior("multiple picked examples, one fails", [

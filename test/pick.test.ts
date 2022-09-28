@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { validate, pick, example, effect, fact, behavior } from '../src/index.js'
+import { validate, pick, example, effect, fact, behavior, defaultOrder } from '../src/index.js'
 import { FakeReporter, withBehavior, withExample, withSkippedClaim, withValidClaim } from './helpers/FakeReporter.js'
 
 test("it only runs and reports on the picked example", async () => {
@@ -55,7 +55,7 @@ test("it only runs and reports on the picked example", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("something", [

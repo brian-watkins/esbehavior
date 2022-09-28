@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { behavior, effect, example, step, procedure,validate, skip } from '../src/index.js'
+import { behavior, effect, example, step, procedure,validate, skip, defaultOrder } from '../src/index.js'
 import failingNestedProcedure from './fixtures/failingNestedProcedure.js'
 import failingProcedure from './fixtures/failingProcedure.js'
 import { FakeReporter, withBehavior, withExample, withInvalidClaim, withInvalidClaims, withSkippedClaim, withSkippedClaims, withValidClaim, withValidClaims } from './helpers/FakeReporter.js'
@@ -28,7 +28,7 @@ test("when all steps in a procedure are valid", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("a single test", [
@@ -79,7 +79,7 @@ test("when all steps in a nested procedure are valid", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("a single test", [
@@ -114,7 +114,7 @@ test("when some steps in a procedure are invalid", async () => {
 
   const actualSummary = await validate([
     failingProcedure
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("a single test", [
@@ -147,7 +147,7 @@ test("when some steps in a nested procedure are invalid", async () => {
 
   const actualSummary = await validate([
     failingNestedProcedure
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("a single test", [
@@ -204,7 +204,7 @@ test("when a procedure is skipped", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("a single test", [
@@ -254,7 +254,7 @@ test("when a nested procedure is skipped", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("a single test", [

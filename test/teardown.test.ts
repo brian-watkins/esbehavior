@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { validate, example, effect, fact, behavior } from '../src/index.js'
+import { validate, example, effect, fact, behavior, defaultOrder } from '../src/index.js'
 import { FakeReporter } from './helpers/FakeReporter.js'
 
 test("it tears down the context", async () => {
@@ -34,10 +34,9 @@ test("it tears down the context", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   assert.equal(testContext.touched, 3, "it runs the teardown function on the context value")
 })
 
-// NOTE: DO I NEED THIS HERE???
 test.run()

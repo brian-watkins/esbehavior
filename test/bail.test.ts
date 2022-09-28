@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { validate, example, effect, fact, behavior } from '../src/index.js'
+import { validate, example, effect, fact, behavior, defaultOrder } from '../src/index.js'
 import { FakeReporter, withBehavior, withExample, withFailure, withValidClaim } from './helpers/FakeReporter.js'
 
 test("failing context generator function", async () => {
@@ -27,7 +27,7 @@ test("failing context generator function", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("failing context generator", [
@@ -71,7 +71,7 @@ test("failing context teardown function", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   reporter.expectReport([
     withBehavior("failing context teardown", [

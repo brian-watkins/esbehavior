@@ -1,7 +1,7 @@
 import { test } from 'uvu'
 import { FakeReportWriter } from './helpers/FakeReportWriter.js'
 import { Formatter, StandardReporter } from '../src/StandardReporter.js'
-import { behavior, fact, effect, example, skip, step, validate, Fact, Step, Effect } from '../src/index.js'
+import { behavior, example, skip, validate, Fact, Step, Effect, defaultOrder } from '../src/index.js'
 import { expect } from 'chai'
 import { Failure, Reporter } from '../src/Reporter.js'
 import { ClaimResult, InvalidClaim, SkippedClaim, ValidClaim } from '../src/Claim.js'
@@ -56,7 +56,7 @@ test("multiple examples with valid and skipped claims", async () => {
           ]
         })
     ])
-  ], { reporter })
+  ], { reporter, order: defaultOrder() })
 
   writer.expectLines([
     "cool behavior",
@@ -71,7 +71,8 @@ test("multiple examples with valid and skipped claims", async () => {
     "  - it does not much",
     "Summary",
     "1 behavior, 2 examples, 7 claims (13ms)",
-    "- 3 skipped claims",
+    "Default ordering",
+    "- 3 skipped claims"
   ])
 })
 
@@ -221,10 +222,12 @@ test("when the validation run is terminated", () => {
     stack: "some stack trace\r\nat some.line.of.code\r\nat another.line.of.code"
   }
 
+  reporter.start(defaultOrder())
   reporter.terminate(error)
 
   writer.expectLines([
     "Failed to validate behaviors!",
+    "Default ordering",
     "  some failure",
     "  at some.line.of.code",
     "  at another.line.of.code"

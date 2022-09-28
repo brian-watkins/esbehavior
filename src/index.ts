@@ -8,10 +8,12 @@ import { emptySummary, Summary } from "./Summary.js"
 import { Action, Procedure, Step } from "./Action.js"
 import { Documentation } from "./Documentation.js"
 import { TimerFactory } from "./Timer.js"
+import { DefaultOrderProvider, OrderProvider, SeededRandomizer } from "./OrderProvider.js"
 export { Observation, Effect, Outcome } from "./Observation.js"
 export { Presupposition, Fact, Situation } from "./Presupposition.js"
 export { Action, Procedure, Step } from "./Action.js"
 export { Claim } from "./Claim.js"
+export { OrderProvider } from "./OrderProvider.js"
 export { Behavior } from "./Behavior.js"
 export { Summary } from "./Summary.js"
 export { Reporter, Writer, Failure } from "./Reporter.js"
@@ -22,15 +24,17 @@ export { Script } from "./Script.js"
 
 export interface ValidationOptions {
   reporter?: Reporter,
+  order?: OrderProvider,
   failFast?: boolean
 }
 
 export async function validate<T>(behaviors: Array<Behavior>, options: ValidationOptions = {}): Promise<Summary> {
   const reporter = options.reporter ?? new StandardReporter()
+  const orderProvider = options.order ?? new SeededRandomizer()
 
-  reporter.start()
+  reporter.start(orderProvider)
 
-  const documentation = new Documentation(behaviors)
+  const documentation = new Documentation(orderProvider.order(behaviors))
 
   try {
     const summary = await documentation.validate(reporter, { failFast: options.failFast ?? false })
@@ -40,6 +44,14 @@ export async function validate<T>(behaviors: Array<Behavior>, options: Validatio
     reporter.terminate(err)
     return emptySummary()
   }
+}
+
+export function defaultOrder(): OrderProvider {
+  return new DefaultOrderProvider()
+}
+
+export function randomOrder(seed?: string): OrderProvider {
+  return new SeededRandomizer(seed)
 }
 
 export function behavior<T>(description: string, examples: Array<ExampleBuilder<T>>): Behavior {
