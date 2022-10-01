@@ -6,13 +6,17 @@ import { addBehavior, addSummary, emptySummary, Summary } from "./Summary.js"
 
 export interface BehaviorValidationOptions {
   failFast: boolean,
+  orderProvider: OrderProvider
 }
 
-export class ValidatableBehavior extends Behavior {
+export class ValidatableBehavior {
   public hasPickedExamples: boolean
+  public description: string
+  public examples: Array<Example>
 
-  constructor(behavior: Behavior) {
-    super(behavior.description, behavior.examples)
+  constructor(behavior: Behavior, options: BehaviorValidationOptions) {
+    this.description = behavior.description
+    this.examples = behavior.examples.map(ex => ex.build(options))
     this.hasPickedExamples = this.examples.find(example => example.runMode === RunMode.Picked) !== undefined
   }
 }
@@ -20,7 +24,7 @@ export class ValidatableBehavior extends Behavior {
 export class Documentation {
   private someExampleIsPicked: boolean
 
-  constructor(private behaviors: Array<ValidatableBehavior>, private orderProvider: OrderProvider, private options: BehaviorValidationOptions) {
+  constructor(private behaviors: Array<ValidatableBehavior>, private options: BehaviorValidationOptions) {
     this.someExampleIsPicked = this.behaviors.find(behavior => behavior.hasPickedExamples) !== undefined
   }
 
@@ -31,11 +35,11 @@ export class Documentation {
   private async execute(validator: BehaviorValidator): Promise<Summary> {
     let summary = emptySummary()
 
-    for (const behavior of this.orderProvider.order(this.behaviors)) {
+    for (const behavior of this.options.orderProvider.order(this.behaviors)) {
       summary = addBehavior(summary)
 
       validator.start(behavior)
-      for (const example of this.orderProvider.order(behavior.examples)) {
+      for (const example of this.options.orderProvider.order(behavior.examples)) {
         const behaviorSummary = await validator.validate(example)
         summary = addSummary(summary)(behaviorSummary)
       }

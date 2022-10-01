@@ -6,6 +6,11 @@ import { Presupposition } from "./Presupposition.js"
 import { Script, ScriptContext, scriptContext } from "./Script.js"
 import { ClaimResult } from "./Claim.js"
 import { Action } from "./Action.js"
+import { OrderProvider } from "./OrderProvider.js"
+
+export interface ExampleValidationOptions {
+  orderProvider: OrderProvider
+}
 
 export interface Example {
   runMode: RunMode
@@ -23,7 +28,7 @@ export enum RunMode {
 }
 
 export interface ExampleBuilder<T> {
-  build(): Example
+  build(options: ExampleValidationOptions): Example
 }
 
 export interface ExampleSetupBuilder<T> extends ExampleBuilder<T> {
@@ -40,56 +45,40 @@ export interface ExampleScriptsBuilder<T> extends ExampleBuilder<T> {
 }
 
 export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetupBuilder<T>, ExampleScriptBuilder<T>, ExampleScriptsBuilder<T> {
-  private example: BehaviorExample<T>
+  private exampleDescription: string | undefined
+  private scripts: Array<ScriptContext<T>> = []
 
-  constructor(public runMode: RunMode, context: Context<T>) {
-    this.example = new BehaviorExample(runMode, context)
-  }
+  constructor(private runMode: RunMode, private context: Context<T>) {}
 
   description(description: string): ExampleScriptBuilder<T> {
-    this.example.setDescription(description)
+    this.exampleDescription = description
     return this
   }
 
   script(script: Script<T>): ExampleScriptsBuilder<T> {
-    this.example.setScript(scriptContext(script))
+    this.scripts = [scriptContext(script)]
     return this
   }
 
   andThen(script: Script<T>): ExampleScriptsBuilder<T> {
-    this.example.addScript(scriptContext(script))
+    this.scripts.push(scriptContext(script))
     return this
   }
 
-  build(): Example {
-    return this.example
+  build(options: ExampleValidationOptions): Example {
+    return new BehaviorExample(this.exampleDescription, this.scripts, this.runMode, this.context, options)
   }
 }
 
 export class BehaviorExample<T> implements Example {
-  private description?: string
-  private scripts: Array<ScriptContext<T>> = []
-
-  constructor(public runMode: RunMode, public context: Context<T>) { }
-
-  setDescription(description: string) {
-    this.description = description
-  }
-
-  setScript(script: ScriptContext<T>) {
-    this.scripts = [script]
-  }
-
-  addScript(script: ScriptContext<T>) {
-    this.scripts.push(script)
-  }
+  constructor(private description: string | undefined, private scripts: Array<ScriptContext<T>>, public runMode: RunMode, public context: Context<T>, private options: ExampleValidationOptions) { }
 
   async run(reporter: Reporter): Promise<Summary> {
     reporter.startExample(this.description)
 
     const context = await waitFor(this.context.init())
 
-    const run = new ExampleRun<T>(new ValidateMode(context), reporter)
+    const run = new ExampleRun<T>(new ValidateMode(context), reporter, this.options)
 
     const summary = await run.execute(this.scripts)
 
@@ -103,7 +92,7 @@ export class BehaviorExample<T> implements Example {
   async skip(reporter: Reporter): Promise<Summary> {
     reporter.startExample(this.description)
 
-    const run = new ExampleRun<T>(new SkipMode(), reporter)
+    const run = new ExampleRun<T>(new SkipMode(), reporter, this.options)
 
     const summary = await run.execute(this.scripts)
 
@@ -124,7 +113,7 @@ interface Mode<T> {
 }
 
 class ExampleRun<T> implements ModeDelegate<T> {
-  constructor(private mode: Mode<T>, private reporter: Reporter) {}
+  constructor(private mode: Mode<T>, private reporter: Reporter, private options: ExampleValidationOptions) {}
 
   setMode(mode: Mode<T>): void {
     this.mode = mode
@@ -163,7 +152,7 @@ class ExampleRun<T> implements ModeDelegate<T> {
       summary = addSummary(summary)(result.summary)
     }
 
-    for (let observation of script.observe ?? []) {
+    for (let observation of this.options.orderProvider.order(script.observe ?? [])) {
       const result = await this.mode.handleObservation(this, observation)
       this.reporter.recordObservation(result)
       summary = addSummary(summary)(result.summary)

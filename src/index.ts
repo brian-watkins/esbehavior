@@ -30,13 +30,16 @@ export interface ValidationOptions {
 
 export async function validate<T>(behaviors: Array<Behavior>, options: ValidationOptions = {}): Promise<Summary> {
   const reporter = options.reporter ?? new StandardReporter()
-  const orderProvider = options.order ?? new SeededRandomizer()
 
-  reporter.start(orderProvider)
-
-  const documentation = new Documentation(behaviors.map(b => new ValidatableBehavior(b)), orderProvider, {
+  const validationOptions = {
     failFast: options.failFast ?? false,
-  })
+    orderProvider: options.order ?? new SeededRandomizer()
+  }
+
+  const validatableBehaviors = behaviors.map(b => new ValidatableBehavior(b, validationOptions))
+  const documentation = new Documentation(validatableBehaviors, validationOptions)
+
+  reporter.start(validationOptions.orderProvider)
 
   try {
     const summary = await documentation.validate(reporter)
@@ -57,7 +60,7 @@ export function randomOrder(seed?: string): OrderProvider {
 }
 
 export function behavior<T>(description: string, examples: Array<ExampleBuilder<T>>): Behavior {
-  return new Behavior(description, examples.map(builder => builder.build()))
+  return new Behavior(description, examples)
 }
 
 const voidContext: Context<any> = { init: () => {} }

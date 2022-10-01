@@ -9,7 +9,7 @@ export class FakeOrderProvider implements OrderProvider {
     let shuffled: Array<T> = []
 
     for (let i = 0; i < items.length; i++) {
-      if (i < this.orderedIndices.length) {
+      if (i < this.orderedIndices.length && this.orderedIndices[i] < items.length) {
         shuffled[i] = items[this.orderedIndices[i]]
       } else {
         shuffled[i] = items[i]
