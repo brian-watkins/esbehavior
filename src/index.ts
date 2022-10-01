@@ -34,10 +34,12 @@ export async function validate<T>(behaviors: Array<Behavior>, options: Validatio
 
   reporter.start(orderProvider)
 
-  const documentation = new Documentation(orderProvider.order(behaviors.map(b => new ValidatableBehavior(b))))
+  const documentation = new Documentation(behaviors.map(b => new ValidatableBehavior(b)), orderProvider, {
+    failFast: options.failFast ?? false,
+  })
 
   try {
-    const summary = await documentation.validate(reporter, { failFast: options.failFast ?? false })
+    const summary = await documentation.validate(reporter)
     reporter.end(summary)
     return summary
   } catch (err: any) {

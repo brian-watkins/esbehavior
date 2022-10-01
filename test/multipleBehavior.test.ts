@@ -57,24 +57,51 @@ test("it runs multiple behaviors", async () => {
   })
 })
 
-test("it uses the order provider to order the behaviors", async () => {
+test("it uses the order provider to order the behaviors and examples", async () => {
   const reporter = new FakeReporter()
 
   const actualSummary = await validate([
     behavior("first claim", [
       example({ init: () => 7 })
-        .description("just a claim")
+        .description("a first example")
         .script({
           observe: [
             effect("compares the correct number", (actual) => {
               expect(actual).to.equal(7)
             })
           ]
+        }),
+      example({ init: () => 14 })
+        .description("a second example")
+        .script({
+          observe: [
+            effect("compares the correct number", (actual) => {
+              expect(actual).to.equal(14)
+            })
+          ]
         })
     ]),
     behavior("second claim", [
       example({ init: () => 18 })
-        .description("just another claim")
+        .description("first example")
+        .script({
+          observe: [
+            effect("compares another correct number", (actual) => {
+              expect(actual).to.equal(18)
+            })
+          ]
+        }),
+      example({ init: () => 18 })
+        .description("second example")
+        .script({
+          observe: [
+            effect("compares another correct number", (actual) => {
+              expect(actual).to.equal(18)
+            })
+          ]
+        }),
+      example({ init: () => 18 })
+        .description("third example")
         .script({
           observe: [
             effect("compares another correct number", (actual) => {
@@ -87,12 +114,21 @@ test("it uses the order provider to order the behaviors", async () => {
 
   reporter.expectReport([
     withBehavior("second claim", [
-      withExample("just another claim", [
+      withExample("second example", [
+        withValidClaim("compares another correct number")
+      ]),
+      withExample("first example", [
+        withValidClaim("compares another correct number")
+      ]),
+      withExample("third example", [
         withValidClaim("compares another correct number")
       ])
     ]),
     withBehavior("first claim", [
-      withExample("just a claim", [
+      withExample("a second example", [
+        withValidClaim("compares the correct number")
+      ]),
+      withExample("a first example", [
         withValidClaim("compares the correct number")
       ])
     ])
@@ -102,8 +138,8 @@ test("it uses the order provider to order the behaviors", async () => {
 
   assert.equal(actualSummary, {
     behaviors: 2,
-    examples: 2,
-    valid: 2,
+    examples: 5,
+    valid: 5,
     invalid: 0,
     skipped: 0
   })

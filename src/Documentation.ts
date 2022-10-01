@@ -1,10 +1,11 @@
 import { Behavior } from "./Behavior.js"
 import { Example, RunMode } from "./Example.js"
+import { OrderProvider } from "./OrderProvider.js"
 import { NullReporter, Reporter } from "./Reporter.js"
 import { addBehavior, addSummary, emptySummary, Summary } from "./Summary.js"
 
 export interface BehaviorValidationOptions {
-  failFast: boolean
+  failFast: boolean,
 }
 
 export class ValidatableBehavior extends Behavior {
@@ -19,22 +20,22 @@ export class ValidatableBehavior extends Behavior {
 export class Documentation {
   private someExampleIsPicked: boolean
 
-  constructor(private behaviors: Array<ValidatableBehavior>) {
+  constructor(private behaviors: Array<ValidatableBehavior>, private orderProvider: OrderProvider, private options: BehaviorValidationOptions) {
     this.someExampleIsPicked = this.behaviors.find(behavior => behavior.hasPickedExamples) !== undefined
   }
 
-  async validate(reporter: Reporter, options: BehaviorValidationOptions): Promise<Summary> {
-    return this.execute(this.getValidator(reporter, options))
+  async validate(reporter: Reporter): Promise<Summary> {
+    return this.execute(this.getValidator(reporter))
   }
 
   private async execute(validator: BehaviorValidator): Promise<Summary> {
     let summary = emptySummary()
 
-    for (const behavior of this.behaviors) {
+    for (const behavior of this.orderProvider.order(this.behaviors)) {
       summary = addBehavior(summary)
 
       validator.start(behavior)
-      for (const example of behavior.examples) {
+      for (const example of this.orderProvider.order(behavior.examples)) {
         const behaviorSummary = await validator.validate(example)
         summary = addSummary(summary)(behaviorSummary)
       }
@@ -44,12 +45,12 @@ export class Documentation {
     return summary
   }
 
-  private getValidator(reporter: Reporter, options: BehaviorValidationOptions): BehaviorValidator {
+  private getValidator(reporter: Reporter): BehaviorValidator {
     let validator = this.someExampleIsPicked ?
-      new PickedExamplesValidator(reporter, options) :
-      new AllBehaviorsValidator(reporter, options)
+      new PickedExamplesValidator(reporter) :
+      new AllBehaviorsValidator(reporter)
 
-    if (options.failFast) {
+    if (this.options.failFast) {
       return new FailFastBehaviorValidator(validator)
     }
 
@@ -64,7 +65,7 @@ interface BehaviorValidator {
 }
 
 class AllBehaviorsValidator implements BehaviorValidator {
-  constructor (private reporter: Reporter, private options: BehaviorValidationOptions) {}
+  constructor (private reporter: Reporter) {}
   
   start(behavior: ValidatableBehavior): void {
     this.reporter.startBehavior(behavior.description)
@@ -86,7 +87,7 @@ class AllBehaviorsValidator implements BehaviorValidator {
 class PickedExamplesValidator implements BehaviorValidator {
   private nullReporter = new NullReporter()
 
-  constructor (private reporter: Reporter, private options: BehaviorValidationOptions) {}
+  constructor (private reporter: Reporter) {}
   
   start(behavior: ValidatableBehavior): void {
     if (behavior.hasPickedExamples) {
