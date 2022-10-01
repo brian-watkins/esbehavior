@@ -6,7 +6,7 @@ import { Fact, Presupposition, Situation } from "./Presupposition.js"
 import { StandardReporter } from "./StandardReporter.js"
 import { emptySummary, Summary } from "./Summary.js"
 import { Action, Procedure, Step } from "./Action.js"
-import { Documentation } from "./Documentation.js"
+import { Documentation, ValidatableBehavior } from "./Documentation.js"
 import { TimerFactory } from "./Timer.js"
 import { DefaultOrderProvider, OrderProvider, SeededRandomizer } from "./OrderProvider.js"
 export { Observation, Effect, Outcome } from "./Observation.js"
@@ -34,7 +34,7 @@ export async function validate<T>(behaviors: Array<Behavior>, options: Validatio
 
   reporter.start(orderProvider)
 
-  const documentation = new Documentation(orderProvider.order(behaviors))
+  const documentation = new Documentation(orderProvider.order(behaviors.map(b => new ValidatableBehavior(b))))
 
   try {
     const summary = await documentation.validate(reporter, { failFast: options.failFast ?? false })
