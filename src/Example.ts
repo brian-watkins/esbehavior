@@ -224,17 +224,28 @@ class SkipMode<T> implements Mode<T> {
 class FailFastMode<T> implements Mode<T> {
   constructor(private mode: Mode<T>) {}
   
-  handlePresupposition(run: ModeDelegate<T>, presupposition: Presupposition<T>): Promise<ClaimResult> {
-    return this.mode.handlePresupposition(run, presupposition)
+  async handlePresupposition(delegate: ModeDelegate<T>, presupposition: Presupposition<T>): Promise<ClaimResult> {
+    const result = await this.mode.handlePresupposition(delegate, presupposition)
+    this.skipRemainingIfInvalid(delegate, result)
+
+    return result
   }
 
-  handleAction(delegate: ModeDelegate<T>, action: Action<T>): Promise<ClaimResult> {
-    return this.mode.handleAction(delegate, action)
+  async handleAction(delegate: ModeDelegate<T>, action: Action<T>): Promise<ClaimResult> {
+    const result = await this.mode.handleAction(delegate, action)
+    this.skipRemainingIfInvalid(delegate, result)
+
+    return result
   }
   
   async handleObservation(delegate: ModeDelegate<T>, observation: Observation<T>): Promise<ClaimResult> {
     const result = await this.mode.handleObservation(delegate, observation)
+    this.skipRemainingIfInvalid(delegate, result)
 
+    return result
+  }
+
+  skipRemainingIfInvalid(delegate: ModeDelegate<T>, result: ClaimResult) {
     result.when({
       valid: () => {},
       invalid: () => {
@@ -242,7 +253,5 @@ class FailFastMode<T> implements Mode<T> {
       },
       skipped: () => {}
     })
-
-    return result
   }
 }
