@@ -101,9 +101,8 @@ For more examples, see the [tests](https://github.com/brian-watkins/esbehavior/t
 
 esbehavior is a DSL that helps you write programs that document the behavior of
 your software. In order to execute the examples, you will need to write a 'runner'
-script that gathers the appropriate examples and passes them to the `validate` function,
-which will run each example in sequence and print the results in TAP output to
-the console. 
+script that gathers the appropriate behaviors and passes them to the `validate` function,
+which will run all the examples for each behavior and print the results to the console. 
 
 This 'runner' script could be executed with node, or it could be executed in a
 browser context.
@@ -128,7 +127,8 @@ The `ValidationOptions` are:
 ```
 {
   reporter?: Reporter, // By default this is StandardReporter
-  failFast?: boolean // By default this is false
+  failFast?: boolean, // By default this is false
+  order?: OrderProvider, // By default this is a random order with a generated seed
 }
 ```
 
@@ -146,10 +146,33 @@ to the `validate` function.
 into the larger ecosystem of tools that use TAP, which includes other reporters (tap-spec,
 tap-mocha-reporter, tap-difflet, etc) as well as other tools.
 
-You could also provide your own reporter that conforms to the `Reporter` interface.
+You could also provide your own implementation of the `Reporter` interface.
 
 #### failFast
 
 If this option is set then the validation run will stop after the first invalid claim.
 The remainder of the current example and remaining examples will be skipped. No more output
 will be generated, but the summary will contain the total number of claims skipped.
+
+#### order
+
+Use this option to specify how behaviors, examples, and observations should be ordered. Other
+elements of examples -- like presuppositions, actions, and scripts -- will be run in their
+given order since these may depend on being run in a particular order. Behaviors, examples, and
+observations *should not* depend on being run in any particular order, and so by default
+esbehavior will run these in a random order. Hopefully this will help to identify any shared
+state or other hidden dependencies among examples.
+
+If you need to reproduce the ordering of a validation run, note the seed that is printed out by the
+standard reporter and use that to configure the random order to use that seed like so:
+
+```
+validate(myBehaviors, {
+  order: randomOrder(seed)
+})
+```
+
+You can also use the `defaultOrder()` function to generate an OrderProvider that runs Behaviors,
+Examples, and Observations in the order given by the test suite files.
+
+If none of these options is suitable, you can provide your own implementation of `OrderProvider`.
