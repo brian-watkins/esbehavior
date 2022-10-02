@@ -5,6 +5,7 @@ export default behavior("multiple picked examples, one fails", [
     .description("failing observation")
     .script({
       observe: [
+        effect("passes first", () => { }),
         effect("does something that fails", () => {
           throw {
             operator: "equals",

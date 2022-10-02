@@ -1,4 +1,4 @@
-import { Reporter } from "./Reporter.js"
+import { NullReporter, Reporter } from "./Reporter.js"
 import { addExample, addSummary, emptySummary, Summary } from "./Summary.js"
 import { waitFor } from "./waitFor.js"
 import { Observation } from "./Observation.js"
@@ -9,7 +9,8 @@ import { Action } from "./Action.js"
 import { OrderProvider } from "./OrderProvider.js"
 
 export interface ExampleValidationOptions {
-  orderProvider: OrderProvider
+  orderProvider: OrderProvider,
+  failFast: boolean
 }
 
 export interface Example {
@@ -78,7 +79,11 @@ export class BehaviorExample<T> implements Example {
 
     const context = await waitFor(this.context.init())
 
-    const run = new ExampleRun<T>(new ValidateMode(context), reporter, this.options)
+    const mode: Mode<T> = this.options.failFast ?
+      new FailFastMode(new ValidateMode(reporter, context)) :
+      new ValidateMode(reporter, context)
+
+    const run = new ExampleRun<T>(mode, reporter, this.options)
 
     const summary = await run.execute(this.scripts)
 
@@ -92,7 +97,7 @@ export class BehaviorExample<T> implements Example {
   async skip(reporter: Reporter): Promise<Summary> {
     reporter.startExample(this.description)
 
-    const run = new ExampleRun<T>(new SkipMode(), reporter, this.options)
+    const run = new ExampleRun<T>(new SkipMode(reporter), reporter, this.options)
 
     const summary = await run.execute(this.scripts)
 
@@ -107,9 +112,9 @@ interface ModeDelegate<T> {
 }
 
 interface Mode<T> {
-  handlePresupposition(run: ModeDelegate<T>, presupposition: Presupposition<T>): Promise<ClaimResult>
-  handleAction(run: ModeDelegate<T>, action: Action<T>): Promise<ClaimResult>
-  handleObservation(run: ModeDelegate<T>, observation: Observation<T>): Promise<ClaimResult>
+  handlePresupposition(delegate: ModeDelegate<T>, presupposition: Presupposition<T>): Promise<ClaimResult>
+  handleAction(delegate: ModeDelegate<T>, action: Action<T>): Promise<ClaimResult>
+  handleObservation(delegate: ModeDelegate<T>, observation: Observation<T>): Promise<ClaimResult>
 }
 
 class ExampleRun<T> implements ModeDelegate<T> {
@@ -128,7 +133,7 @@ class ExampleRun<T> implements ModeDelegate<T> {
       this.reporter.endScript()
 
       if (scriptSummary.invalid > 0) {
-        this.mode = new SkipMode()
+        this.mode = new SkipMode(this.reporter)
       }
 
       summary = addSummary(summary)(scriptSummary)
@@ -142,19 +147,16 @@ class ExampleRun<T> implements ModeDelegate<T> {
 
     for (let presupposition of script.suppose ?? []) {
       const result = await this.mode.handlePresupposition(this, presupposition)
-      this.reporter.recordPresupposition(result)
       summary = addSummary(summary)(result.summary)
     }
 
     for (let step of script.perform ?? []) {
       const result = await this.mode.handleAction(this, step)
-      this.reporter.recordAction(result)
       summary = addSummary(summary)(result.summary)
     }
 
     for (let observation of this.options.orderProvider.order(script.observe ?? [])) {
       const result = await this.mode.handleObservation(this, observation)
-      this.reporter.recordObservation(result)
       summary = addSummary(summary)(result.summary)
     }
 
@@ -164,49 +166,83 @@ class ExampleRun<T> implements ModeDelegate<T> {
 
 
 class ValidateMode<T> implements Mode<T> {
-  constructor(private context: T) { }
+  constructor(private reporter: Reporter, private context: T) { }
 
   async handlePresupposition(delegate: ModeDelegate<T>, presupposition: Presupposition<T>): Promise<ClaimResult> {
     const result = await presupposition.validate(this.context)
+    this.reporter.recordPresupposition(result)
     this.skipRemainingIfInvalid(delegate, result)
     return result
   }
 
   async handleAction(delegate: ModeDelegate<T>, action: Action<T>): Promise<ClaimResult> {
     const result = await action.validate(this.context)
+    this.reporter.recordAction(result)
     this.skipRemainingIfInvalid(delegate, result)
     return result
   }
 
   async handleObservation(delegate: ModeDelegate<T>, effect: Observation<T>): Promise<ClaimResult> {
-    return await effect.validate(this.context)
+    const result = await effect.validate(this.context)
+    this.reporter.recordObservation(result)
+    return result
   }
 
   skipRemainingIfInvalid(delegate: ModeDelegate<T>, result: ClaimResult) {
     result.when({
-      valid: () => {
-        // nothing
-      },
+      valid: () => {},
       invalid: () => {
-        delegate.setMode(new SkipMode())
+        delegate.setMode(new SkipMode(this.reporter))
       },
-      skipped: () => {
-        // nothing
-      }
+      skipped: () => {}
     })
   }
 }
 
 class SkipMode<T> implements Mode<T> {
+  constructor(private reporter: Reporter) {}
+
   async handlePresupposition(delegate: ModeDelegate<T>, presupposition: Presupposition<T>): Promise<ClaimResult> {
-    return presupposition.skip()
+    const result = presupposition.skip()
+    this.reporter.recordPresupposition(result)
+    return result
   }
 
   async handleAction(delegate: ModeDelegate<T>, action: Action<T>): Promise<ClaimResult> {
-    return action.skip()
+    const result = action.skip()
+    this.reporter.recordAction(result)
+    return result
   }
 
   async handleObservation(delegate: ModeDelegate<T>, effect: Observation<T>): Promise<ClaimResult> {
-    return effect.skip()
+    const result = effect.skip()
+    this.reporter.recordObservation(result)
+    return result
+  }
+}
+
+class FailFastMode<T> implements Mode<T> {
+  constructor(private mode: Mode<T>) {}
+  
+  handlePresupposition(run: ModeDelegate<T>, presupposition: Presupposition<T>): Promise<ClaimResult> {
+    return this.mode.handlePresupposition(run, presupposition)
+  }
+
+  handleAction(delegate: ModeDelegate<T>, action: Action<T>): Promise<ClaimResult> {
+    return this.mode.handleAction(delegate, action)
+  }
+  
+  async handleObservation(delegate: ModeDelegate<T>, observation: Observation<T>): Promise<ClaimResult> {
+    const result = await this.mode.handleObservation(delegate, observation)
+
+    result.when({
+      valid: () => {},
+      invalid: () => {
+        delegate.setMode(new SkipMode(new NullReporter()))
+      },
+      skipped: () => {}
+    })
+
+    return result
   }
 }

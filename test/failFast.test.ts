@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert'
 import { behavior, defaultOrder, effect, example, validate } from '../src/index.js'
 import multipleExamplesOneFails from './fixtures/multipleExamplesOneFails.js'
 import multiplePickedExamplesOneFails from './fixtures/multiplePickedExamplesOneFails.js'
-import { FakeReporter, withBehavior, withExample, withInvalidClaim, withValidClaim } from './helpers/FakeReporter.js'
+import { FakeReporter, withBehavior, withExample, withInvalidClaim, withSkippedClaim, withValidClaim } from './helpers/FakeReporter.js'
 
 const someOtherPassingBehavior = behavior("some other passing behavior", [
   example()
@@ -33,10 +33,10 @@ test("where an invalid claim is observed and the validation should fail fast", a
     ]),
     withBehavior("multiple examples, one fails", [
       withExample("failing observation", [
+        withValidClaim("passes"),
         withInvalidClaim("multipleExamplesOneFails.ts:6:6", "does something that fails", {
           operator: "equals", expected: "something", actual: "nothing"
         }),
-        withValidClaim("passes")
       ])
     ])
   ])
@@ -48,7 +48,7 @@ test("where an invalid claim is observed and the validation should fail fast", a
     examples: 5,
     valid: 2,
     invalid: 1,
-    skipped: 4
+    skipped: 7
   })
 })
 
@@ -64,10 +64,10 @@ test("where an invalid picked claim is observed and the validation should fail f
   reporter.expectReport([
     withBehavior("multiple picked examples, one fails", [
       withExample("failing observation", [
+        withValidClaim("passes first"),
         withInvalidClaim("multiplePickedExamplesOneFails.ts:6:6", "does something that fails", {
           operator: "equals", expected: "something", actual: "nothing"
-        }),
-        withValidClaim("passes")
+        })
       ])
     ])
   ])
@@ -79,7 +79,7 @@ test("where an invalid picked claim is observed and the validation should fail f
     examples: 7,
     valid: 1,
     invalid: 1,
-    skipped: 10
+    skipped: 11
   })
 })
 
