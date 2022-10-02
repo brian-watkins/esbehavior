@@ -150,6 +150,6 @@ You could also provide your own reporter that conforms to the `Reporter` interfa
 
 #### failFast
 
-If this option is set then the validation run will stop after the first example that contains
-a failed claim. Remaining examples will be skipped. No more output will be generated, but
-the summary will contain the total number of examples skipped.
+If this option is set then the validation run will stop after the first invalid claim.
+The remainder of the current example and remaining examples will be skipped. No more output
+will be generated, but the summary will contain the total number of claims skipped.
