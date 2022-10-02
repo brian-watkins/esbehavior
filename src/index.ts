@@ -1,4 +1,4 @@
-import { Context, RunMode, ExampleBuilder, BehaviorExampleBuilder, ExampleSetupBuilder } from "./Example.js"
+import { Context, ValidationMode, ExampleBuilder, BehaviorExampleBuilder, ExampleSetupBuilder } from "./Example.js"
 import { Reporter } from "./Reporter.js"
 import { Behavior } from "./Behavior.js"
 import { Effect, Observation, Outcome } from "./Observation.js"
@@ -66,18 +66,18 @@ export function behavior<T>(description: string, examples: Array<ExampleBuilder<
 const voidContext: Context<any> = { init: () => {} }
 
 export function example<T = void>(context: Context<T> = voidContext): ExampleSetupBuilder<T> {
-  return new BehaviorExampleBuilder(RunMode.Normal, context)
+  return new BehaviorExampleBuilder(ValidationMode.Normal, context)
 }
 
 export const skip = {
   example<T = void>(context: Context<T> = voidContext): ExampleSetupBuilder<T> {
-    return new BehaviorExampleBuilder(RunMode.Skipped, context)
+    return new BehaviorExampleBuilder(ValidationMode.Skipped, context)
   }
 }
 
 export const pick = {
   example<T = void>(context: Context<T> = voidContext): ExampleSetupBuilder<T> {
-    return new BehaviorExampleBuilder(RunMode.Picked, context)
+    return new BehaviorExampleBuilder(ValidationMode.Picked, context)
   }
 }
 

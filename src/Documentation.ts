@@ -1,5 +1,5 @@
 import { Behavior } from "./Behavior.js"
-import { Example, RunMode } from "./Example.js"
+import { Example, ValidationMode } from "./Example.js"
 import { OrderProvider } from "./OrderProvider.js"
 import { NullReporter, Reporter } from "./Reporter.js"
 import { addBehavior, addSummary, emptySummary, Summary } from "./Summary.js"
@@ -17,7 +17,7 @@ export class ValidatableBehavior {
   constructor(behavior: Behavior, options: BehaviorValidationOptions) {
     this.description = behavior.description
     this.examples = behavior.examples.map(ex => ex.build(options))
-    this.hasPickedExamples = this.examples.find(example => example.runMode === RunMode.Picked) !== undefined
+    this.hasPickedExamples = this.examples.find(example => example.validationMode === ValidationMode.Picked) !== undefined
   }
 }
 
@@ -80,10 +80,10 @@ class AllBehaviorsValidator implements BehaviorValidator {
   }
 
   async validate(example: Example): Promise<Summary> {
-    if (example.runMode === RunMode.Skipped) {
+    if (example.validationMode === ValidationMode.Skipped) {
       return await example.skip(this.reporter)
     } else {
-      return await example.run(this.reporter)
+      return await example.validate(this.reporter)
     }
   }
 }
@@ -106,8 +106,8 @@ class PickedExamplesValidator implements BehaviorValidator {
   }
 
   async validate(example: Example): Promise<Summary> {
-    if (example.runMode === RunMode.Picked) {
-      return await example.run(this.reporter)
+    if (example.validationMode === ValidationMode.Picked) {
+      return await example.validate(this.reporter)
     } else {
       return await example.skip(this.nullReporter)
     }

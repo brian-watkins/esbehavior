@@ -14,8 +14,8 @@ export interface ExampleValidationOptions {
 }
 
 export interface Example {
-  runMode: RunMode
-  run(reporter: Reporter): Promise<Summary>
+  validationMode: ValidationMode
+  validate(reporter: Reporter): Promise<Summary>
   skip(reporter: Reporter): Promise<Summary>
 }
 
@@ -24,7 +24,7 @@ export interface Context<T> {
   teardown?: (context: T) => void | Promise<void>
 }
 
-export enum RunMode {
+export enum ValidationMode {
   Normal, Skipped, Picked
 }
 
@@ -49,7 +49,7 @@ export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetu
   private exampleDescription: string | undefined
   private scripts: Array<ScriptContext<T>> = []
 
-  constructor(private runMode: RunMode, private context: Context<T>) {}
+  constructor(private runMode: ValidationMode, private context: Context<T>) {}
 
   description(description: string): ExampleScriptBuilder<T> {
     this.exampleDescription = description
@@ -72,9 +72,9 @@ export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetu
 }
 
 export class BehaviorExample<T> implements Example {
-  constructor(private description: string | undefined, private scripts: Array<ScriptContext<T>>, public runMode: RunMode, public context: Context<T>, private options: ExampleValidationOptions) { }
+  constructor(private description: string | undefined, private scripts: Array<ScriptContext<T>>, public validationMode: ValidationMode, public context: Context<T>, private options: ExampleValidationOptions) { }
 
-  async run(reporter: Reporter): Promise<Summary> {
+  async validate(reporter: Reporter): Promise<Summary> {
     reporter.startExample(this.description)
 
     const context = await waitFor(this.context.init())
