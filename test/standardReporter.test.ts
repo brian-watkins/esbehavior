@@ -1,7 +1,7 @@
 import { test } from 'uvu'
 import { FakeReportWriter } from './helpers/FakeReportWriter.js'
 import { Formatter, StandardReporter } from '../src/StandardReporter.js'
-import { behavior, example, skip, validate, Fact, Step, Effect, defaultOrder } from '../src/index.js'
+import { behavior, example, validate, Fact, Step, Effect, defaultOrder } from '../src/index.js'
 import { expect } from 'chai'
 import { Failure, Reporter } from '../src/Reporter.js'
 import { ClaimResult, InvalidClaim, SkippedClaim, ValidClaim } from '../src/Claim.js'
@@ -40,7 +40,7 @@ test("multiple examples with valid and skipped claims", async () => {
             }, fakeTimer(6)),
           ]
         }),
-      skip.example()
+      (m) => m.skip() && example()
         .description("skipped case")
         .script({
           suppose: [

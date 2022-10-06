@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { behavior, effect, example, step, situation, validate, fact, skip, defaultOrder } from '../src/index.js'
+import { behavior, effect, example, situation, validate, fact, defaultOrder } from '../src/index.js'
 import failingNestedSituation from './fixtures/failingNestedSituation.js'
 import failingSituation from './fixtures/failingSituation.js'
 import { FakeReporter, withBehavior, withExample, withInvalidClaim, withInvalidClaims, withSkippedClaim, withSkippedClaims, withValidClaim, withValidClaims } from './helpers/FakeReporter.js'
@@ -189,7 +189,7 @@ test("when a situation is skipped", async () => {
 
   const actualSummary = await validate([
     behavior("a single test", [
-      skip.example({ init: () => { return { count: 1 } } })
+      (m) => m.skip() && example({ init: () => { return { count: 1 } } })
         .description("my first test of some skipped situation")
         .script({
           suppose: [
@@ -235,7 +235,7 @@ test("when a nested situation is skipped", async () => {
 
   const actualSummary = await validate([
     behavior("a single test", [
-      skip.example({ init: () => { return { count: 1 } } })
+      (m) => m.skip() && example({ init: () => { return { count: 1 } } })
         .description("my first test of some skipped situation")
         .script({
           suppose: [

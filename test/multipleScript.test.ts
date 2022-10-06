@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { validate, effect, fact, skip, behavior, defaultOrder } from '../src/index.js'
+import { validate, effect, fact, behavior, defaultOrder, example } from '../src/index.js'
 import anotherMultipleScripts from './fixtures/anotherMultipleScripts.js'
 import multipleScripts from './fixtures/multipleScripts.js'
 import { FakeReporter, withBehavior, withExample, withInvalidClaim, withSkippedClaim, withValidClaim } from './helpers/FakeReporter.js'
@@ -41,7 +41,7 @@ test("it skips all scripts when the example is skipped", async () => {
 
   await validate([
     behavior("example with multiple scripts", [
-      skip.example({ init: () => ({ touched: 0 }) })
+      (m) => m.skip() && example({ init: () => ({ touched: 0 }) })
         .description("example is skipped")
         .script({
           suppose: [

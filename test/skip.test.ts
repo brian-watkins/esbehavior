@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { test } from 'uvu'
-import { validate, skip, effect, example, fact, behavior, step, defaultOrder } from '../src/index.js'
+import { validate, effect, example, fact, behavior, step, defaultOrder } from '../src/index.js'
 import { FakeReporter, withBehavior, withExample, withSkippedClaim, withValidClaim } from './helpers/FakeReporter.js'
 
 test("it skips an example", async () => {
@@ -8,7 +8,7 @@ test("it skips an example", async () => {
 
   await validate([
     behavior("something", [
-      skip.example({
+      (m) => m.skip() && example({
         init: () => {
           expect(7).to.equal(5)
           return "blah"

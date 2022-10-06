@@ -1,5 +1,5 @@
 import assert from 'proclaim'
-import { behavior, fact, effect, example, outcome, procedure, skip, step, situation } from 'esbehavior'
+import { behavior, fact, effect, example, outcome, procedure, step, situation } from 'esbehavior'
 import { Thing } from '../src/Thing.js'
 
 export default
@@ -31,7 +31,7 @@ export default
           })
         ]
       }),
-    skip.example({ init: () => new Thing() })
+    (o) => o.skip() && example({ init: () => new Thing() })
       .description("some boring example")
       .script({
         observe: [

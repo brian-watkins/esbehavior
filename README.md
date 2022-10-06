@@ -107,7 +107,22 @@ which will run all the examples for each behavior and print the results to the c
 This 'runner' script could be executed with node, or it could be executed in a
 browser context.
 
-You can use `pick` to run selected examples or `skip` to ignore selected examples.
+You can use run selected examples like so:
+
+```
+behavior("my behavior", [
+  (m) => m.pick() && example()
+    .script({ ... })
+])
+```
+
+You can also skip selected examples like so:
+
+```
+behavior("my behavior", [
+  (m) => m.skip() && example()
+    .script({ ... })
+])
 
 Here's a sample with [behaviors evaluated in node](https://github.com/brian-watkins/esbehavior/tree/main/samples/node) and here's
 a sample for a React app with [behaviors evaluated in a browser](https://github.com/brian-watkins/esbehavior/tree/main/samples/react).

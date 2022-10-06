@@ -1,6 +1,6 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
-import { behavior, defaultOrder, effect, example, outcome, skip, validate } from '../src/index.js'
+import { behavior, defaultOrder, effect, example, outcome, validate } from '../src/index.js'
 import failingNestedOutcome from './fixtures/failingNestedOutcome.js'
 import failingOutcome from './fixtures/failingOutcome.js'
 import { FakeReporter, withBehavior, withExample, withInvalidClaim, withInvalidClaims, withSkippedClaim, withSkippedClaims, withValidClaim, withValidClaims } from './helpers/FakeReporter.js'
@@ -180,7 +180,7 @@ test("when an outcome is skipped", async () => {
 
   const actualSummary = await validate([
     behavior("a single test", [
-      skip.example()
+      (m) => m.skip() && example()
         .description("my first test of some skipped outcome")
         .script({
           observe: [
@@ -224,7 +224,7 @@ test("when nested outcomes are skipped", async () => {
 
   const actualSummary = await validate([
     behavior("a single test", [
-      skip.example()
+      (m) => m.skip() && example()
         .description("my nested skipped outcome")
         .script({
           observe: [

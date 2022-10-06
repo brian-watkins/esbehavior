@@ -10,7 +10,8 @@ import { OrderProvider } from "./OrderProvider.js"
 
 export interface ExampleValidationOptions {
   orderProvider: OrderProvider,
-  failFast: boolean
+  failFast: boolean,
+  validationMode: ValidationMode
 }
 
 export interface Example {
@@ -49,7 +50,7 @@ export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetu
   private exampleDescription: string | undefined
   private scripts: Array<ScriptContext<T>> = []
 
-  constructor(private runMode: ValidationMode, private context: Context<T>) {}
+  constructor(private context: Context<T>) {}
 
   description(description: string): ExampleScriptBuilder<T> {
     this.exampleDescription = description
@@ -67,12 +68,16 @@ export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetu
   }
 
   build(options: ExampleValidationOptions): Example {
-    return new BehaviorExample(this.exampleDescription, this.scripts, this.runMode, this.context, options)
+    return new BehaviorExample(this.exampleDescription, this.scripts, this.context, options)
   }
 }
 
 export class BehaviorExample<T> implements Example {
-  constructor(private description: string | undefined, private scripts: Array<ScriptContext<T>>, public validationMode: ValidationMode, public context: Context<T>, private options: ExampleValidationOptions) { }
+  public validationMode: ValidationMode
+
+  constructor(private description: string | undefined, private scripts: Array<ScriptContext<T>>, private context: Context<T>, private options: ExampleValidationOptions) {
+    this.validationMode = options.validationMode
+  }
 
   async validate(reporter: Reporter): Promise<Summary> {
     reporter.startExample(this.description)

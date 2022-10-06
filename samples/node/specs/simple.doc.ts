@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { behavior, effect, example, outcome, skip } from 'esbehavior'
+import { behavior, effect, example } from 'esbehavior'
 
 export default
   behavior("simple behavior", [

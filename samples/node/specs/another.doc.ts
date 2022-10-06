@@ -1,4 +1,4 @@
-import { behavior, effect, example, outcome, skip } from 'esbehavior'
+import { behavior, effect, example, outcome } from 'esbehavior'
 import { div, mod, sum } from "../src/math.js"
 import assert from 'proclaim'
 

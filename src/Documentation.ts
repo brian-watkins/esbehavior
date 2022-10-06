@@ -1,4 +1,4 @@
-import { Behavior } from "./Behavior.js"
+import { Behavior, ExampleOptions } from "./Behavior.js"
 import { Example, ValidationMode } from "./Example.js"
 import { OrderProvider } from "./OrderProvider.js"
 import { NullReporter, Reporter } from "./Reporter.js"
@@ -10,14 +10,20 @@ export interface BehaviorValidationOptions {
 }
 
 export class ValidatableBehavior {
-  public hasPickedExamples: boolean
+  public hasPickedExamples: boolean = false
   public description: string
-  public examples: Array<Example>
+  public examples: Array<Example> = []
 
   constructor(behavior: Behavior, options: BehaviorValidationOptions) {
     this.description = behavior.description
-    this.examples = behavior.examples.map(ex => ex.build(options))
-    this.hasPickedExamples = this.examples.find(example => example.validationMode === ValidationMode.Picked) !== undefined
+    for (const generator of behavior.examples) {
+      const exampleOptions = new ExampleOptions()
+      const builder = typeof generator === "function" ? generator(exampleOptions) : generator
+      if (exampleOptions.validationMode === ValidationMode.Picked) {
+        this.hasPickedExamples = true
+      }
+      this.examples.push(builder.build({ ...options, validationMode: exampleOptions.validationMode }))
+    }
   }
 }
 

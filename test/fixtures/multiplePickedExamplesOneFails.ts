@@ -1,7 +1,7 @@
-import { behavior, effect, example, pick } from "../../src/index.js"
+import { behavior, effect, example } from "../../src/index.js"
 
 export default behavior("multiple picked examples, one fails", [
-  pick.example()
+  (m) => m.pick() && example()
     .description("failing observation")
     .script({
       observe: [
@@ -24,7 +24,7 @@ export default behavior("multiple picked examples, one fails", [
         effect("passes", () => { })
       ]
     }),
-  pick.example()
+  (m) => m.pick() && example()
     .description("passing observation")
     .script({
       observe: [
@@ -32,7 +32,7 @@ export default behavior("multiple picked examples, one fails", [
         effect("passes", () => { })
       ]
     }),
-  pick.example()
+  (m) => m.pick() && example()
     .description("passing observation")
     .script({
       observe: [
