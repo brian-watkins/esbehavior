@@ -131,10 +131,10 @@ a sample for a React app with [behaviors evaluated in a browser](https://github.
 
 ## Public API
 
-### validate(behaviors: Array<Behavior>, options: ValidationOptions): Promise<Summary> 
+### validate(behaviors: Behavior[], options: ValidationOptions): Promise(Summary)
 
-This function validates a list of behaviors and returns a summary. Use the DSL functions
-to create `Behaviors`.
+This function validates a list of behaviors and returns a promise that resolves to a
+summary. Use the DSL functions to create `Behaviors`.
 
 ### ValidationOptions
 
