@@ -123,6 +123,7 @@ behavior("my behavior", [
   (m) => m.skip() && example()
     .script({ ... })
 ])
+```
 
 Here's a sample with [behaviors evaluated in node](https://github.com/brian-watkins/esbehavior/tree/main/samples/node) and here's
 a sample for a React app with [behaviors evaluated in a browser](https://github.com/brian-watkins/esbehavior/tree/main/samples/react).
