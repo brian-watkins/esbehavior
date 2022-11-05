@@ -1,4 +1,3 @@
-import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { behavior, effect, example, step, procedure,validate, defaultOrder } from '../src/index.js'
@@ -23,7 +22,7 @@ test("when all steps in a procedure are valid", async () => {
           ],
           observe: [
             effect("something cool happens", (context) => {
-              expect(6).to.equal(context.count)
+              assert.equal(context.count, 6)
             })
           ]
         })
@@ -74,7 +73,7 @@ test("when all steps in a nested procedure are valid", async () => {
           ],
           observe: [
             effect("something cool happens", (context) => {
-              expect(30).to.equal(context.count)
+              assert.equal(context.count, 30)
             })
           ]
         })
@@ -199,7 +198,7 @@ test("when a procedure is skipped", async () => {
           ],
           observe: [
             effect("something cool happens", (context) => {
-              expect(6).to.equal(context.count)
+              assert.equal(context.count, 6)
             })
           ]
         })
@@ -249,7 +248,7 @@ test("when a nested procedure is skipped", async () => {
           ],
           observe: [
             effect("something cool happens", (context) => {
-              expect(6).to.equal(context.count)
+              assert.equal(context.count, 6)
             })
           ]
         })

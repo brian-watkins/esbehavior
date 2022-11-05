@@ -1,4 +1,4 @@
-import { expect } from 'chai'
+import * as assert from "uvu/assert"
 import { test } from 'uvu'
 import { validate, example, effect, fact, behavior, defaultOrder } from '../src/index.js'
 import { FakeReporter, withBehavior, withExample, withValidClaim } from './helpers/FakeReporter.js'
@@ -18,10 +18,10 @@ test("it only runs and reports on the picked example", async () => {
           ],
           observe: [
             effect("will never run this", () => {
-              expect(7).to.equal(5)
+              assert.equal(7, 5)
             }),
             effect("or this", () => {
-              expect(9).to.equal(1)
+              assert.equal(9, 1)
             })
           ]
         }),
@@ -30,7 +30,7 @@ test("it only runs and reports on the picked example", async () => {
         .script({
           observe: [
             effect("will run this", () => {
-              expect(7).to.equal(7)
+              assert.equal(7, 7)
             })
           ]
         })
@@ -50,7 +50,7 @@ test("it only runs and reports on the picked example", async () => {
           ],
           observe: [
             effect("just won't", () => {
-              expect(7).to.equal(4)
+              assert.equal(7, 4)
             })
           ]
         })

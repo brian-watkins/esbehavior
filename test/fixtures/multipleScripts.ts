@@ -1,4 +1,4 @@
-import { expect } from "chai"
+import * as assert from "uvu/assert"
 import { behavior, fact, effect, example } from "../../src/index.js"
 
 export default behavior("multiple scripts", [
@@ -10,7 +10,7 @@ export default behavior("multiple scripts", [
       ],
       observe: [
         effect("the first script works", (context) => {
-          expect(context.touched).to.equal(1)
+          assert.equal(context.touched, 1)
         })
       ]
     })
@@ -21,7 +21,7 @@ export default behavior("multiple scripts", [
       ],
       observe: [
         effect("part of the second script works", (context) => {
-          expect(context.touched).to.equal(3)
+          assert.equal(context.touched, 3)
         }),
         effect("the second script fails", (context) => {
           throw {

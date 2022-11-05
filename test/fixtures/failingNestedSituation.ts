@@ -1,4 +1,4 @@
-import { expect } from "chai"
+import * as assert from "uvu/assert"
 import { situation, effect, behavior, example, fact } from "../../src/index.js"
 
 export default behavior("a single test", [
@@ -22,7 +22,7 @@ export default behavior("a single test", [
       ],
       observe: [
         effect("something cool happens", (context) => {
-          expect(6).to.equal(context.count)
+          assert.equal(context.count, 6)
         })
       ]
     })

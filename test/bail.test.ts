@@ -1,5 +1,5 @@
-import { expect } from 'chai'
 import { test } from 'uvu'
+import * as assert from "uvu/assert"
 import { validate, example, effect, fact, behavior, defaultOrder } from '../src/index.js'
 import { FakeReporter, withBehavior, withExample, withFailure, withValidClaim } from './helpers/FakeReporter.js'
 
@@ -22,7 +22,7 @@ test("failing context generator function", async () => {
           ],
           observe: [
             effect("it works", (context) => {
-              expect(3).to.equal(2)
+              assert.equal(3, 2)
             })
           ]
         })
@@ -57,7 +57,7 @@ test("failing context teardown function", async () => {
           ],
           observe: [
             effect("it works", (context) => {
-              expect(context).to.equal(7)
+              assert.equal(context, 7)
             })
           ]
         }),
@@ -66,7 +66,7 @@ test("failing context teardown function", async () => {
         .script({
           observe: [
             effect("will never run", () => {
-              expect(7).to.equal(5)
+              assert.equal(7, 5)
             })
           ]
         })

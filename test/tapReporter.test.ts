@@ -1,4 +1,3 @@
-import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { Fact } from '../src/Presupposition.js'
@@ -415,7 +414,7 @@ errorLocationBehavior("condition", () => {
   return {
     suppose: [
       fact("something throws an error", () => {
-        expect(7).to.equal(9)
+        assert.equal(7, 9)
       }),
     ]
   }
@@ -425,7 +424,7 @@ errorLocationBehavior("step", () => {
   return {
     perform: [
       step("something throws an error", () => {
-        expect(7).to.equal(9)
+        assert.equal(7, 9)
       }),
     ]
   }
@@ -435,7 +434,7 @@ errorLocationBehavior("observation", () => {
   return {
     observe: [
       effect("something throws an error", () => {
-        expect(7).to.equal(9)
+        assert.equal(7, 9)
       }),
     ]
   }

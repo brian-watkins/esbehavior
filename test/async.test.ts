@@ -1,7 +1,6 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { validate, example, fact, effect, behavior, defaultOrder } from '../src/index.js'
-import { expect } from 'chai'
 import { FakeReporter, withBehavior, withExample, withInvalidClaim, withValidClaim } from './helpers/FakeReporter.js'
 import { asyncBehavior, teardownValue } from './fixtures/asyncBehavior.js'
 
@@ -101,7 +100,7 @@ test("it runs async conditions", async () => {
           ],
           observe: [
             effect("compares the correct number", (context) => {
-              expect(context.val).to.equal(10)
+              assert.equal(context.val, 10)
             })
           ]
         })

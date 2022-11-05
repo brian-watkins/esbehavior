@@ -1,6 +1,5 @@
 import { test } from 'uvu'
 import { validate, example, effect, behavior, defaultOrder } from '../src/index.js'
-import { expect } from 'chai'
 import { FakeReporter, withBehavior, withExample, withValidClaim } from './helpers/FakeReporter.js'
 import * as assert from 'uvu/assert'
 import { FakeOrderProvider } from './helpers/FakeOrderProvider.js'
@@ -15,7 +14,7 @@ test("it runs multiple behaviors", async () => {
         .script({
           observe: [
             effect("compares the correct number", (actual) => {
-              expect(actual).to.equal(7)
+              assert.equal(actual, 7)
             })
           ]
         })
@@ -26,7 +25,7 @@ test("it runs multiple behaviors", async () => {
         .script({
           observe: [
             effect("compares another correct number", (actual) => {
-              expect(actual).to.equal(18)
+              assert.equal(actual, 18)
             })
           ]
         })
@@ -67,10 +66,10 @@ test("it uses the order provider to order the behaviors and examples and observa
         .script({
           observe: [
             effect("compares the correct number (one)", (actual) => {
-              expect(actual).to.equal(7)
+              assert.equal(actual, 7)
             }),
             effect("compares the correct number (two)", (actual) => {
-              expect(actual).to.equal(7)
+              assert.equal(actual, 7)
             })
           ]
         }),
@@ -79,7 +78,7 @@ test("it uses the order provider to order the behaviors and examples and observa
         .script({
           observe: [
             effect("compares the correct number", (actual) => {
-              expect(actual).to.equal(14)
+              assert.equal(actual, 14)
             })
           ]
         })
@@ -90,7 +89,7 @@ test("it uses the order provider to order the behaviors and examples and observa
         .script({
           observe: [
             effect("compares another correct number", (actual) => {
-              expect(actual).to.equal(18)
+              assert.equal(actual, 18)
             })
           ]
         }),
@@ -99,13 +98,13 @@ test("it uses the order provider to order the behaviors and examples and observa
         .script({
           observe: [
             effect("compares another correct number (one)", (actual) => {
-              expect(actual).to.equal(18)
+              assert.equal(actual, 18)
             }),
             effect("compares another correct number (two)", (actual) => {
-              expect(actual).to.equal(18)
+              assert.equal(actual, 18)
             }),
             effect("compares another correct number (three)", (actual) => {
-              expect(actual).to.equal(18)
+              assert.equal(actual, 18)
             })
           ]
         }),
@@ -114,7 +113,7 @@ test("it uses the order provider to order the behaviors and examples and observa
         .script({
           observe: [
             effect("compares another correct number", (actual) => {
-              expect(actual).to.equal(18)
+              assert.equal(actual, 18)
             })
           ]
         })

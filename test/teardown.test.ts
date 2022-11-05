@@ -1,4 +1,3 @@
-import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { validate, example, effect, fact, behavior, defaultOrder } from '../src/index.js'
@@ -29,7 +28,7 @@ test("it tears down the context", async () => {
           ],
           observe: [
             effect("it works", (context) => {
-              expect(context.touched).to.equal(2)
+              assert.equal(context.touched, 2)
             })
           ]
         })

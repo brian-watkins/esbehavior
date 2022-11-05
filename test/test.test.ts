@@ -1,4 +1,3 @@
-import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { example, validate, effect, fact, behavior, step, defaultOrder } from '../src/index.js'
@@ -127,7 +126,7 @@ test("when the example has valid assumptions", async () => {
           ],
           observe: [
             effect("it compares the correct number", (context) => {
-              expect(context.val).to.equal(10)
+              assert.equal(context.val, 10)
             })
           ]
         })
@@ -172,7 +171,7 @@ test("it runs example with no description", async () => {
           ],
           observe: [
             effect("it compares the correct number", (context) => {
-              expect(context.val).to.equal(10)
+              assert.equal(context.val, 10)
             })
           ]
         })

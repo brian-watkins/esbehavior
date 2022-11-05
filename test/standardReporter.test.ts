@@ -1,8 +1,8 @@
 import { test } from 'uvu'
+import * as assert from 'uvu/assert'
 import { FakeReportWriter } from './helpers/FakeReportWriter.js'
 import { Formatter, StandardReporter } from '../src/StandardReporter.js'
 import { behavior, example, validate, Fact, Step, Effect, defaultOrder } from '../src/index.js'
-import { expect } from 'chai'
 import { Failure, Reporter } from '../src/Reporter.js'
 import { ClaimResult, InvalidClaim, SkippedClaim, ValidClaim } from '../src/Claim.js'
 import { fakeTimer } from './helpers/FakeTimer.js'
@@ -33,10 +33,10 @@ test("multiple examples with valid and skipped claims", async () => {
           ],
           observe: [
             new Effect("it compares the correct number", (actual) => {
-              expect(actual.number).to.equal(7)
+              assert.equal(actual.number, 7)
             }, fakeTimer(600)),
             new Effect("it compares other numbers", (actual) => {
-              expect(18).to.equal(18)
+              assert.equal(18, 18)
             }, fakeTimer(6)),
           ]
         }),
@@ -51,7 +51,7 @@ test("multiple examples with valid and skipped claims", async () => {
           ],
           observe: [
             new Effect("it does not much", () => {
-              expect(7).to.equal(7)
+              assert.equal(7, 7)
             }, fakeTimer(2))
           ]
         })
@@ -299,25 +299,28 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
-    try {
-      expect(7).to.be.lessThan(5)
-    } catch (err: any) {
-      err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      writeToReport(reporter, "file://some/file/location.ts:58:19", new InvalidClaim(description, err))
-
-      writer.expectLines([
-        `  ✖ ${description}`,
-        "    expected 7 to be below 5",
-        "    Actual",
-        "      7",
-        "    Expected",
-        "      5",
-        "    Script Failed",
-        "      file://some/file/location.ts:58:19",
-        "    at some.line.of.code",
-        "    at another.line.of.code",
-      ])
+    const err = {
+      message: "expected 7 to be below 5",
+      actual: 7,
+      expected: 5,
+      operator: "strictEqual",
+      showDiff: true,
+      stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
     }
+    writeToReport(reporter, "file://some/file/location.ts:58:19", new InvalidClaim(description, err))
+
+    writer.expectLines([
+      `  ✖ ${description}`,
+      "    expected 7 to be below 5",
+      "    Actual",
+      "      7",
+      "    Expected",
+      "      5",
+      "    Script Failed",
+      "      file://some/file/location.ts:58:19",
+      "    at some.line.of.code",
+      "    at another.line.of.code",
+    ])
   })
 
   test(`invalid ${name} with no actual and expected`, () => {
@@ -366,152 +369,159 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
-    try {
-      expect(["one", "two", "three"]).to.contain("apples")
-    } catch (err: any) {
-      err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      writeToReport(reporter, "file://some/file/location.ts:58:19", new InvalidClaim(description, err))
-
-      writer.expectLines([
-        `  ✖ ${description}`,
-        "    expected [ 'one', 'two', 'three' ] to include 'apples'",
-        "    Script Failed",
-        "      file://some/file/location.ts:58:19",
-        "    at some.line.of.code",
-        "    at another.line.of.code"
-      ])
+    const err = {
+      message: "expected [ 'one', 'two', 'three' ] to include 'apples'",
+      stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
     }
-  })
 
-  test(`invalid ${name} with falsey expected`, () => {
-    const writer = new FakeReportWriter()
-    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+    writeToReport(reporter, "file://some/file/location.ts:58:19", new InvalidClaim(description, err))
 
-    try {
-      expect(false).to.be.true
-    } catch (err: any) {
-      err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      writeToReport(reporter, "file://some/file/location.ts:58:19", new InvalidClaim(description, err))
-
-      writer.expectLines([
-        `  ✖ ${description}`,
-        "    expected false to be true",
-        "    Actual",
-        "      false",
-        "    Expected",
-        "      true",
-        "    Script Failed",
-        "      file://some/file/location.ts:58:19",
-        "    at some.line.of.code",
-        "    at another.line.of.code"
-      ])
-    }
+    writer.expectLines([
+      `  ✖ ${description}`,
+      "    expected [ 'one', 'two', 'three' ] to include 'apples'",
+      "    Script Failed",
+      "      file://some/file/location.ts:58:19",
+      "    at some.line.of.code",
+      "    at another.line.of.code"
+    ])
   })
 
   test(`invalid ${name} with falsey actual`, () => {
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
-    try {
-      expect(true).to.be.false
-    } catch (err: any) {
-      err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      writeToReport(reporter, "file://some/file/location.ts:58:19", new InvalidClaim(description, err))
-
-      writer.expectLines([
-        `  ✖ ${description}`,
-        "    expected true to be false",
-        "    Actual",
-        "      true",
-        "    Expected",
-        "      false",
-        "    Script Failed",
-        "      file://some/file/location.ts:58:19",
-        "    at some.line.of.code",
-        "    at another.line.of.code"
-      ])
+    const err = {
+      message: "expected false to be true",
+      expected: true,
+      actual: false,
+      stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
     }
+
+    writeToReport(reporter, "file://some/file/location.ts:58:19", new InvalidClaim(description, err))
+
+    writer.expectLines([
+      `  ✖ ${description}`,
+      "    expected false to be true",
+      "    Actual",
+      "      false",
+      "    Expected",
+      "      true",
+      "    Script Failed",
+      "      file://some/file/location.ts:58:19",
+      "    at some.line.of.code",
+      "    at another.line.of.code"
+    ])
+  })
+
+  test(`invalid ${name} with falsey expected`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+    const err = {
+      message: "expected false to be true",
+      expected: false,
+      actual: true,
+      stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
+    }
+
+    writeToReport(reporter, "file://some/file/location.ts:58:19", new InvalidClaim(description, err))
+
+    writer.expectLines([
+      `  ✖ ${description}`,
+      "    expected false to be true",
+      "    Actual",
+      "      true",
+      "    Expected",
+      "      false",
+      "    Script Failed",
+      "      file://some/file/location.ts:58:19",
+      "    at some.line.of.code",
+      "    at another.line.of.code"
+    ])
   })
 
   test(`invalid ${name} with duration less than 500ms and above slow claim limit`, () => {
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), slowClaimInMillis: 100 })
 
-    try {
-      expect(true).to.be.false
-    } catch (err: any) {
-      err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      const claim = new InvalidClaim(description, err)
-      claim.durationInMillis = 323
-      writeToReport(reporter, "file://some/file/location.ts:58:19", claim)
-
-      writer.expectLines([
-        `  ✖ ${description} (323ms)`,
-        "    expected true to be false",
-        "    Actual",
-        "      true",
-        "    Expected",
-        "      false",
-        "    Script Failed",
-        "      file://some/file/location.ts:58:19",
-        "    at some.line.of.code",
-        "    at another.line.of.code"
-      ])
+    const err = {
+      message: "expected true to be false",
+      expected: false,
+      actual: true,
+      stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
     }
+    const claim = new InvalidClaim(description, err)
+    claim.durationInMillis = 323
+    writeToReport(reporter, "file://some/file/location.ts:58:19", claim)
+
+    writer.expectLines([
+      `  ✖ ${description} (323ms)`,
+      "    expected true to be false",
+      "    Actual",
+      "      true",
+      "    Expected",
+      "      false",
+      "    Script Failed",
+      "      file://some/file/location.ts:58:19",
+      "    at some.line.of.code",
+      "    at another.line.of.code"
+    ])
   })
 
   test(`invalid ${name} with duration greater than 500ms and above slow claim limit`, () => {
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), slowClaimInMillis: 100 })
 
-    try {
-      expect(true).to.be.false
-    } catch (err: any) {
-      err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      const claim = new InvalidClaim(description, err)
-      claim.durationInMillis = 1243
-      writeToReport(reporter, "file://some/file/location.ts:58:19", claim)
-
-      writer.expectLines([
-        `  ✖ ${description} (1.24s)`,
-        "    expected true to be false",
-        "    Actual",
-        "      true",
-        "    Expected",
-        "      false",
-        "    Script Failed",
-        "      file://some/file/location.ts:58:19",
-        "    at some.line.of.code",
-        "    at another.line.of.code"
-      ])
+    const err = {
+      message: "expected true to be false",
+      expected: false,
+      actual: true,
+      stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
     }
+    const claim = new InvalidClaim(description, err)
+    claim.durationInMillis = 1243
+    writeToReport(reporter, "file://some/file/location.ts:58:19", claim)
+
+    writer.expectLines([
+      `  ✖ ${description} (1.24s)`,
+      "    expected true to be false",
+      "    Actual",
+      "      true",
+      "    Expected",
+      "      false",
+      "    Script Failed",
+      "      file://some/file/location.ts:58:19",
+      "    at some.line.of.code",
+      "    at another.line.of.code"
+    ])
   })
 
   test(`invalid ${name} with duration less than slow claim limit`, () => {
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), slowClaimInMillis: 100 })
 
-    try {
-      expect(true).to.be.false
-    } catch (err: any) {
-      err.stack = "some message\n   at some.line.of.code\n   at another.line.of.code"
-      const claim = new InvalidClaim(description, err)
-      claim.durationInMillis = 30
-      writeToReport(reporter, "file://some/file/location.ts:58:19", claim)
-
-      writer.expectLines([
-        `  ✖ ${description}`,
-        "    expected true to be false",
-        "    Actual",
-        "      true",
-        "    Expected",
-        "      false",
-        "    Script Failed",
-        "      file://some/file/location.ts:58:19",
-        "    at some.line.of.code",
-        "    at another.line.of.code"
-      ])
+    const err = {
+      message: "expected true to be false",
+      expected: false,
+      actual: true,
+      stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
     }
+    const claim = new InvalidClaim(description, err)
+    claim.durationInMillis = 30
+    writeToReport(reporter, "file://some/file/location.ts:58:19", claim)
+
+    writer.expectLines([
+      `  ✖ ${description}`,
+      "    expected true to be false",
+      "    Actual",
+      "      true",
+      "    Expected",
+      "      false",
+      "    Script Failed",
+      "      file://some/file/location.ts:58:19",
+      "    at some.line.of.code",
+      "    at another.line.of.code"
+    ])
   })
 }
 

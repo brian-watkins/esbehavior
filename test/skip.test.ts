@@ -1,5 +1,5 @@
-import { expect } from 'chai'
 import { test } from 'uvu'
+import * as assert from 'uvu/assert'
 import { validate, effect, example, fact, behavior, step, defaultOrder } from '../src/index.js'
 import { FakeReporter, withBehavior, withExample, withSkippedClaim, withValidClaim } from './helpers/FakeReporter.js'
 
@@ -10,7 +10,7 @@ test("it skips an example", async () => {
     behavior("something", [
       (m) => m.skip() && example({
         init: () => {
-          expect(7).to.equal(5)
+          assert.equal(7, 5)
           return "blah"
         }
       })
@@ -26,10 +26,10 @@ test("it skips an example", async () => {
           ],
           observe: [
             effect("will never run this", () => {
-              expect(7).to.equal(5)
+              assert.equal(7, 5)
             }),
             effect("or this", () => {
-              expect(9).to.equal(1)
+              assert.equal(7, 5)
             })
           ]
         }),
@@ -38,7 +38,7 @@ test("it skips an example", async () => {
         .script({
           observe: [
             effect("will run this", () => {
-              expect(7).to.equal(7)
+              assert.equal(7, 7)
             })
           ]
         })

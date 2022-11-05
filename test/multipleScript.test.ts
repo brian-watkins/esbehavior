@@ -1,5 +1,5 @@
-import { expect } from 'chai'
 import { test } from 'uvu'
+import * as assert from "uvu/assert"
 import { validate, effect, fact, behavior, defaultOrder, example } from '../src/index.js'
 import anotherMultipleScripts from './fixtures/anotherMultipleScripts.js'
 import multipleScripts from './fixtures/multipleScripts.js'
@@ -49,7 +49,7 @@ test("it skips all scripts when the example is skipped", async () => {
           ],
           observe: [
             effect("the first script works", (context) => {
-              expect(context.touched).to.equal(1)
+              assert.equal(context.touched, 1)
             })
           ]
         })
@@ -60,7 +60,7 @@ test("it skips all scripts when the example is skipped", async () => {
           ],
           observe: [
             effect("the second script works", (context) => {
-              expect(context.touched).to.equal(3)
+              assert.equal(context.touched, 3)
             })
           ]
         })

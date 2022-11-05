@@ -1,4 +1,4 @@
-import { expect } from "chai"
+import * as assert from 'uvu/assert'
 import { behavior, effect, example } from "../../src/index.js"
 
 export let teardownValue = 0
@@ -26,19 +26,15 @@ export const asyncBehavior = behavior("a single test", [
           const fetchedValue = await new Promise(resolve => {
             setTimeout(() => resolve(actual + 5), 30)
           })
-          try {
-            expect(fetchedValue).to.equal(15)
-          } catch (err: any) {
-            throw {
-              expected: err.expected,
-              actual: err.actual,
-              operator: err.operator,
-              stack: "fake stack"
-            }
+          throw {
+            expected: 15,
+            actual: fetchedValue,
+            operator: "strictEqual",
+            stack: "fake stack"
           }
         }),
         effect("does something sync", (actual) => {
-          expect(actual).to.equal(7)
+          assert.equal(actual, 7)
         })
       ]
     })

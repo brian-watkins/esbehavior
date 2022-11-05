@@ -1,4 +1,3 @@
-import { expect } from 'chai'
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { behavior, effect, example, situation, validate, fact, defaultOrder } from '../src/index.js'
@@ -22,8 +21,8 @@ test("when all facts in a situation are valid", async () => {
           ],
           observe: [
             effect("something cool happens", (context) => {
-              expect(4).to.equal(context.count)
-              expect("Cool Dude").to.equal(context.name)
+              assert.equal(context.count, 4)
+              assert.equal(context.name, "Cool Dude")
             })
           ]
         })
@@ -74,8 +73,8 @@ test("when all facts in a nested situation are valid", async () => {
           ],
           observe: [
             effect("something cool happens", (context) => {
-              expect(8).to.equal(context.count)
-              expect(["a","Larry","b","c"]).to.deep.equal(context.names)
+              assert.equal(context.count, 8)
+              assert.equal(context.names, ["a", "Larry", "b", "c"])
             })
           ]
         })
@@ -200,7 +199,7 @@ test("when a situation is skipped", async () => {
           ],
           observe: [
             effect("something cool happens", (context) => {
-              expect(6).to.equal(context.count)
+              assert.equal(context.count, 6)
             })
           ]
         })
@@ -250,7 +249,7 @@ test("when a nested situation is skipped", async () => {
           ],
           observe: [
             effect("something cool happens", (context) => {
-              expect(6).to.equal(context.count)
+              assert.equal(context.count, 6)
             })
           ]
         })
