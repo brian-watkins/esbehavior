@@ -5,9 +5,11 @@ export interface Timer {
 }
 
 export class TimerFactory {
+  private static timerIndex: number = 0
+
   static newTimer(): Timer {
     if (typeof window !== "undefined" && window.performance) {
-      return new BrowserTimer()
+      return new BrowserTimer(TimerFactory.timerIndex++)
     } else {
       return new NodeTimer()
     }
@@ -15,16 +17,18 @@ export class TimerFactory {
 }
 
 export class BrowserTimer implements Timer {
+  constructor (private index: number) {}
+
   start() {
-    window.performance.mark("start_validation")
+    performance.mark(`start_validation_${this.index}`)
   }
 
   stop() {
-    window.performance.mark("end_validation")
+    performance.mark(`end_validation_${this.index}`)
   }
 
   durationInMillis(): number {
-    const measure = window.performance.measure("validation_duration", "start_validation", "end_validation")
+    const measure = performance.measure(`validation_duration_${this.index}`, `start_validation_${this.index}`, `end_validation_${this.index}`)
     return Number(measure.duration.toFixed())
   }
 }

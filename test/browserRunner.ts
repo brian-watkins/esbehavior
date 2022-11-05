@@ -5,7 +5,8 @@ const server = await createServer({
   configFile: false,
   server: {
     port: 5957,
-  }
+  },
+  logLevel: "warn"
 })
 await server.listen()
 
