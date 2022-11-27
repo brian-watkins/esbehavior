@@ -365,6 +365,37 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
     ])
   })
 
+  test(`invalid ${name} with multi-line actual`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+    const err = {
+      message: "expected things to happen",
+      stack: "some message\n   at some.line.of.code\n   at another.line.of.code",
+      actual: "First line of actual\nSecond line\nThird line",
+      expected: "hello\ngoodbye\nwelcome back\ngo away"
+    }
+    writeToReport(reporter, "file://some/awesome/location.ts:58:19", new InvalidClaim(description, err))
+
+    writer.expectLines([
+      `  ✖ ${description}`,
+      "    expected things to happen",
+      "    Actual",
+      "      First line of actual",
+      "      Second line",
+      "      Third line",
+      "    Expected",
+      "      hello",
+      "      goodbye",
+      "      welcome back",
+      "      go away",
+      "    Script Failed",
+      "      file://some/awesome/location.ts:58:19",
+      "    at some.line.of.code",
+      "    at another.line.of.code"
+    ])
+  })
+
   test(`invalid ${name} with no expected`, () => {
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })

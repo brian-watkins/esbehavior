@@ -215,10 +215,17 @@ export class StandardReporter implements Reporter {
     }
   }
 
-  writeDetail(description: string, value: string, indentLevel: number = 2) {
+  writeDetail(description: string, detail: any, indentLevel: number = 2) {
     this.writer.writeLine(indent(indentLevel, this.format.dim(this.format.underline(description))))
     this.space()
-    this.writer.writeLine(indent(indentLevel + 1, value))
+    if (typeof detail === "string") {
+      const detailLines = detail.split(/\r?\n/);
+      for (const line of detailLines) {
+        this.writer.writeLine(indent(indentLevel + 1, line))
+      }  
+    } else {
+      this.writer.writeLine(indent(indentLevel + 1, detail))
+    }
     this.space()
   }
 
