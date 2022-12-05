@@ -1,5 +1,14 @@
 # Changelog
 
+### 12/5/2022
+
+esbehavior 3.1.1
+
+#### Added
+- Better formatting of multi-line expected and actual values
+- Pretty-print non-string expected and actual values
+
+
 ### 10/2/2022
 
 esbehavior 2.1.0
