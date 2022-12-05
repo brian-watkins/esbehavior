@@ -400,8 +400,8 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
-    const actualValue = { name: "Cool Person" }
-    const expectedValue = { name: "Fun Person" }
+    const actualValue = { name: "Cool Person", favorite: "bowling" }
+    const expectedValue = { name: "Fun Person", favorite: "running" }
 
     const err = {
       message: "expected things to happen",
@@ -416,9 +416,15 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
       `  ✖ ${description}`,
       "    expected things to happen",
       "    Actual",
-      "      {\n  name: \"Cool Person\"\n}",
+      "      {",
+      "        name: \"Cool Person\",",
+      "        favorite: \"bowling\"",
+      "      }",
       "    Expected",
-      "      {\n  name: \"Fun Person\"\n}",
+      "      {",
+      "        name: \"Fun Person\",",
+      "        favorite: \"running\"",
+      "      }",
       "    Script Failed",
       "      file://some/file/location.ts:58:19",
       "    at some.line.of.code",

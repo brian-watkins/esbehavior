@@ -157,7 +157,7 @@ export class StandardReporter implements Reporter {
 
   writeValidClaimResult(successIndicator: SuccessIndicator, result: ClaimResult, indentLevel: number = 1) {
     let description = this.format.green(`${successIndicator} ${result.description}`)
-    
+
     if (this.shouldDisplayDuration(result)) {
       description += this.formatClaimDuration(result.durationInMillis)
     }
@@ -169,7 +169,7 @@ export class StandardReporter implements Reporter {
     } else {
       this.writer.writeLine(this.format.dim(descriptionLine))
     }
-    
+
     if (result.hasSubsumedResults) {
       for (const subResult of result.subsumedResults) {
         this.writeValidClaimResult(SuccessIndicator.Nested, subResult, indentLevel + 1)
@@ -212,22 +212,26 @@ export class StandardReporter implements Reporter {
       }
       this.writeDetail("Script Failed", this.currentScriptLocation, indentLevel + 1)
       this.writeStack(error.stack, { indentLevel: indentLevel + 1 })
-      this.space()  
+      this.space()
     }
   }
 
   writeDetail(description: string, detail: any, indentLevel: number = 2) {
     this.writer.writeLine(indent(indentLevel, this.format.dim(this.format.underline(description))))
     this.space()
+    this.writeDetailMessage(detail, indentLevel + 1)
+    this.space()
+  }
+
+  writeDetailMessage(detail: any, indentLevel: number = 2) {
     if (typeof detail === "string") {
       const detailLines = detail.split(/\r?\n/);
       for (const line of detailLines) {
-        this.writer.writeLine(indent(indentLevel + 1, line))
-      }  
+        this.writer.writeLine(indent(indentLevel, line))
+      }
     } else {
-      this.writer.writeLine(indent(indentLevel + 1, stringify(detail)))
+      this.writeDetailMessage(stringify(detail), indentLevel)
     }
-    this.space()
   }
 
   writeStack(stack: string, { indentLevel }: { indentLevel: number } = { indentLevel: 2 }) {
