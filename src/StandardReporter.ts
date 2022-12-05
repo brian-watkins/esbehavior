@@ -4,6 +4,7 @@ import { OrderProvider } from "./OrderProvider.js";
 import { Failure, Reporter, Writer } from "./Reporter.js";
 import { Summary } from "./Summary.js";
 import { Timer, TimerFactory } from "./Timer.js";
+import { prettyPrint } from "@base2/pretty-print-object";
 
 export interface StandardReporterOptions {
   writer?: Writer
@@ -224,7 +225,7 @@ export class StandardReporter implements Reporter {
         this.writer.writeLine(indent(indentLevel + 1, line))
       }  
     } else {
-      this.writer.writeLine(indent(indentLevel + 1, detail))
+      this.writer.writeLine(indent(indentLevel + 1, stringify(detail)))
     }
     this.space()
   }
@@ -260,6 +261,13 @@ export class StandardReporter implements Reporter {
   space() {
     this.writer.writeLine("")
   }
+}
+
+function stringify(value: any): string {
+  return prettyPrint(value, {
+    indent: '  ',
+    singleQuotes: false
+  })
 }
 
 class ANSIFormatter implements Formatter {
