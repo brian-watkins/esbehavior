@@ -18,7 +18,7 @@
     "build": "rm -rf ./dist && tsc",
     "test": "npm run test:node && npm run test:browser",
     "test:node": "node --loader ts-node/esm --no-warnings ./test/index.ts",
-    "test:browser": "node --enable-source-maps --loader ts-node/esm --no-warnings ./test/browserRunner.ts",
+    "test:browser": "node --loader ts-node/esm --no-warnings ./test/browserRunner.ts",
     "test:browser:watch": "WATCH=true npm run test:browser",
     "test:one": "node --loader ts-node/esm --no-warnings ",
     "sample:node": "npm run test:raw --prefix samples/node",
