@@ -5,7 +5,7 @@ import { Formatter, StandardReporter } from '../src/StandardReporter.js'
 import { behavior, example, validate, Fact, Step, Effect, defaultOrder } from '../src/index.js'
 import { Failure, Reporter } from '../src/Reporter.js'
 import { ClaimResult, InvalidClaim, SkippedClaim, ValidClaim } from '../src/Claim.js'
-import { fakeTimer } from './helpers/FakeTimer.js'
+import { FakeTimer, fakeTimer } from './helpers/FakeTimer.js'
 
 test("multiple examples with valid and skipped claims", async () => {
   const writer = new FakeReportWriter()
@@ -610,6 +610,70 @@ invalidClaimBehavior("observation", (reporter, scriptLocation, claimResult) => {
   reporter.endScript()
 }, "some observation")
 
+
+const errorHighlightBehavior = function (name: string, expectedHighlightedLines: number, generateInvalidClaim: () => Promise<ClaimResult>, writeToReport: <T>(reporter: Reporter, scriptLocation: string, claimResult: ClaimResult) => void) {
+  test(`highlighting ${name} function call in stack`, async () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeColorFormatter(), slowClaimInMillis: 100 })
+
+    const result = await generateInvalidClaim()
+
+    writeToReport(reporter, "file://some/file/location.ts:58:19", result)
+
+    assert.equal(writer.logLines.filter((line) => line.includes("[highlight")).length, expectedHighlightedLines, "it highlights the expected number of lines in the stack trace")
+  })
+}
+
+errorHighlightBehavior("condition", 1, () => {
+  const fact = new Fact("some fact", () => {
+    assert.ok(false)
+  }, new FakeTimer(80))
+  return fact.validate(null)
+}, (reporter, scriptLocation, claimResult) => {
+  reporter.startScript(scriptLocation)
+  reporter.recordPresupposition(claimResult)
+  reporter.endScript()
+})
+
+errorHighlightBehavior("step", 1, () => {
+  const step = new Step("some step", () => {
+    assert.ok(false)
+  }, new FakeTimer(80))
+  return step.validate(null)
+}, (reporter, scriptLocation, claimResult) => {
+  reporter.startScript(scriptLocation)
+  reporter.recordAction(claimResult)
+  reporter.endScript()
+})
+
+errorHighlightBehavior("effect", 1, () => {
+  const effect = new Effect("some effect", () => {
+    assert.ok(false)
+  }, new FakeTimer(80))
+  return effect.validate(null)
+}, (reporter, scriptLocation, claimResult) => {
+  reporter.startScript(scriptLocation)
+  reporter.recordObservation(claimResult)
+  reporter.endScript()
+})
+
+errorHighlightBehavior("unknown", 0, async () => {
+  const err = {
+    message: "expected true to be false",
+    expected: false,
+    actual: true,
+    stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
+  }
+  const claim = new InvalidClaim("some invalid claim", err)
+  claim.durationInMillis = 30
+
+  return claim
+}, (reporter, scriptLocation, claimResult) => {
+  reporter.startScript(scriptLocation)
+  reporter.recordObservation(claimResult)
+  reporter.endScript()
+})
+
 const validTestClaim = (description: string, duration: number) => {
   const claim = new ValidClaim(description)
   claim.durationInMillis = duration
@@ -807,5 +871,29 @@ class FakeFormatter implements Formatter {
   }
   cyan(message: string): string {
     return message
+  }
+}
+
+class FakeColorFormatter implements Formatter {
+  underline(message: string): string {
+    return `[underline ${message}]`
+  }
+  bold(message: string): string {
+    return `[bold ${message}]`
+  }
+  dim(message: string): string {
+    return `[dim ${message}]`
+  }
+  red(message: string): string {
+    return `[bad ${message}]`
+  }
+  yellow(message: string): string {
+    return `[caution ${message}]`
+  }
+  green(message: string): string {
+    return `[ok ${message}]`
+  }
+  cyan(message: string): string {
+    return `[highlight ${message}]`
   }
 }

@@ -240,7 +240,7 @@ export class StandardReporter implements Reporter {
       .map(line => line.trim())
       .filter((line) => line.startsWith("at"))
       .forEach(line => {
-        if (line.includes("Effect.execute") || line.includes("Condition.execute") || line.includes("Step.execute")) {
+        if (line.includes("Fact.execute") || line.includes("Step.execute") || line.includes("Effect.execute")) {
           this.writer.writeLine(indent(indentLevel, this.format.cyan(line)))
         } else {
           this.writer.writeLine(indent(indentLevel, this.format.dim(line)))
