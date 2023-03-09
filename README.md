@@ -26,6 +26,11 @@ performed, as well as the effects that should be observed.
 In addition, esbehavior *discourages* some testing practices that tend to make test suites
 more complicated: nested examples and shared state between examples.
 
+### Getting Started
+
+```
+$ npm install esbehavior
+```
 
 ### The DSL
 
@@ -131,11 +136,13 @@ a sample for a React app with [behaviors evaluated in a browser](https://github.
 
 ## Public API
 
-## Creating a Behavior
+### Creating a Behavior
 
-### behavior(description: string, examples: ConfigurableExample[]): Behavior
+#### behavior(description: string, examples: ConfigurableExample[]): Behavior
 
-This function generates a behavior with some description and some list of examples.
+This function generates a behavior with some description and some list of examples. A
+`Behavior` is just data -- a description and an array of `ConfigurableExample`; this
+function is for convenience.
 
 A `ConfigurableExample` is an `ExampleBuilder` or a function that takes `ExampleOptions`
 and returns an `ExampleBuilder`.
@@ -162,7 +169,7 @@ avoid the need for braces around the example definition or reference with pickin
 or skipping it.
 
 
-## Creating an Example
+### Creating an Example
 
 An Example is composed of a script and an optional description. A `Script` describes
 the flow of the example. To describe an example, you may need to *suppose* that
@@ -180,7 +187,7 @@ during one part of the script and observed later. Or, the context might initiali
 context, provide a reference to it throughout the script, and then destroy it at the end.
 
 
-### Context
+#### Context
 
 A context is an object that conforms to this interface:
 
@@ -197,7 +204,7 @@ script, if the `teardown` method is defined, it will be called at the end of the
 example. If the `init` method or the `teardown` method fails, then the validation
 run will be terminated.
 
-### example(context?: Context): Fluent ExampleBuilder API
+#### example(context?: Context): Fluent ExampleBuilder API
 
 Use this function to start the construction of an example. Provide a context, if
 necessary. This function results in an object that progressively exposes the
@@ -226,7 +233,7 @@ actually be validated, you must provide at least one script.
 Use the `andThen` method to add another script to an example. This is useful for
 more complicated examples that might involve observations at multiple stages.
 
-## Creating a Script
+### Creating a Script
 
 A script is an object that conforms to this interface:
 
@@ -238,42 +245,42 @@ interface Script<T> {
 }
 ```
 
-### fact(description: string, validate: (context: T) => void | Promise\<void\>): Presupposition\<T\>
+#### fact(description: string, validate: (context: T) => void | Promise\<void\>): Presupposition\<T\>
 
 Create a presupposition for the `suppose` section of a `Script`.
 
-### situation(description: string, presuppositions: Presupposition\<T\>[]): Presupposition\<T\>
+#### situation(description: string, presuppositions: Presupposition\<T\>[]): Presupposition\<T\>
 
 Combine presuppositions into a group that has its own description. Useful for describing
 complicated setups.
 
-### step(description: string, validate: (context: T) => void | Promise\<void\>): Action\<T\>
+#### step(description: string, validate: (context: T) => void | Promise\<void\>): Action\<T\>
 
 Create an action for the `perform` section of a `Script`.
 
-### function procedure(descripion: string, steps: Action\<T\>[]): Action\<T\>
+#### procedure(descripion: string, steps: Action\<T\>[]): Action\<T\>
 
 Combine actions into a group that has its own description. Useful for describing
 complicated actions.
 
-### function effect(description: string, validate: (context: T) => void | Promise\<void\>): Observation\<T\>
+#### effect(description: string, validate: (context: T) => void | Promise\<void\>): Observation\<T\>
 
 Create an observation for the `observe` section of a `Script`.
 
-### function outcome(description: string, effects: Observation\<T\>[]): Observation\<T\>
+#### outcome(description: string, effects: Observation\<T\>[]): Observation\<T\>
 
 Combine observations into a group that has its own description. Useful for describing
 complication assertions.
 
 
-## Validating Behaviors
+### Validating Behaviors
 
-### validate(behaviors: Behavior[], options: ValidationOptions): Promise(Summary)
+#### validate(behaviors: Behavior[], options: ValidationOptions): Promise(Summary)
 
 This function validates a list of behaviors and returns a promise that resolves to a
 summary. Use the DSL functions to create `Behaviors`.
 
-### ValidationOptions
+#### ValidationOptions
 
 The `ValidationOptions` are:
 
@@ -336,14 +343,14 @@ If none of these options is suitable, you can provide your own implementation of
 esbehavior is a *framework* for writing executable documentation, and this means that it is
 meant to be easy to extend or tailor to your specific use case. Here are some ways to do so:
 
-### Provide your own Example implementation
+#### Provide your own Example implementation
 
 An `Example` is just an object that conforms to a particular interface that tells
 esbehavior how to validate or skip it. So, you could provide your own implementation
 of the `Example` interface (and associated `ExampleBuilder` interface) to provide
 an entirely distinct way of describing the behaviors of your application.
 
-### Provide your own function that generates an Example
+#### Provide your own function that generates an Example
 
 The easiest way to extend esbehavior is to provide your own function that generates
 an example. For example, you could write xunit-style tests with a function like this:
@@ -361,13 +368,15 @@ function test(description: string, block: () => void) {
 }
 ```
 
-So the test would look like:
+So the behavior would look like:
 
 ```
-test("some test", () => {
-  const value = computeTheValue()
-  expect(value, is(equalTo(7)))
-})
+behavior("my behavior", [
+  test("some test", () => {
+    const value = computeTheValue()
+    expect(value, is(equalTo(7)))
+  })
+])
 ```
 
 Or, if you are providing examples of some pure function, you might want to provide
@@ -382,7 +391,7 @@ Then we map the given observation functions and pass the computed value to them:
 ```
 interface PureFunctionScript<T> {
   compute: () => T
-  properties: Array<Effect<T>>
+  check: Array<Effect<T>>
 }
 
 class ValueContext<T> {
@@ -406,7 +415,7 @@ export function test<T>(description: string, script: PureFunctionScript<T>) {
           context.set(script.compute())
         })
       ],
-      observe: script.properties.map((property) => {
+      observe: script.check.map((property) => {
         return effect(property.description, (context) => {
           property.validate(context.get())
         })
@@ -415,17 +424,19 @@ export function test<T>(description: string, script: PureFunctionScript<T>) {
 }
 ```
 
-Then we could write tests like so:
+Then we could write behaviors like so:
 
 ```
-test("the return value of some pure function is even", {
-  compute: () => someFunction(27),
-  properties: [
-    effect("it is even", (value) => {
-      expect(value).to.be.even
-    })
-  ]
-})
+behavior("some behavior", [
+  test("the return value of some pure function is even", {
+    compute: () => someFunction(27),
+    check: [
+      effect("it is even", (value) => {
+        expect(value).to.be.even
+      })
+    ]
+  })
+])
 ```
 
 Using this method, you should be able to craft the DSL that makes the most
