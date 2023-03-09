@@ -1,6 +1,7 @@
 # esbehavior
 
-esbehavior is a framework for writing executable documentation.
+esbehavior is a framework for writing executable documentation. It works best
+with Typescript.
 
 Use esbehavior to describe the *behaviors* of your program.
 Each behavior consists of one or more *examples* that together illustrate what
@@ -208,8 +209,9 @@ run will be terminated.
 
 Use this function to start the construction of an example. Provide a context, if
 necessary. This function results in an object that progressively exposes the
-API for building an Example. Look in the source for details about the types, but,
-in general, example creation will follow this patter:
+API for building an Example. If you use Typescript, the auto-completion in your editor
+should help you understand the options; look in the source for details about the types.
+In general, example creation will follow this patter:
 
 ```
 example(someContext)
