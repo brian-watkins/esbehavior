@@ -222,7 +222,7 @@ test("when the validation run is terminated", () => {
     stack: "some stack trace\r\nat some.line.of.code\r\nat another.line.of.code"
   }
 
-  reporter.start(defaultOrder())
+  reporter.start(defaultOrder().description)
   reporter.terminate(error)
 
   writer.expectLines([

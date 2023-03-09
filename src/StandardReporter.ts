@@ -36,7 +36,7 @@ export class StandardReporter implements Reporter {
   private timer: Timer
   private slowClaimInMillis: number
   private currentScriptLocation = "UNKNOWN"
-  private orderProvider: OrderProvider | null = null
+  private orderDescription: string | undefined = undefined
 
   constructor(options: StandardReporterOptions = {}) {
     this.writer = options.writer ?? new ConsoleWriter()
@@ -45,8 +45,8 @@ export class StandardReporter implements Reporter {
     this.slowClaimInMillis = options.slowClaimInMillis ?? 100
   }
 
-  start(orderProvider: OrderProvider): void {
-    this.orderProvider = orderProvider
+  start(orderDescription: string): void {
+    this.orderDescription = orderDescription
     this.timer.start()
   }
 
@@ -61,9 +61,9 @@ export class StandardReporter implements Reporter {
     const claims = pluralize(total, 'claim')
     const duration = '(' + formatTime(this.timer.durationInMillis()) + ')'
     this.writer.writeLine(this.format.bold(`${behaviors}, ${examples}, ${claims} ${this.format.dim(duration)}`))
-    if (this.orderProvider) {
+    if (this.orderDescription) {
       this.space()
-      this.writer.writeLine(this.format.dim(this.orderProvider.description))
+      this.writer.writeLine(this.format.dim(this.orderDescription))
     }
     this.space()
 
@@ -85,8 +85,8 @@ export class StandardReporter implements Reporter {
   terminate(error: Failure): void {
     this.writer.writeLine(this.format.bold(this.format.red("Failed to validate behaviors!")))
     this.space()
-    if (this.orderProvider) {
-      this.writer.writeLine(this.format.dim(this.orderProvider.description))
+    if (this.orderDescription) {
+      this.writer.writeLine(this.format.dim(this.orderDescription))
       this.space()
     }
     if (error.message) {

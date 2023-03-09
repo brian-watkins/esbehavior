@@ -43,7 +43,7 @@ export async function validate<T>(behaviors: Array<Behavior>, options: Validatio
   const validatableBehaviors = behaviors.map(b => new ValidatableBehavior(b, validationOptions))
   const documentation = new Documentation(validatableBehaviors, validationOptions)
 
-  reporter.start(validationOptions.orderProvider)
+  reporter.start(validationOptions.orderProvider.description)
 
   try {
     const summary = await documentation.validate(reporter)

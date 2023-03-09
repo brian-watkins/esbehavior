@@ -1,5 +1,4 @@
 import { ClaimResult } from "./Claim.js"
-import { OrderProvider } from "./OrderProvider.js"
 import { Summary } from "./Summary.js"
 
 export interface Writer {
@@ -15,7 +14,7 @@ export interface Failure {
 }
 
 export interface Reporter {
-  start(orderProvider: OrderProvider): void
+  start(orderDescription: string): void
   end(summary: Summary): void
   terminate(error: Failure): void
 
