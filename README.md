@@ -105,15 +105,22 @@ For more examples, see the [tests](https://github.com/brian-watkins/esbehavior/t
 
 ## Running Behaviors
 
-esbehavior is a DSL that helps you write programs that document the behavior of
-your software. In order to execute the examples, you will need to write a 'runner'
-script that gathers the appropriate behaviors and passes them to the `validate` function,
-which will run all the examples for each behavior and print the results to the console. 
+esbehavior is just a framework for writing executable documentation in terms of
+behaviors and examples. In order to validate the behaviors you write, you'll need to
+write a 'runner' script that gathers the appropriate behaviors and passes them to
+the `validate` function, which will then run all the examples for each behavior and print
+the results to the console.
 
 This 'runner' script could be executed with node, or it could be executed in a
 browser context.
 
-You can use run selected examples like so:
+Here's a sample with [behaviors evaluated in node](https://github.com/brian-watkins/esbehavior/tree/main/samples/node) -- note the runner file at `esbehavior/samples/node/specs/runner.ts` -- and here's
+a sample for a React app with [behaviors evaluated in a browser](https://github.com/brian-watkins/esbehavior/tree/main/samples/react) -- with the runner file at `esbehavior/samples/react/specs/runner.mjs`.
+
+
+### Running particular examples only; Skipping examples
+
+You can use run particular examples only like so:
 
 ```
 behavior("my behavior", [
@@ -122,7 +129,7 @@ behavior("my behavior", [
 ])
 ```
 
-You can also skip selected examples like so:
+You can also skip particular examples like so:
 
 ```
 behavior("my behavior", [
@@ -131,8 +138,18 @@ behavior("my behavior", [
 ])
 ```
 
-Here's a sample with [behaviors evaluated in node](https://github.com/brian-watkins/esbehavior/tree/main/samples/node) and here's
-a sample for a React app with [behaviors evaluated in a browser](https://github.com/brian-watkins/esbehavior/tree/main/samples/react).
+
+### Source Map Support
+
+Depending on how your behaviors are transpiled or where they are validated (in node or the
+browser) you may find that you need to install support for source maps so that stack traces
+provide the correct line numbers.
+
+If you run esbehavior with typescript in node, then [ts-node](https://www.npmjs.com/package/ts-node)
+has built in support for source maps.
+
+If you run esbehavior in the browser, check out
+[source-map-support](https://www.npmjs.com/package/source-map-support).
 
 
 ## Public API
