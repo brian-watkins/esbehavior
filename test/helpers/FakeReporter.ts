@@ -80,31 +80,28 @@ export class FakeReporter implements Reporter {
 function toTestClaim(script: TestScript, result: ClaimResult): TestClaim | TestClaims {
   const toTestClaimForScript = (subResult: ClaimResult) => toTestClaim(script, subResult)
 
-  return result.when({
-    valid: () => {
-      if (result.hasSubsumedResults) {
+  switch (result.type) {
+    case "valid-claim":
+      if (result.subsumedResults.length > 0) {
         return new TestClaims(result.description, result.subsumedResults.map(toTestClaimForScript), "valid")
       } else {
         return new ValidClaim(result.description)
       }
-    },
-    invalid: (failure) => {
-      if (result.hasSubsumedResults) {
+    case "invalid-claim":
+      if (result.subsumedResults.length > 0) {
         return new TestClaims(result.description, result.subsumedResults.map(toTestClaimForScript), "invalid")
       } else {
         const location = script.location.split("/").at(-1) ?? "<LOCATION NOT FOUND>"
         const normalizedScriptLocation = location.substring(0, location.indexOf(":"))
-        return new InvalidClaim(normalizedScriptLocation, result.description, failure)
+        return new InvalidClaim(normalizedScriptLocation, result.description, result.error)
       }
-    },
-    skipped: () => {
-      if (result.hasSubsumedResults) {
+    case "skipped-claim":
+      if (result.subsumedResults.length > 0) {
         return new TestClaims(result.description, result.subsumedResults.map(toTestClaimForScript), "skipped")
       } else {
         return new SkippedClaim(result.description)
       }
-    }
-  })
+  }
 }
 
 class TestBehavior {

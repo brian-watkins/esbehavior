@@ -140,11 +140,17 @@ export class StandardReporter implements Reporter {
   }
 
   recordClaimResult(successIndicator: SuccessIndicator, result: ClaimResult): void {
-    result.when({
-      valid: () => this.writeValidClaimResult(successIndicator, result),
-      invalid: (error) => this.writeInvalidClaimResult(result, error),
-      skipped: () => this.writeSkippedClaimResult(result)
-    })
+    switch (result.type) {
+      case "valid-claim":
+        this.writeValidClaimResult(successIndicator, result)
+        break
+      case "invalid-claim":
+        this.writeInvalidClaimResult(result, result.error)
+        break
+      case "skipped-claim":
+        this.writeSkippedClaimResult(result)
+        break
+    }
   }
 
   formatClaimDuration(duration: number): string {
@@ -170,10 +176,8 @@ export class StandardReporter implements Reporter {
       this.writer.writeLine(this.format.dim(descriptionLine))
     }
 
-    if (result.hasSubsumedResults) {
-      for (const subResult of result.subsumedResults) {
-        this.writeValidClaimResult(SuccessIndicator.Nested, subResult, indentLevel + 1)
-      }
+    for (const subResult of result.subsumedResults) {
+      this.writeValidClaimResult(SuccessIndicator.Nested, subResult, indentLevel + 1)
     }
   }
 
@@ -185,19 +189,19 @@ export class StandardReporter implements Reporter {
     }
 
     this.writer.writeLine(indent(indentLevel, description))
-    if (result.hasSubsumedResults) {
+    if (result.subsumedResults.length > 0) {
       for (const subResult of result.subsumedResults) {
-        subResult.when({
-          valid: () => {
+        switch (subResult.type) {
+          case "valid-claim":
             this.writeValidClaimResult(SuccessIndicator.Nested, subResult, indentLevel + 1)
-          },
-          invalid: (subError) => {
-            this.writeInvalidClaimResult(subResult, subError, indentLevel + 1)
-          },
-          skipped: () => {
+            break
+          case "invalid-claim":
+            this.writeInvalidClaimResult(subResult, subResult.error, indentLevel + 1)
+            break
+          case "skipped-claim":
             this.writeSkippedClaimResult(subResult, indentLevel + 1)
-          }
-        })
+            break
+        }
       }
     } else {
       this.space()
@@ -255,10 +259,8 @@ export class StandardReporter implements Reporter {
       this.writer.writeLine(indent(indentLevel, this.format.dim(this.format.yellow(`${SuccessIndicator.Nested} ${result.description}`))))
     }
 
-    if (result.hasSubsumedResults) {
-      for (const subResult of result.subsumedResults) {
-        this.writeSkippedClaimResult(subResult, indentLevel + 1)
-      }
+    for (const subResult of result.subsumedResults) {
+      this.writeSkippedClaimResult(subResult, indentLevel + 1)
     }
   }
 

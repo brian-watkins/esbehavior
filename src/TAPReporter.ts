@@ -83,7 +83,7 @@ export class TAPReporter implements Reporter {
   }
 
   private recordClaimResult(result: ClaimResult, designator?: string) {
-    if (result.hasSubsumedResults) {
+    if (result.subsumedResults.length > 0) {
       if (designator) {
         this.writeComment(`> ${designator} ${result.description}`)
       } else {
@@ -99,11 +99,17 @@ export class TAPReporter implements Reporter {
       } else {
         description = result.description
       }
-      result.when({
-        valid: () => this.recordValidClaim(description),
-        invalid: (error) => this.recordInvalidClaim(description, error),
-        skipped: () => this.recordSkippedClaim(description)
-      })
+      switch (result.type) {
+        case "valid-claim":
+          this.recordValidClaim(description)
+          break
+        case "invalid-claim":
+          this.recordInvalidClaim(description, result.error)
+          break
+        case "skipped-claim":
+          this.recordSkippedClaim(description)
+          break
+      }
     }
   }
 

@@ -19,9 +19,9 @@ export class SimpleClaim<T> implements Claim<T> {
 
     try {
       await waitFor(this.execute(context))
-      claimResult = new ValidClaim(this.description)
+      claimResult = validClaim(this.description)
     } catch (failure: any) {  
-      claimResult = new InvalidClaim(this.description, failure)
+      claimResult = invalidClaim(this.description, failure)
     } 
 
     this.timer.stop()
@@ -32,7 +32,7 @@ export class SimpleClaim<T> implements Claim<T> {
   }
 
   skip(): ClaimResult {
-    return new SkippedClaim(this.description)
+    return skippedClaim(this.description)
   }
 }
 
@@ -42,108 +42,100 @@ export abstract class ComplexClaim<T> implements Claim<T> {
   abstract evaluateSubsumedClaim(claim: Claim<T>, context: T): Promise<ClaimResult>
 
   async validate(context: T): Promise<ClaimResult> {
-    let result = new ValidClaim(this.description)
+    let result: ClaimResult = validClaim(this.description)
 
     for (const claim of this.claims) {
       const claimResult = await this.evaluateSubsumedClaim(claim, context)
-      result = result.subsume(claimResult)
+      result = subsume(result, claimResult)
     }
 
     return result
   }
 
   skip(): ClaimResult {
-    let result = new SkippedClaim(this.description)
+    let result: ClaimResult = skippedClaim(this.description)
 
     for (const claim of this.claims) {
-      const skippedResult = claim.skip()
-      result = result.subsume(skippedResult)
+      result = subsume(result, claim.skip())
     }
 
     return result
   }
 }
 
-export interface ClaimResultHandler<S> {
-  valid(): S
-  invalid(error: Failure): S
-  skipped(): S
+export interface ValidClaim {
+  type: "valid-claim"
+  description: string
+  durationInMillis?: number
+  subsumedResults: Array<ClaimResult>
 }
 
-type ClaimStatus = "Invalid" | "Valid" | "Skipped"
-
-export abstract class ClaimResult {
-  abstract type: ClaimStatus
-  public subsumedResults: Array<ClaimResult> = []
-  public durationInMillis: number | undefined
-
-  constructor(public description: string) {}
-
-  get hasSubsumedResults(): boolean {
-    return this.subsumedResults.length > 0
+export function validClaim(description: string): ValidClaim {
+  return {
+    type: "valid-claim",
+    description,
+    subsumedResults: []
   }
+}
 
-  get summary(): Summary {
-    if (this.subsumedResults.length > 0) {
-      return this.subsumedResults
-        .map(result => result.summary)
-        .reduce(combineSummaries, emptySummary())
-    } else {
-      return this.when({
-        valid: () => addValid(emptySummary()),
-        invalid: () => addInvalid(emptySummary()),
-        skipped: () => addSkipped(emptySummary())
-      })
+export interface SkippedClaim {
+  type: "skipped-claim"
+  description: string
+  durationInMillis?: number
+  subsumedResults: Array<ClaimResult>
+}
+
+export function skippedClaim(description: string): SkippedClaim {
+  return {
+    type: "skipped-claim",
+    description,
+    subsumedResults: []
+  }
+}
+
+export interface InvalidClaim {
+  type: "invalid-claim"
+  description: string
+  durationInMillis?: number
+  error: Failure
+  subsumedResults: Array<ClaimResult>
+}
+
+export function invalidClaim(description: string, error: Failure): InvalidClaim {
+  return {
+    type: "invalid-claim",
+    description,
+    error,
+    subsumedResults: []
+  }
+}
+
+export type ClaimResult = ValidClaim | InvalidClaim | SkippedClaim
+
+function subsume(parent: ClaimResult, child: ClaimResult): ClaimResult {
+  switch (child.type) {
+    case "valid-claim":
+    case "skipped-claim":
+      parent.subsumedResults.push(child)
+      return parent
+    case "invalid-claim":
+      const result = invalidClaim(parent.description, { message: "One or more claims are invalid" })
+      result.subsumedResults = parent.subsumedResults
+      result.subsumedResults.push(child)
+      return result
+  }
+}
+
+export function summarize(result: ClaimResult): Summary {
+  if (result.subsumedResults.length > 0) {
+    return result.subsumedResults
+      .map(result => summarize(result))
+      .reduce(combineSummaries, emptySummary())
+  } else {
+    switch (result.type) {
+      case "valid-claim": return addValid(emptySummary())
+      case "invalid-claim": return addInvalid(emptySummary())
+      case "skipped-claim": return addSkipped(emptySummary())
     }
-  }
-
-  abstract when<S>(handler: ClaimResultHandler<S>): S
-  
-  subsume(subResult: ClaimResult): ClaimResult {
-    return subResult.when<ClaimResult>({
-      valid: () => {
-        this.subsumedResults.push(subResult)
-        return this
-      },
-      invalid: () => {
-        const result = new InvalidClaim(this.description, { message: "One or more claims are invalid" })
-        result.subsumedResults = this.subsumedResults
-        result.subsumedResults.push(subResult)
-        return result
-      },
-      skipped: () => {
-        this.subsumedResults.push(subResult)
-        return this
-      }
-    })
-  }
-}
-
-
-export class ValidClaim extends ClaimResult {
-  public type: ClaimStatus = "Valid"
-
-  when<S>(handler: ClaimResultHandler<S>): S {
-    return handler.valid()
-  }
-}
-
-export class InvalidClaim extends ClaimResult {
-  public type: ClaimStatus = "Invalid"
-  
-  constructor (description: string, public error: Failure) {
-    super(description)
-  }
-
-  when<S>(handler: ClaimResultHandler<S>): S {
-    return handler.invalid(this.error)
-  }
-}
-
-export class SkippedClaim extends ClaimResult {
-  public type: ClaimStatus = "Skipped"
-
-  when<S>(handler: ClaimResultHandler<S>): S {
-    return handler.skipped()
   }
 }

@@ -10,11 +10,9 @@ export class Situation<T> extends ComplexClaim<T> {
   async evaluateSubsumedClaim(claim: Claim<T>, context: T): Promise<ClaimResult> {
     if (this.shouldValidate) {
       const result = await claim.validate(context)
-      result.when({
-        valid: () => {},
-        invalid: () => { this.shouldValidate = false },
-        skipped: () => {}
-      })
+      if (result.type === "invalid-claim") {
+        this.shouldValidate = false
+      }
       return result
     } else {
       return claim.skip()

@@ -4,7 +4,7 @@ import { waitFor } from "./waitFor.js"
 import { Observation } from "./Observation.js"
 import { Presupposition } from "./Presupposition.js"
 import { Script, ScriptContext, scriptContext } from "./Script.js"
-import { ClaimResult } from "./Claim.js"
+import { ClaimResult, summarize } from "./Claim.js"
 import { Action } from "./Action.js"
 import { OrderProvider } from "./OrderProvider.js"
 
@@ -152,17 +152,17 @@ class ExampleRun<T> implements ModeDelegate<T> {
 
     for (let presupposition of script.suppose ?? []) {
       const result = await this.mode.handlePresupposition(this, presupposition)
-      summary = addSummary(summary)(result.summary)
+      summary = addSummary(summary)(summarize(result))
     }
 
     for (let step of script.perform ?? []) {
       const result = await this.mode.handleAction(this, step)
-      summary = addSummary(summary)(result.summary)
+      summary = addSummary(summary)(summarize(result))
     }
 
     for (let observation of this.options.orderProvider.order(script.observe ?? [])) {
       const result = await this.mode.handleObservation(this, observation)
-      summary = addSummary(summary)(result.summary)
+      summary = addSummary(summary)(summarize(result))
     }
 
     return summary
@@ -194,13 +194,9 @@ class ValidateMode<T> implements Mode<T> {
   }
 
   skipRemainingIfInvalid(delegate: ModeDelegate<T>, result: ClaimResult) {
-    result.when({
-      valid: () => {},
-      invalid: () => {
-        delegate.setMode(new SkipMode(this.reporter))
-      },
-      skipped: () => {}
-    })
+    if (result.type === "invalid-claim") {
+      delegate.setMode(new SkipMode(this.reporter))
+    }
   }
 }
 
@@ -251,12 +247,8 @@ class FailFastMode<T> implements Mode<T> {
   }
 
   skipRemainingIfInvalid(delegate: ModeDelegate<T>, result: ClaimResult) {
-    result.when({
-      valid: () => {},
-      invalid: () => {
-        delegate.setMode(new SkipMode(new NullReporter()))
-      },
-      skipped: () => {}
-    })
+    if (result.type === "invalid-claim") {
+      delegate.setMode(new SkipMode(new NullReporter()))
+    }
   }
 }

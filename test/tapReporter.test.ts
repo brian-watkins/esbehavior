@@ -1,7 +1,7 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { Fact } from '../src/Presupposition.js'
-import { ClaimResult, InvalidClaim, SkippedClaim, ValidClaim } from '../src/Claim.js'
+import { ClaimResult, invalidClaim, skippedClaim, validClaim } from '../src/Claim.js'
 import { example, effect, fact, validate, behavior, step, Script, Effect, Step, defaultOrder } from '../src/index.js'
 import { Reporter } from '../src/Reporter.js'
 import { TAPReporter } from '../src/TAPReporter.js'
@@ -92,7 +92,7 @@ const validClaimBehavior = (name: string, writeToReport: (reporter: Reporter, cl
     const writer = new FakeReportWriter()
     const reporter = new TAPReporter(writer)
   
-    writeToReport(reporter, new ValidClaim(claimDescription))
+    writeToReport(reporter, validClaim(claimDescription))
   
     writer.expectLines([
       `ok ${reportedDescription}`
@@ -123,17 +123,17 @@ const validGroupedClaimBehavior = (name: string, writeToReport: (reporter: Repor
     const writer = new FakeReportWriter()
     const reporter = new TAPReporter(writer)
 
-    const nestedOutcome = new ValidClaim("nested outcome")
+    const nestedOutcome = validClaim("nested outcome")
     nestedOutcome.subsumedResults = [
-      new ValidClaim("nested claim 1"),
-      new ValidClaim("nested claim 2")
+      validClaim("nested claim 1"),
+      validClaim("nested claim 2")
     ]
 
-    const outcome = new ValidClaim("some-description")
+    const outcome = validClaim("some-description")
     outcome.subsumedResults = [
-      new ValidClaim("sub-claim 1"),
+      validClaim("sub-claim 1"),
       nestedOutcome,
-      new ValidClaim("sub-claim 2")
+      validClaim("sub-claim 2")
     ]
 
     writeToReport(reporter, outcome)
@@ -196,17 +196,17 @@ const skippedGroupedClaimBehavior = (name: string, writeToReport: (reporter: Rep
     const writer = new FakeReportWriter()
     const reporter = new TAPReporter(writer)
 
-    const nestedOutcome = new SkippedClaim("nested outcome")
+    const nestedOutcome = skippedClaim("nested outcome")
     nestedOutcome.subsumedResults = [
-      new SkippedClaim("nested claim 1"),
-      new SkippedClaim("nested claim 2")
+      skippedClaim("nested claim 1"),
+      skippedClaim("nested claim 2")
     ]
 
-    const outcome = new SkippedClaim("some-description")
+    const outcome = skippedClaim("some-description")
     outcome.subsumedResults = [
-      new SkippedClaim("sub-claim 1"),
+      skippedClaim("sub-claim 1"),
       nestedOutcome,
-      new SkippedClaim("sub-claim 2")
+      skippedClaim("sub-claim 2")
     ]
 
     writeToReport(reporter, outcome)
@@ -240,7 +240,7 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
     const writer = new FakeReportWriter()
     const reporter = new TAPReporter(writer)
 
-    writeToReport(reporter, new InvalidClaim(claimDescription, { expected: "something", actual: "nothing", operator: "equals", stack: "blah" }))
+    writeToReport(reporter, invalidClaim(claimDescription, { expected: "something", actual: "nothing", operator: "equals", stack: "blah" }))
 
     writer.expectLines([
       `not ok ${reportedDescription}`,
@@ -258,7 +258,7 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
     const writer = new FakeReportWriter()
     const reporter = new TAPReporter(writer)
 
-    writeToReport(reporter, new InvalidClaim(claimDescription, {
+    writeToReport(reporter, invalidClaim(claimDescription, {
       expected: "# Behavior: A Sample Behavior\n# Example: Comparing some numbers\n# tests 1\n# pass 1\n# fail 0\n# skip 0",
       actual: "# Behavior: A Sample Behavior\n# Example: Comparing some numbers",
       operator: "equals",
@@ -281,7 +281,7 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
     const writer = new FakeReportWriter()
     const reporter = new TAPReporter(writer)
 
-    writeToReport(reporter, new InvalidClaim(claimDescription, {
+    writeToReport(reporter, invalidClaim(claimDescription, {
       expected: 7,
       actual: [9, 10, 11],
       operator: "equals",
@@ -307,7 +307,7 @@ const invalidClaimBehavior = (name: string, writeToReport: (reporter: Reporter, 
     const error = new Error()
     error.stack = "funny stack"
 
-    writeToReport(reporter, new InvalidClaim(claimDescription, error))
+    writeToReport(reporter, invalidClaim(claimDescription, error))
 
     writer.expectLines([
       `not ok ${reportedDescription}`,
@@ -446,18 +446,18 @@ const invalidGroupedClaimBehavior = (name: string, writeToReport: (reporter: Rep
     const writer = new FakeReportWriter()
     const reporter = new TAPReporter(writer)
 
-    const nestedOutcome = new InvalidClaim("nested outcome", {})
+    const nestedOutcome = invalidClaim("nested outcome", {})
     nestedOutcome.subsumedResults = [
-      new ValidClaim("nested claim 1"),
-      new InvalidClaim("failing nested claim", { expected: "something", actual: "nothing", operator: "equals", stack: "blah" }),
-      new SkippedClaim("skipped nested claim")
+      validClaim("nested claim 1"),
+      invalidClaim("failing nested claim", { expected: "something", actual: "nothing", operator: "equals", stack: "blah" }),
+      skippedClaim("skipped nested claim")
     ]
 
-    const outcome = new InvalidClaim("some-description", {})
+    const outcome = invalidClaim("some-description", {})
     outcome.subsumedResults = [
-      new ValidClaim("sub-claim 1"),
+      validClaim("sub-claim 1"),
       nestedOutcome,
-      new SkippedClaim("sub-claim 2")
+      skippedClaim("sub-claim 2")
     ]
 
     writeToReport(reporter, outcome)
