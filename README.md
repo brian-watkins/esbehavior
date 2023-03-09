@@ -29,7 +29,7 @@ more complicated: nested examples and shared state between examples.
 ### Getting Started
 
 ```
-$ npm install esbehavior
+$ npm install --save-dev esbehavior
 ```
 
 ### The DSL
