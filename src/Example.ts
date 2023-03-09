@@ -33,36 +33,36 @@ export interface ExampleBuilder<T> {
   build(options: ExampleValidationOptions): Example
 }
 
-export interface ExampleSetupBuilder<T> extends ExampleBuilder<T> {
-  description(description: string): ExampleScriptBuilder<T>
-  script(script: Script<T>): ExampleScriptsBuilder<T>
+export interface ExampleSetup<T> extends ExampleBuilder<T> {
+  description(description: string): ExampleScript<T>
+  script(script: Script<T>): ExampleScripts<T>
 }
 
-export interface ExampleScriptBuilder<T> extends ExampleBuilder<T> {
-  script(script: Script<T>): ExampleScriptsBuilder<T>
+export interface ExampleScript<T> extends ExampleBuilder<T> {
+  script(script: Script<T>): ExampleScripts<T>
 }
 
-export interface ExampleScriptsBuilder<T> extends ExampleBuilder<T> {
-  andThen(script: Script<T>): ExampleScriptsBuilder<T>
+export interface ExampleScripts<T> extends ExampleBuilder<T> {
+  andThen(script: Script<T>): ExampleScripts<T>
 }
 
-export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetupBuilder<T>, ExampleScriptBuilder<T>, ExampleScriptsBuilder<T> {
+export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetup<T>, ExampleScript<T>, ExampleScripts<T> {
   private exampleDescription: string | undefined
   private scripts: Array<ScriptContext<T>> = []
 
   constructor(private context: Context<T>) {}
 
-  description(description: string): ExampleScriptBuilder<T> {
+  description(description: string): ExampleScript<T> {
     this.exampleDescription = description
     return this
   }
 
-  script(script: Script<T>): ExampleScriptsBuilder<T> {
+  script(script: Script<T>): ExampleScripts<T> {
     this.scripts = [scriptContext(script)]
     return this
   }
 
-  andThen(script: Script<T>): ExampleScriptsBuilder<T> {
+  andThen(script: Script<T>): ExampleScripts<T> {
     this.scripts.push(scriptContext(script))
     return this
   }
