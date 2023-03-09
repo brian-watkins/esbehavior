@@ -87,7 +87,7 @@ Generally speaking, `Observation` functions make assertions about the state of t
 but you can include assertions in conditions and steps, as well, if it makes
 sense to do so.
 
-Use any assertion library you like (chai, power assert, proclaim, node assert, etc).
+Use any assertion library you like ([great-expectations](https://www.npmjs.com/package/great-expectations), chai, power assert, proclaim, node assert, etc).
 
 esbehavior can run in node or the browser.
 
@@ -130,6 +130,143 @@ a sample for a React app with [behaviors evaluated in a browser](https://github.
 
 
 ## Public API
+
+## Creating a Behavior
+
+### behavior(description: string, examples: ConfigurableExample[]): Behavior
+
+This function generates a behavior with some description and some list of examples.
+
+A `ConfigurableExample` is an `ExampleBuilder` or a function that takes `ExampleOptions`
+and returns an `ExampleBuilder`.
+
+An `ExampleOptions` is an object that exposes `pick` and `skip` methods, which support
+validating a particular example only or ignoring it, respectively.
+
+In practice, this looks like:
+
+```
+behavior("my behavior", [
+  example()
+    .description("example one")
+    .script({ ... }),
+  (m) => m.pick() && example()
+    .description("example two")
+    .script({ ... })
+])
+```
+
+which will only validate `anotherExample`. We suggest following the format here
+(ie, using the `&&` to have the function return the generated `ExampleBuilder`) to
+avoid the need for braces around the example definition or reference with picking
+or skipping it.
+
+
+## Creating an Example
+
+An Example is composed of a script and an optional description. A `Script` describes
+the flow of the example. To describe an example, you may need to *suppose* that
+certain things are true. Next, you may need to *perform* certain actions. Finally, you
+will need to *observe* that certain things are the case. A `Script` is just an object
+that organize all these claims.
+
+In addition to the `Script`, an example may specify a `Context`. The Context is an
+object with an `init` function that generates a value that will be passed to each
+claim in the script. The `Context` is initialized at the start of the example, and
+cleaned up at the end, via an optional `teardown` function (no matter whether any
+claims fail in the meantime). Use a Context value to store any state that the example
+might need. For example, the context might just be a holder that stores values computed
+during one part of the script and observed later. Or, the context might initialize a browser
+context, provide a reference to it throughout the script, and then destroy it at the end.
+
+
+### Context
+
+A context is an object that conforms to this interface:
+
+```
+interface Context<T> {
+  init: () => T | Promise<T>
+  teardown?: (context: T) => void | Promise<void>
+}
+```
+
+The `init` method is called at the start of the example, and the generated value
+is passed to each claim that's part of the script. No matter what happens during the
+script, if the `teardown` method is defined, it will be called at the end of the
+example. If the `init` method or the `teardown` method fails, then the validation
+run will be terminated.
+
+### example(context?: Context): Fluent ExampleBuilder API
+
+Use this function to start the construction of an example. Provide a context, if
+necessary. This function results in an object that progressively exposes the
+API for building an Example. Look in the source for details about the types, but,
+in general, example creation will follow this patter:
+
+```
+example(someContext)
+  .description("my description") // optional
+  .script({
+    suppose: [ ... ], // presuppositions
+    perform: [ ... ], // actions
+    observe: [ ... ], // observations
+  })
+  .andThen({
+    // another script if necessary
+  })
+```
+
+This will result in an `ExampleBuilder` that can then be passed to the `behavior`
+function defined above.
+
+None of the method calls here are necessary, but if you want the resulting example to
+actually be validated, you must provide at least one script.
+
+Use the `andThen` method to add another script to an example. This is useful for
+more complicated examples that might involve observations at multiple stages.
+
+## Creating a Script
+
+A script is an object that conforms to this interface:
+
+```
+interface Script<T> {
+  suppose?: Array<Presupposition<T>>
+  perform?: Array<Action<T>>
+  observe?: Array<Observation<T>>
+}
+```
+
+### fact(description: string, validate: (context: T) => void | Promise\<void\>): Presupposition\<T\>
+
+Create a presupposition for the `suppose` section of a `Script`.
+
+### situation(description: string, presuppositions: Presupposition\<T\>[]): Presupposition\<T\>
+
+Combine presuppositions into a group that has its own description. Useful for describing
+complicated setups.
+
+### step(description: string, validate: (context: T) => void | Promise\<void\>): Action\<T\>
+
+Create an action for the `perform` section of a `Script`.
+
+### function procedure(descripion: string, steps: Action\<T\>[]): Action\<T\>
+
+Combine actions into a group that has its own description. Useful for describing
+complicated actions.
+
+### function effect(description: string, validate: (context: T) => void | Promise\<void\>): Observation\<T\>
+
+Create an observation for the `observe` section of a `Script`.
+
+### function outcome(description: string, effects: Observation\<T\>[]): Observation\<T\>
+
+Combine observations into a group that has its own description. Useful for describing
+complication assertions.
+
+
+## Validating Behaviors
 
 ### validate(behaviors: Behavior[], options: ValidationOptions): Promise(Summary)
 
@@ -192,3 +329,104 @@ You can also use the `defaultOrder()` function to generate an OrderProvider that
 Examples, and Observations in the order given by the test suite files.
 
 If none of these options is suitable, you can provide your own implementation of `OrderProvider`.
+
+
+## Extending esbehavior
+
+esbehavior is a *framework* for writing executable documentation, and this means that it is
+meant to be easy to extend or tailor to your specific use case. Here are some ways to do so:
+
+### Provide your own Example implementation
+
+An `Example` is just an object that conforms to a particular interface that tells
+esbehavior how to validate or skip it. So, you could provide your own implementation
+of the `Example` interface (and associated `ExampleBuilder` interface) to provide
+an entirely distinct way of describing the behaviors of your application.
+
+### Provide your own function that generates an Example
+
+The easiest way to extend esbehavior is to provide your own function that generates
+an example. For example, you could write xunit-style tests with a function like this:
+
+```
+function test(description: string, block: () => void) {
+  return new example()
+    .script({
+      observe: [
+        effect(description, () => {
+          block()
+        })
+      ]
+    })
+}
+```
+
+So the test would look like:
+
+```
+test("some test", () => {
+  const value = computeTheValue()
+  expect(value, is(equalTo(7)))
+})
+```
+
+Or, if you are providing examples of some pure function, you might want to provide
+a function that computes the value of the function, and then a list of observations
+about the result.
+
+In that case, you might write a function that creates an example that uses a `Context`
+that can store a value. Then, as part of the perform step, the function under test
+would be executed and the return value would be stored in the context.
+Then we map the given observation functions and pass the computed value to them:
+
+```
+interface PureFunctionScript<T> {
+  compute: () => T
+  properties: Array<Effect<T>>
+}
+
+class ValueContext<T> {
+  private _value: T | undefined
+
+  set(value: T) {
+    this._value = value
+  }
+
+  get(): T {
+    return this._value!
+  }
+}
+
+export function test<T>(description: string, script: PureFunctionScript<T>) {
+  return example<ValueContext<T>>({ init: () => new ValueContext() })
+    .description(description)
+    .script({
+      perform: [
+        step("the function is executed", (context) => {
+          context.set(script.compute())
+        })
+      ],
+      observe: script.properties.map((property) => {
+        return effect(property.description, (context) => {
+          property.validate(context.get())
+        })
+      })
+    })
+}
+```
+
+Then we could write tests like so:
+
+```
+test("the return value of some pure function is even", {
+  compute: () => someFunction(27),
+  properties: [
+    effect("it is even", (value) => {
+      expect(value).to.be.even
+    })
+  ]
+})
+```
+
+Using this method, you should be able to craft the DSL that makes the most
+sense for describing the behavior of your system.
