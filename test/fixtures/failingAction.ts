@@ -1,5 +1,9 @@
 import { behavior, effect, example, step } from "../../src/index.js"
 
+interface SomthingToChangeTheLineNumbersWhenTranspiled {
+  name: string
+}
+
 export default behavior("failing", [
   example()
     .description("failing action")

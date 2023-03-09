@@ -135,7 +135,7 @@ test("where an invalid claim occurs in an action and the validation should fail 
     ]),
     withBehavior("failing", [
       withExample("failing action", [
-        withInvalidClaim("failingAction.ts:6:6", "something throws an error", {
+        withInvalidClaim("failingAction.ts:10:6", "something throws an error", {
           operator: "equals", expected: "something", actual: "nothing"
         })
       ])

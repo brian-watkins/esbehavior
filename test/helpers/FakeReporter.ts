@@ -92,8 +92,7 @@ function toTestClaim(script: TestScript, result: ClaimResult): TestClaim | TestC
         return new TestClaims(result.description, result.subsumedResults.map(toTestClaimForScript), "invalid")
       } else {
         const location = script.location.split("/").at(-1) ?? "<LOCATION NOT FOUND>"
-        const normalizedScriptLocation = location.substring(0, location.indexOf(":"))
-        return new InvalidClaim(normalizedScriptLocation, result.description, result.error)
+        return new InvalidClaim(location, result.description, result.error)
       }
     case "skipped-claim":
       if (result.subsumedResults.length > 0) {
@@ -174,8 +173,7 @@ export function withInvalidClaims(description: string, claims: Array<TestClaim>)
 }
 
 export function withInvalidClaim(scriptLocation: string, descripion: string, failure: Failure): TestClaim {
-  const normalizedScriptLocation = scriptLocation.substring(0, scriptLocation.indexOf(":"))
-  return new InvalidClaim(normalizedScriptLocation, descripion, failure)
+  return new InvalidClaim(scriptLocation, descripion, failure)
 }
 
 export function withSkippedClaims(description: string, claims: Array<TestClaim>): TestClaims {
