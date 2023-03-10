@@ -162,8 +162,8 @@ This function generates a behavior with some description and some list of exampl
 `Behavior` is just data -- a description and an array of `ConfigurableExample`; this
 function is for convenience.
 
-A `ConfigurableExample` is an `ExampleBuilder` or a function that takes `ExampleOptions`
-and returns an `ExampleBuilder`.
+A `ConfigurableExample` is an `Example` or a function that takes `ExampleOptions`
+and returns an `Example`.
 
 An `ExampleOptions` is an object that exposes `pick` and `skip` methods, which support
 validating a particular example only or ignoring it, respectively.
@@ -182,18 +182,29 @@ behavior("my behavior", [
 ```
 
 which will only validate `anotherExample`. We suggest following the format here
-(ie, using the `&&` to have the function return the generated `ExampleBuilder`) to
+(ie, using the `&&` to have the function return the generated `Example`) to
 avoid the need for braces around the example definition or reference with picking
 or skipping it.
 
 
 ### Creating an Example
 
-An Example is composed of a script and an optional description. A `Script` describes
-the flow of the example. To describe an example, you may need to *suppose* that
+An Example is just an object that implements the following interface:
+
+```
+interface Example {
+  validate(reporter: Reporter, options: ExampleValidationOptions): Promise<Summary>
+  skip(reporter: Reporter, options: ExampleValidationOptions): Promise<Summary>
+}
+```
+
+esbehavior provides a default implementation of `Example` that should serve well
+for most use cases. According to the default implementation, an `Example` is
+composed of a script and an optional description. A `Script` describes
+the flow of the example. First, you may need to *suppose* that
 certain things are true. Next, you may need to *perform* certain actions. Finally, you
 will need to *observe* that certain things are the case. A `Script` is just an object
-that organize all these claims.
+that organizes all these claims.
 
 In addition to the `Script`, an example may specify a `Context`. The Context is an
 object with an `init` function that generates a value that will be passed to each
@@ -222,13 +233,13 @@ script, if the `teardown` method is defined, it will be called at the end of the
 example. If the `init` method or the `teardown` method fails, then the validation
 run will be terminated.
 
-#### example(context?: Context): Fluent ExampleBuilder API
+#### example\<T\>(context?: Context\<T\>): Fluent Example builder API
 
 Use this function to start the construction of an example. Provide a context, if
 necessary. This function results in an object that progressively exposes the
 API for building an Example. If you use Typescript, the auto-completion in your editor
 should help you understand the options; look in the source for details about the types.
-In general, example creation will follow this patter:
+In general, example creation will follow this pattern:
 
 ```
 example(someContext)
@@ -243,7 +254,7 @@ example(someContext)
   })
 ```
 
-This will result in an `ExampleBuilder` that can then be passed to the `behavior`
+This will result in an `Example` that can then be passed to the `behavior`
 function defined above.
 
 None of the method calls here are necessary, but if you want the resulting example to
@@ -264,29 +275,29 @@ interface Script<T> {
 }
 ```
 
-#### fact(description: string, validate: (context: T) => void | Promise\<void\>): Presupposition\<T\>
+#### fact\<T\>(description: string, validate: (context: T) => void | Promise\<void\>): Presupposition\<T\>
 
 Create a presupposition for the `suppose` section of a `Script`.
 
-#### situation(description: string, presuppositions: Presupposition\<T\>[]): Presupposition\<T\>
+#### situation\<T\>(description: string, presuppositions: Presupposition\<T\>[]): Presupposition\<T\>
 
 Combine presuppositions into a group that has its own description. Useful for describing
 complicated setups.
 
-#### step(description: string, validate: (context: T) => void | Promise\<void\>): Action\<T\>
+#### step\<T\>(description: string, validate: (context: T) => void | Promise\<void\>): Action\<T\>
 
 Create an action for the `perform` section of a `Script`.
 
-#### procedure(descripion: string, steps: Action\<T\>[]): Action\<T\>
+#### procedure\<T\>(descripion: string, steps: Action\<T\>[]): Action\<T\>
 
 Combine actions into a group that has its own description. Useful for describing
 complicated actions.
 
-#### effect(description: string, validate: (context: T) => void | Promise\<void\>): Observation\<T\>
+#### effect\<T\>(description: string, validate: (context: T) => void | Promise\<void\>): Observation\<T\>
 
 Create an observation for the `observe` section of a `Script`.
 
-#### outcome(description: string, effects: Observation\<T\>[]): Observation\<T\>
+#### outcome\<T\>(description: string, effects: Observation\<T\>[]): Observation\<T\>
 
 Combine observations into a group that has its own description. Useful for describing
 complication assertions.
@@ -366,8 +377,8 @@ meant to be easy to extend or tailor to your specific use case. Here are some wa
 
 An `Example` is just an object that conforms to a particular interface that tells
 esbehavior how to validate or skip it. So, you could provide your own implementation
-of the `Example` interface (and associated `ExampleBuilder` interface) to provide
-an entirely distinct way of describing the behaviors of your application.
+of the `Example` interface to provide an entirely distinct way of describing the
+behaviors of your application.
 
 #### Provide your own function that generates an Example
 
@@ -447,10 +458,10 @@ Then we could write behaviors like so:
 
 ```
 behavior("some behavior", [
-  test("the return value of some pure function is even", {
+  test("when the argument is odd", {
     compute: () => someFunction(27),
     check: [
-      effect("it is even", (value) => {
+      effect("the return value is even", (value) => {
         expect(value).to.be.even
       })
     ]
