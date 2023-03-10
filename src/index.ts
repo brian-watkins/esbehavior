@@ -23,7 +23,7 @@ export type { Reporter, Writer, Failure } from "./Reporter.js"
 export { StandardReporter } from "./StandardReporter.js"
 export type { StandardReporterOptions } from "./StandardReporter.js"
 export { TAPReporter } from "./TAPReporter.js"
-export type { Example, Context, ExampleBuilder, ExampleSetup, ExampleScript, ExampleScripts } from "./Example.js"
+export type { Example, ExampleValidationOptions, Context, ExampleBuilder, ExampleSetup, ExampleScript, ExampleScripts } from "./Example.js"
 export type { Script } from "./Script.js"
 
 export interface ValidationOptions {
@@ -32,7 +32,7 @@ export interface ValidationOptions {
   failFast?: boolean
 }
 
-export async function validate<T>(behaviors: Array<Behavior>, options: ValidationOptions = {}): Promise<Summary> {
+export async function validate(behaviors: Array<Behavior>, options: ValidationOptions = {}): Promise<Summary> {
   const reporter = options.reporter ?? new StandardReporter()
 
   const validationOptions = {

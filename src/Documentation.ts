@@ -1,5 +1,5 @@
-import { Behavior, ExampleOptions } from "./Behavior.js"
-import { Example, ValidationMode } from "./Example.js"
+import { Behavior, ExampleOptions, ValidationMode } from "./Behavior.js"
+import { Example, ExampleValidationOptions } from "./Example.js"
 import { OrderProvider } from "./OrderProvider.js"
 import { NullReporter, Reporter } from "./Reporter.js"
 import { addBehavior, addSummary, emptySummary, Summary } from "./Summary.js"
@@ -9,10 +9,21 @@ export interface BehaviorValidationOptions {
   orderProvider: OrderProvider
 }
 
+class ExecutableExample {
+  constructor(public mode: ValidationMode, private example: Example, private options: ExampleValidationOptions) {}
+
+  validate(reporter: Reporter): Promise<Summary> {
+    return this.example.validate(reporter, this.options)
+  }
+  skip(reporter: Reporter): Promise<Summary> {
+    return this.example.skip(reporter, this.options)
+  }
+}
+
 export class ValidatableBehavior {
   public hasPickedExamples: boolean = false
   public description: string
-  public examples: Array<Example> = []
+  public examples: Array<ExecutableExample> = []
 
   constructor(behavior: Behavior, options: BehaviorValidationOptions) {
     this.description = behavior.description
@@ -22,7 +33,7 @@ export class ValidatableBehavior {
       if (exampleOptions.validationMode === ValidationMode.Picked) {
         this.hasPickedExamples = true
       }
-      this.examples.push(builder.build({ ...options, validationMode: exampleOptions.validationMode }))
+      this.examples.push(new ExecutableExample(exampleOptions.validationMode, builder.build(), options))
     }
   }
 }
@@ -71,7 +82,7 @@ export class Documentation {
 interface BehaviorValidator {
   start(behavior: ValidatableBehavior): void
   end(behavior: ValidatableBehavior): void
-  validate(behavior: Example): Promise<Summary>
+  validate(example: ExecutableExample): Promise<Summary>
 }
 
 class AllBehaviorsValidator implements BehaviorValidator {
@@ -85,11 +96,11 @@ class AllBehaviorsValidator implements BehaviorValidator {
     this.reporter.endBehavior()
   }
 
-  async validate(example: Example): Promise<Summary> {
-    if (example.validationMode === ValidationMode.Skipped) {
-      return await example.skip(this.reporter)
+  validate(example: ExecutableExample): Promise<Summary> {
+    if (example.mode === ValidationMode.Skipped) {
+      return example.skip(this.reporter)
     } else {
-      return await example.validate(this.reporter)
+      return example.validate(this.reporter)
     }
   }
 }
@@ -111,11 +122,11 @@ class PickedExamplesValidator implements BehaviorValidator {
     }
   }
 
-  async validate(example: Example): Promise<Summary> {
-    if (example.validationMode === ValidationMode.Picked) {
-      return await example.validate(this.reporter)
+  validate(example: ExecutableExample): Promise<Summary> {
+    if (example.mode === ValidationMode.Picked) {
+      return example.validate(this.reporter)
     } else {
-      return await example.skip(this.nullReporter)
+      return example.skip(this.nullReporter)
     }
   }
 }
@@ -127,7 +138,7 @@ class SkipBehaviorsValidator implements BehaviorValidator {
 
   end(behavior: ValidatableBehavior): void {}
 
-  async validate(example: Example): Promise<Summary> {
+  validate(example: ExecutableExample): Promise<Summary> {
     return example.skip(this.nullReporter)
   }
 }
@@ -153,13 +164,13 @@ class FailFastBehaviorValidator implements BehaviorValidator {
       this.skipValidator.start(behavior)
       return
     } 
-      this.validator.end(behavior)
-      this.hasStartedBehavior = false
+    this.validator.end(behavior)
+    this.hasStartedBehavior = false
   }
 
-  async validate(example: Example): Promise<Summary> {
+  async validate(example: ExecutableExample): Promise<Summary> {
     if (this.hasFailed) {
-      return await this.skipValidator.validate(example)
+      return this.skipValidator.validate(example)
     }
 
     const summary = await this.validator.validate(example)

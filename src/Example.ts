@@ -11,13 +11,11 @@ import { OrderProvider } from "./OrderProvider.js"
 export interface ExampleValidationOptions {
   orderProvider: OrderProvider,
   failFast: boolean,
-  validationMode: ValidationMode
 }
 
 export interface Example {
-  validationMode: ValidationMode
-  validate(reporter: Reporter): Promise<Summary>
-  skip(reporter: Reporter): Promise<Summary>
+  validate(reporter: Reporter, options: ExampleValidationOptions): Promise<Summary>
+  skip(reporter: Reporter, options: ExampleValidationOptions): Promise<Summary>
 }
 
 export interface Context<T> {
@@ -25,12 +23,8 @@ export interface Context<T> {
   teardown?: (context: T) => void | Promise<void>
 }
 
-export enum ValidationMode {
-  Normal, Skipped, Picked
-}
-
 export interface ExampleBuilder<T> {
-  build(options: ExampleValidationOptions): Example
+  build(): Example
 }
 
 export interface ExampleSetup<T> extends ExampleBuilder<T> {
@@ -67,28 +61,24 @@ export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetu
     return this
   }
 
-  build(options: ExampleValidationOptions): Example {
-    return new BehaviorExample(this.exampleDescription, this.scripts, this.context, options)
+  build(): Example {
+    return new BehaviorExample(this.exampleDescription, this.scripts, this.context)
   }
 }
 
 export class BehaviorExample<T> implements Example {
-  public validationMode: ValidationMode
+  constructor(private description: string | undefined, private scripts: Array<ScriptContext<T>>, private context: Context<T>) {}
 
-  constructor(private description: string | undefined, private scripts: Array<ScriptContext<T>>, private context: Context<T>, private options: ExampleValidationOptions) {
-    this.validationMode = options.validationMode
-  }
-
-  async validate(reporter: Reporter): Promise<Summary> {
+  async validate(reporter: Reporter, options: ExampleValidationOptions): Promise<Summary> {
     reporter.startExample(this.description)
 
     const context = await waitFor(this.context.init())
 
-    const mode: Mode<T> = this.options.failFast ?
+    const mode: Mode<T> = options.failFast ?
       new FailFastMode(new ValidateMode(reporter, context)) :
       new ValidateMode(reporter, context)
 
-    const run = new ExampleRun<T>(mode, reporter, this.options)
+    const run = new ExampleRun<T>(mode, reporter, options)
 
     const summary = await run.execute(this.scripts)
 
@@ -99,10 +89,10 @@ export class BehaviorExample<T> implements Example {
     return summary
   }
 
-  async skip(reporter: Reporter): Promise<Summary> {
+  async skip(reporter: Reporter, options: ExampleValidationOptions): Promise<Summary> {
     reporter.startExample(this.description)
 
-    const run = new ExampleRun<T>(new SkipMode(reporter), reporter, this.options)
+    const run = new ExampleRun<T>(new SkipMode(reporter), reporter, options)
 
     const summary = await run.execute(this.scripts)
 

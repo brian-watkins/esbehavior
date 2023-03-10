@@ -1,4 +1,8 @@
-import { ExampleBuilder, ValidationMode } from "./Example.js";
+import { ExampleBuilder } from "./Example.js";
+
+export enum ValidationMode {
+  Normal, Skipped, Picked
+}
 
 export class ExampleOptions {
   public validationMode: ValidationMode = ValidationMode.Normal
