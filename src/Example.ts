@@ -23,24 +23,20 @@ export interface Context<T> {
   teardown?: (context: T) => void | Promise<void>
 }
 
-export interface ExampleBuilder<T> {
-  build(): Example
-}
-
-export interface ExampleSetup<T> extends ExampleBuilder<T> {
+export interface ExampleSetup<T> extends Example {
   description(description: string): ExampleScript<T>
   script(script: Script<T>): ExampleScripts<T>
 }
 
-export interface ExampleScript<T> extends ExampleBuilder<T> {
+export interface ExampleScript<T> extends Example {
   script(script: Script<T>): ExampleScripts<T>
 }
 
-export interface ExampleScripts<T> extends ExampleBuilder<T> {
+export interface ExampleScripts<T> extends Example {
   andThen(script: Script<T>): ExampleScripts<T>
 }
 
-export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetup<T>, ExampleScript<T>, ExampleScripts<T> {
+export class BehaviorExampleBuilder<T> implements Example, ExampleSetup<T>, ExampleScript<T>, ExampleScripts<T> {
   private exampleDescription: string | undefined
   private scripts: Array<ScriptContext<T>> = []
 
@@ -61,16 +57,8 @@ export class BehaviorExampleBuilder<T> implements ExampleBuilder<T>, ExampleSetu
     return this
   }
 
-  build(): Example {
-    return new BehaviorExample(this.exampleDescription, this.scripts, this.context)
-  }
-}
-
-export class BehaviorExample<T> implements Example {
-  constructor(private description: string | undefined, private scripts: Array<ScriptContext<T>>, private context: Context<T>) {}
-
   async validate(reporter: Reporter, options: ExampleValidationOptions): Promise<Summary> {
-    reporter.startExample(this.description)
+    reporter.startExample(this.exampleDescription)
 
     const context = await waitFor(this.context.init())
 
@@ -90,7 +78,7 @@ export class BehaviorExample<T> implements Example {
   }
 
   async skip(reporter: Reporter, options: ExampleValidationOptions): Promise<Summary> {
-    reporter.startExample(this.description)
+    reporter.startExample(this.exampleDescription)
 
     const run = new ExampleRun<T>(new SkipMode(reporter), reporter, options)
 

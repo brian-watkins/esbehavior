@@ -1,4 +1,4 @@
-import { Context, ExampleBuilder, BehaviorExampleBuilder, ExampleSetup } from "./Example.js"
+import { Context, BehaviorExampleBuilder, ExampleSetup, Example } from "./Example.js"
 import { Reporter } from "./Reporter.js"
 import { Behavior, ExampleOptions } from "./Behavior.js"
 import { Effect, Observation, Outcome } from "./Observation.js"
@@ -23,7 +23,7 @@ export type { Reporter, Writer, Failure } from "./Reporter.js"
 export { StandardReporter } from "./StandardReporter.js"
 export type { StandardReporterOptions } from "./StandardReporter.js"
 export { TAPReporter } from "./TAPReporter.js"
-export type { Example, ExampleValidationOptions, Context, ExampleBuilder, ExampleSetup, ExampleScript, ExampleScripts } from "./Example.js"
+export type { Example, ExampleValidationOptions, Context, ExampleSetup, ExampleScript, ExampleScripts } from "./Example.js"
 export type { Script } from "./Script.js"
 
 export interface ValidationOptions {
@@ -63,7 +63,7 @@ export function randomOrder(seed?: string): OrderProvider {
   return new SeededRandomizer(seed)
 }
 
-export type ConfigurableExample = ((model: ExampleOptions) => ExampleBuilder<any>) | ExampleBuilder<any>
+export type ConfigurableExample = ((model: ExampleOptions) => Example) | Example
 
 export function behavior(description: string, examples: Array<ConfigurableExample>): Behavior {
   return new Behavior(description, examples)

@@ -27,13 +27,13 @@ export class ValidatableBehavior {
 
   constructor(behavior: Behavior, options: BehaviorValidationOptions) {
     this.description = behavior.description
-    for (const generator of behavior.examples) {
+    for (const configurableExample of behavior.examples) {
       const exampleOptions = new ExampleOptions()
-      const builder = typeof generator === "function" ? generator(exampleOptions) : generator
+      const example = typeof configurableExample === "function" ? configurableExample(exampleOptions) : configurableExample
       if (exampleOptions.validationMode === ValidationMode.Picked) {
         this.hasPickedExamples = true
       }
-      this.examples.push(new ExecutableExample(exampleOptions.validationMode, builder.build(), options))
+      this.examples.push(new ExecutableExample(exampleOptions.validationMode, example, options))
     }
   }
 }
