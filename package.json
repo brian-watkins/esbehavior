@@ -21,7 +21,7 @@
     "test:browser": "ts-node --esm --swc ./test/browserRunner.ts",
     "test:browser:watch": "WATCH=true npm run test:browser",
     "test:one": "ts-node --esm --swc ",
-    "test:types": "tsc --noEmit",
+    "test:types": "tsc --noEmit && tsc --noEmit -p ./test",
     "sample:node": "npm run test:raw --prefix samples/node",
     "sample:react": "npm run test --prefix samples/react"
   },
