@@ -1,5 +1,18 @@
 # Changelog
 
+### 3/12/2023
+
+esbehavior 4.0.0
+
+#### Changed
+- Simplified Example type; Removed ExampleBuilder
+- Reporter consumes JSON serializable values only
+- Improved documentation
+
+#### Fixed
+- Stack traces for errors thrown in facts have proper highlighting
+
+
 ### 12/5/2022
 
 esbehavior 3.1.1
