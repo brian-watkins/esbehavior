@@ -420,8 +420,7 @@ Then we map the given observation functions and pass the computed value to them:
 
 ```
 interface PureFunctionScript<T> {
-  compute: () => T
-  check: Array<Effect<T>>
+  check: Array<Observation<T>>
 }
 
 class ValueContext<T> {
@@ -436,13 +435,13 @@ class ValueContext<T> {
   }
 }
 
-export function test<T>(description: string, script: PureFunctionScript<T>) {
+export function test<T>(description: string, subject: () => T, script: PureFunctionScript<T>) {
   return example<ValueContext<T>>({ init: () => new ValueContext() })
     .description(description)
     .script({
       perform: [
         step("the function is executed", (context) => {
-          context.set(script.compute())
+          context.set(subject())
         })
       ],
       observe: script.check.map((property) => {
@@ -458,8 +457,7 @@ Then we could write behaviors like so:
 
 ```
 behavior("some behavior", [
-  test("when the argument is odd", {
-    compute: () => someFunction(27),
+  test("when the argument is odd", () => someFunction(27), {
     check: [
       effect("the return value is even", (value) => {
         expect(value).to.be.even
