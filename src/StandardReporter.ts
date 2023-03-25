@@ -1,6 +1,5 @@
 import { ClaimResult } from "./Claim.js";
 import { ConsoleWriter } from "./ConsoleWriter.js";
-import { OrderProvider } from "./OrderProvider.js";
 import { Failure, Reporter, Writer } from "./Reporter.js";
 import { Summary } from "./Summary.js";
 import { Timer, TimerFactory } from "./Timer.js";

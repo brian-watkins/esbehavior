@@ -1,7 +1,7 @@
 import * as stackTraceParser from 'stacktrace-parser';
-import { Action } from './Action';
-import { Presupposition } from './Presupposition';
-import { Observation } from './Observation';
+import { Action } from './Action.js';
+import { Presupposition } from './Presupposition.js';
+import { Observation } from './Observation.js';
 
 export interface Script<T> {
   suppose?: Array<Presupposition<T>>
