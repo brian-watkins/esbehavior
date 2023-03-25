@@ -1,5 +1,16 @@
 # Changelog
 
+### 3/25/2023
+
+esbehavior 4.0.1
+
+### Fixed
+- All imports have extensions so types will be imported
+correctly when node16 or nodenext module resolution is used
+in typescript projects
+- Updated simplified example example in README so that types
+will be inferred correctly
+
 ### 3/12/2023
 
 esbehavior 4.0.0
