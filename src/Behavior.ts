@@ -4,6 +4,24 @@ export enum ValidationMode {
   Normal, Skipped, Picked
 }
 
+export type ConfigurableBehavior = ((mode: BehaviorOptions) => Behavior) | Behavior
+
+export type ConfigurableExample = ((model: ExampleOptions) => Example) | Example
+
+export class BehaviorOptions {
+  public validationMode: ValidationMode = ValidationMode.Normal
+
+  pick(): true {
+    this.validationMode = ValidationMode.Picked
+    return true
+  }
+
+  skip(): true {
+    this.validationMode = ValidationMode.Skipped
+    return true
+  }
+}
+
 export class ExampleOptions {
   public validationMode: ValidationMode = ValidationMode.Normal
 
@@ -19,5 +37,5 @@ export class ExampleOptions {
 }
 
 export class Behavior {
-  constructor(public description: string, public examples: Array<((mode: ExampleOptions) => Example) | Example>) {}
+  constructor(public description: string, public examples: Array<ConfigurableExample>) {}
 }

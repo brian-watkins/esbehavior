@@ -1,6 +1,6 @@
 import { Context, BehaviorExampleBuilder, ExampleSetup, Example } from "./Example.js"
 import { Reporter } from "./Reporter.js"
-import { Behavior, ExampleOptions } from "./Behavior.js"
+import { Behavior, BehaviorOptions, ConfigurableBehavior, ConfigurableExample, ExampleOptions } from "./Behavior.js"
 import { Effect, Observation, Outcome } from "./Observation.js"
 import { Fact, Presupposition, Situation } from "./Presupposition.js"
 import { StandardReporter } from "./StandardReporter.js"
@@ -18,6 +18,7 @@ export type { Action } from "./Action.js"
 export type { Claim } from "./Claim.js"
 export type { OrderProvider } from "./OrderProvider.js"
 export { Behavior, ExampleOptions } from "./Behavior.js"
+export type { ConfigurableBehavior, ConfigurableExample } from "./Behavior.js"
 export type { Summary } from "./Summary.js"
 export type { Reporter, Writer, Failure } from "./Reporter.js"
 export { StandardReporter } from "./StandardReporter.js"
@@ -32,7 +33,7 @@ export interface ValidationOptions {
   failFast?: boolean
 }
 
-export async function validate(behaviors: Array<Behavior>, options: ValidationOptions = {}): Promise<Summary> {
+export async function validate(behaviors: Array<ConfigurableBehavior>, options: ValidationOptions = {}): Promise<Summary> {
   const reporter = options.reporter ?? new StandardReporter()
 
   const validationOptions = {
@@ -62,8 +63,6 @@ export function defaultOrder(): OrderProvider {
 export function randomOrder(seed?: string): OrderProvider {
   return new SeededRandomizer(seed)
 }
-
-export type ConfigurableExample = ((model: ExampleOptions) => Example) | Example
 
 export function behavior(description: string, examples: Array<ConfigurableExample>): Behavior {
   return new Behavior(description, examples)

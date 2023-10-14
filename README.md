@@ -139,6 +139,33 @@ behavior("my behavior", [
 ```
 
 
+### Running particular behaviors only; Skipping Behaviors
+
+You can run particular behaviors like so:
+
+```
+(m) => m.pick() && behavior("my behavior", [
+  example()
+    .script({ ... })
+])
+```
+
+This will run only those examples belonging to the picked behaviors, except those that
+are explicitly skipped.
+
+You can skip a behavior like so:
+
+```
+(m) => m.skip() && behavior("my behavior", [
+  example()
+    .script({ ... })
+])
+```
+
+This will skip *all* examples belonging to the skipped behaviors, even those that are
+explicitly picked.
+
+
 ### Source Map Support
 
 Depending on how your behaviors are transpiled or where they are validated (in node or the

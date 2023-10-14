@@ -1,4 +1,4 @@
-import { Behavior, ExampleOptions, ValidationMode } from "./Behavior.js"
+import { Behavior, BehaviorOptions, ConfigurableBehavior, ConfigurableExample, ExampleOptions, ValidationMode } from "./Behavior.js"
 import { Example, ExampleValidationOptions } from "./Example.js"
 import { OrderProvider } from "./OrderProvider.js"
 import { NullReporter, Reporter } from "./Reporter.js"
@@ -10,7 +10,7 @@ export interface BehaviorValidationOptions {
 }
 
 class ExecutableExample {
-  constructor(public mode: ValidationMode, private example: Example, private options: ExampleValidationOptions) {}
+  constructor(public mode: ValidationMode, private example: Example, private options: ExampleValidationOptions) { }
 
   validate(reporter: Reporter): Promise<Summary> {
     return this.example.validate(reporter, this.options)
@@ -25,16 +25,66 @@ export class ValidatableBehavior {
   public description: string
   public examples: Array<ExecutableExample> = []
 
-  constructor(behavior: Behavior, options: BehaviorValidationOptions) {
+  constructor(configurableBehavior: ConfigurableBehavior, options: BehaviorValidationOptions) {
+    const behaviorOptions = new BehaviorOptions()
+    const behavior = typeof configurableBehavior === "function" ? configurableBehavior(behaviorOptions) : configurableBehavior
+
+    const executableExampleFactory = getExecutableExampleFactory(behaviorOptions.validationMode)
+
     this.description = behavior.description
     for (const configurableExample of behavior.examples) {
-      const exampleOptions = new ExampleOptions()
-      const example = typeof configurableExample === "function" ? configurableExample(exampleOptions) : configurableExample
-      if (exampleOptions.validationMode === ValidationMode.Picked) {
-        this.hasPickedExamples = true
-      }
-      this.examples.push(new ExecutableExample(exampleOptions.validationMode, example, options))
+      this.examples.push(executableExampleFactory.generate(configurableExample, options))
     }
+    this.hasPickedExamples = executableExampleFactory.hasPickedExamples
+  }
+}
+
+interface ExecutableExampleFactory {
+  hasPickedExamples: boolean
+  generate(configurableExample: ConfigurableExample, options: BehaviorValidationOptions): ExecutableExample
+}
+
+function getExecutableExampleFactory(mode: ValidationMode): ExecutableExampleFactory {
+  switch (mode) {
+    case ValidationMode.Normal:
+      return new DefaultExecutableExampleFactory()
+    case ValidationMode.Picked:
+      return new PickedByDefaultExecutableExampleFactory()
+    case ValidationMode.Skipped:
+      return new SkipAllExecutableExampleFactory()
+  }
+}
+
+class PickedByDefaultExecutableExampleFactory implements ExecutableExampleFactory {
+  hasPickedExamples: boolean = true
+
+  generate(configurableExample: ConfigurableExample, options: BehaviorValidationOptions): ExecutableExample {
+    const exampleOptions = new ExampleOptions()
+    exampleOptions.pick()
+    const example = typeof configurableExample === "function" ? configurableExample(exampleOptions) : configurableExample
+    return new ExecutableExample(exampleOptions.validationMode, example, options)
+  }
+}
+
+class SkipAllExecutableExampleFactory implements ExecutableExampleFactory {
+  hasPickedExamples: boolean = false
+
+  generate(configurableExample: ConfigurableExample, options: BehaviorValidationOptions): ExecutableExample {
+    const example = typeof configurableExample === "function" ? configurableExample(new ExampleOptions()) : configurableExample
+    return new ExecutableExample(ValidationMode.Skipped, example, options)
+  }
+}
+
+class DefaultExecutableExampleFactory implements ExecutableExampleFactory {
+  hasPickedExamples: boolean = false
+
+  generate(configurableExample: ConfigurableExample, options: BehaviorValidationOptions): ExecutableExample {
+    const exampleOptions = new ExampleOptions()
+    const example = typeof configurableExample === "function" ? configurableExample(exampleOptions) : configurableExample
+    if (exampleOptions.validationMode === ValidationMode.Picked) {
+      this.hasPickedExamples = true
+    }
+    return new ExecutableExample(exampleOptions.validationMode, example, options)
   }
 }
 
@@ -86,8 +136,8 @@ interface BehaviorValidator {
 }
 
 class AllBehaviorsValidator implements BehaviorValidator {
-  constructor (private reporter: Reporter) {}
-  
+  constructor(private reporter: Reporter) { }
+
   start(behavior: ValidatableBehavior): void {
     this.reporter.startBehavior(behavior.description)
   }
@@ -108,8 +158,8 @@ class AllBehaviorsValidator implements BehaviorValidator {
 class PickedExamplesValidator implements BehaviorValidator {
   private nullReporter = new NullReporter()
 
-  constructor (private reporter: Reporter) {}
-  
+  constructor(private reporter: Reporter) { }
+
   start(behavior: ValidatableBehavior): void {
     if (behavior.hasPickedExamples) {
       this.reporter.startBehavior(behavior.description)
@@ -133,10 +183,10 @@ class PickedExamplesValidator implements BehaviorValidator {
 
 class SkipBehaviorsValidator implements BehaviorValidator {
   private nullReporter = new NullReporter()
-  
-  start(behavior: ValidatableBehavior): void {}
 
-  end(behavior: ValidatableBehavior): void {}
+  start(behavior: ValidatableBehavior): void { }
+
+  end(behavior: ValidatableBehavior): void { }
 
   validate(example: ExecutableExample): Promise<Summary> {
     return example.skip(this.nullReporter)
@@ -147,8 +197,8 @@ class FailFastBehaviorValidator implements BehaviorValidator {
   private hasFailed = false
   private hasStartedBehavior = false
   private skipValidator = new SkipBehaviorsValidator()
-  
-  constructor (private validator: BehaviorValidator) {}
+
+  constructor(private validator: BehaviorValidator) { }
 
   start(behavior: ValidatableBehavior): void {
     if (this.hasFailed) {
@@ -163,7 +213,7 @@ class FailFastBehaviorValidator implements BehaviorValidator {
     if (!this.hasStartedBehavior && this.hasFailed) {
       this.skipValidator.start(behavior)
       return
-    } 
+    }
     this.validator.end(behavior)
     this.hasStartedBehavior = false
   }
