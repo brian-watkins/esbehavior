@@ -1,5 +1,17 @@
 # Changelog
 
+### 10/14/2023
+
+esbehavior 4.1.0
+
+### Added
+- Pick or skip behaviors
+
+### Fixed
+- Handle exceptions thrown during a claim that are not
+subclasses of the Error object
+
+
 ### 3/25/2023
 
 esbehavior 4.0.1
