@@ -507,6 +507,21 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
     ])
   })
 
+  test.only(`invalid ${name} with no failure properties`, () => {
+    const writer = new FakeReportWriter()
+    const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
+
+    const err = {}
+
+    writeToReport(reporter, "file://some/file/location.ts:58:19", invalidClaim(description, err))
+
+    writer.expectLines([
+      `  ✖ ${description}`,
+      "    Script Failed",
+      "      file://some/file/location.ts:58:19",
+    ])
+  })
+
   test(`invalid ${name} with duration less than 500ms and above slow claim limit`, () => {
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), slowClaimInMillis: 100 })

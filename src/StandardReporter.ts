@@ -180,7 +180,7 @@ export class StandardReporter implements Reporter {
     }
   }
 
-  writeInvalidClaimResult(result: ClaimResult, error: any, indentLevel: number = 1) {
+  writeInvalidClaimResult(result: ClaimResult, error: Failure, indentLevel: number = 1) {
     let description = this.format.red(this.format.bold(`${fail()} ${result.description}`))
 
     if (this.shouldDisplayDuration(result)) {
@@ -204,9 +204,11 @@ export class StandardReporter implements Reporter {
       }
     } else {
       this.space()
-      const messageLines = error.message.split(/\r?\n/);
-      for (const line of messageLines) {
-        this.writer.writeLine(indent(indentLevel + 1, this.format.red(line)))
+      if (error.message !== undefined) {
+        const messageLines = error.message.split(/\r?\n/);
+        for (const line of messageLines) {
+          this.writer.writeLine(indent(indentLevel + 1, this.format.red(line)))
+        }
       }
       this.space()
       if (error.expected != undefined && error.actual != undefined) {
@@ -214,7 +216,9 @@ export class StandardReporter implements Reporter {
         this.writeDetail("Expected", error.expected, indentLevel + 1)
       }
       this.writeDetail("Script Failed", this.currentScriptLocation, indentLevel + 1)
-      this.writeStack(error.stack, { indentLevel: indentLevel + 1 })
+      if (error.stack !== undefined) {
+        this.writeStack(error.stack, { indentLevel: indentLevel + 1 })
+      }
       this.space()
     }
   }
