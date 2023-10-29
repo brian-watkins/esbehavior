@@ -332,10 +332,17 @@ complication assertions.
 
 ### Validating Behaviors
 
-#### validate(behaviors: Behavior[], options: ValidationOptions): Promise(Summary)
+#### validate(behaviors: ConfigurableBehavior[], options: ValidationOptions): Promise\<Summary\>
 
-This function validates a list of behaviors and returns a promise that resolves to a
-summary. Use the DSL functions to create `Behaviors`.
+This function validates a list of configurable behaviors and returns a promise
+that resolves to a summary. Use the DSL functions to create `Behaviors`.
+
+A `ConfigurableBehavior` is a `Behavior` or a function that takes `BehaviorOptions`
+and returns a `Behavior`.
+
+A `BehaviorOptions` is an object that exposes `pick` and `skip` methods, which support
+validating a particular behavior only or ignoring it, respectively.
+
 
 #### ValidationOptions
 
