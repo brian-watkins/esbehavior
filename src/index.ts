@@ -1,12 +1,12 @@
-import { Context, BehaviorExampleBuilder, ExampleSetup, Example } from "./Example.js"
+import { Context, BehaviorExampleBuilder, ExampleSetup } from "./Example.js"
 import { Reporter } from "./Reporter.js"
-import { Behavior, BehaviorOptions, ConfigurableBehavior, ConfigurableExample, ExampleOptions } from "./Behavior.js"
+import { Behavior, ConfigurableBehavior, ConfigurableExample } from "./Behavior.js"
 import { Effect, Observation, Outcome } from "./Observation.js"
 import { Fact, Presupposition, Situation } from "./Presupposition.js"
 import { StandardReporter } from "./StandardReporter.js"
 import { emptySummary, Summary } from "./Summary.js"
 import { Action, Procedure, Step } from "./Action.js"
-import { Documentation, ValidatableBehavior } from "./Documentation.js"
+import { Documentation, hasPickedExamples } from "./Documentation.js"
 import { TimerFactory } from "./Timer.js"
 import { DefaultOrderProvider, OrderProvider, SeededRandomizer } from "./OrderProvider.js"
 export { Effect, Outcome } from "./Observation.js"
@@ -15,9 +15,9 @@ export { Fact, Situation } from "./Presupposition.js"
 export type { Presupposition } from "./Presupposition.js"
 export { Procedure, Step } from "./Action.js"
 export type { Action } from "./Action.js"
-export type { Claim } from "./Claim.js"
+export type { Claim, ClaimResult } from "./Claim.js"
 export type { OrderProvider } from "./OrderProvider.js"
-export { Behavior, ExampleOptions } from "./Behavior.js"
+export { Behavior, ExampleOptions, BehaviorOptions, ValidationMode } from "./Behavior.js"
 export type { ConfigurableBehavior, ConfigurableExample } from "./Behavior.js"
 export type { Summary } from "./Summary.js"
 export type { Reporter, Writer, Failure } from "./Reporter.js"
@@ -26,6 +26,8 @@ export type { StandardReporterOptions } from "./StandardReporter.js"
 export { TAPReporter } from "./TAPReporter.js"
 export type { Example, ExampleValidationOptions, Context, ExampleSetup, ExampleScript, ExampleScripts } from "./Example.js"
 export type { Script } from "./Script.js"
+export { DocumentationRunner } from "./DocumentationRunner.js"
+export type { BehaviorValidationOptions } from "./DocumentationRunner.js"
 
 export interface ValidationOptions {
   reporter?: Reporter,
@@ -37,18 +39,16 @@ export async function validate(behaviors: Array<ConfigurableBehavior>, options: 
   const reporter = options.reporter ?? new StandardReporter()
 
   const validationOptions = {
+    reporter,
     failFast: options.failFast ?? false,
-    orderProvider: options.order ?? new SeededRandomizer()
+    orderProvider: options.order ?? new SeededRandomizer(),
+    runPickedOnly: hasPickedExamples(behaviors)
   }
 
-  const validatableBehaviors = behaviors.map(b => new ValidatableBehavior(b, validationOptions))
-  const documentation = new Documentation(validatableBehaviors, validationOptions)
-
-  reporter.start(validationOptions.orderProvider.description)
+  const documentation = new Documentation(behaviors, validationOptions)
 
   try {
-    const summary = await documentation.validate(reporter)
-    reporter.end(summary)
+    const summary = await documentation.validate()
     return summary
   } catch (err: any) {
     reporter.terminate(err)

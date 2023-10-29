@@ -1,234 +1,47 @@
-import { Behavior, BehaviorOptions, ConfigurableBehavior, ConfigurableExample, ExampleOptions, ValidationMode } from "./Behavior.js"
-import { Example, ExampleValidationOptions } from "./Example.js"
-import { OrderProvider } from "./OrderProvider.js"
-import { NullReporter, Reporter } from "./Reporter.js"
-import { addBehavior, addSummary, emptySummary, Summary } from "./Summary.js"
+import { BehaviorOptions, ConfigurableBehavior, ExampleOptions, ValidationMode } from "./Behavior.js"
+import { BehaviorValidationOptions, DocumentationRunner } from "./DocumentationRunner.js"
+import { Summary } from "./Summary.js"
 
-export interface BehaviorValidationOptions {
-  failFast: boolean,
-  orderProvider: OrderProvider
-}
-
-class ExecutableExample {
-  constructor(public mode: ValidationMode, private example: Example, private options: ExampleValidationOptions) { }
-
-  validate(reporter: Reporter): Promise<Summary> {
-    return this.example.validate(reporter, this.options)
-  }
-  skip(reporter: Reporter): Promise<Summary> {
-    return this.example.skip(reporter, this.options)
-  }
-}
-
-export class ValidatableBehavior {
-  public hasPickedExamples: boolean = false
-  public description: string
-  public examples: Array<ExecutableExample> = []
-
-  constructor(configurableBehavior: ConfigurableBehavior, options: BehaviorValidationOptions) {
+export function hasPickedExamples(configurableBehaviors: Array<ConfigurableBehavior>): boolean {
+  for (const configurableBehavior of configurableBehaviors) {
     const behaviorOptions = new BehaviorOptions()
-    const behavior = typeof configurableBehavior === "function" ? configurableBehavior(behaviorOptions) : configurableBehavior
+    const behavior = typeof configurableBehavior === "function" ?
+      configurableBehavior(behaviorOptions) :
+      configurableBehavior
+    if (behaviorOptions.validationMode === ValidationMode.Picked) {
+      return true
+    } else if (behaviorOptions.validationMode === ValidationMode.Skipped) {
+      continue
+    }
 
-    const executableExampleFactory = getExecutableExampleFactory(behaviorOptions.validationMode)
-
-    this.description = behavior.description
     for (const configurableExample of behavior.examples) {
-      this.examples.push(executableExampleFactory.generate(configurableExample, options))
+      const exampleOptions = new ExampleOptions()
+      const example = typeof configurableExample === "function" ?
+        configurableExample(exampleOptions) :
+        configurableExample
+      if (exampleOptions.validationMode === ValidationMode.Picked) {
+        return true
+      }
     }
-    this.hasPickedExamples = executableExampleFactory.hasPickedExamples
   }
-}
 
-interface ExecutableExampleFactory {
-  hasPickedExamples: boolean
-  generate(configurableExample: ConfigurableExample, options: BehaviorValidationOptions): ExecutableExample
-}
-
-function getExecutableExampleFactory(mode: ValidationMode): ExecutableExampleFactory {
-  switch (mode) {
-    case ValidationMode.Normal:
-      return new DefaultExecutableExampleFactory()
-    case ValidationMode.Picked:
-      return new PickedByDefaultExecutableExampleFactory()
-    case ValidationMode.Skipped:
-      return new SkipAllExecutableExampleFactory()
-  }
-}
-
-class PickedByDefaultExecutableExampleFactory implements ExecutableExampleFactory {
-  hasPickedExamples: boolean = true
-
-  generate(configurableExample: ConfigurableExample, options: BehaviorValidationOptions): ExecutableExample {
-    const exampleOptions = new ExampleOptions()
-    exampleOptions.pick()
-    const example = typeof configurableExample === "function" ? configurableExample(exampleOptions) : configurableExample
-    return new ExecutableExample(exampleOptions.validationMode, example, options)
-  }
-}
-
-class SkipAllExecutableExampleFactory implements ExecutableExampleFactory {
-  hasPickedExamples: boolean = false
-
-  generate(configurableExample: ConfigurableExample, options: BehaviorValidationOptions): ExecutableExample {
-    const example = typeof configurableExample === "function" ? configurableExample(new ExampleOptions()) : configurableExample
-    return new ExecutableExample(ValidationMode.Skipped, example, options)
-  }
-}
-
-class DefaultExecutableExampleFactory implements ExecutableExampleFactory {
-  hasPickedExamples: boolean = false
-
-  generate(configurableExample: ConfigurableExample, options: BehaviorValidationOptions): ExecutableExample {
-    const exampleOptions = new ExampleOptions()
-    const example = typeof configurableExample === "function" ? configurableExample(exampleOptions) : configurableExample
-    if (exampleOptions.validationMode === ValidationMode.Picked) {
-      this.hasPickedExamples = true
-    }
-    return new ExecutableExample(exampleOptions.validationMode, example, options)
-  }
+  return false
 }
 
 export class Documentation {
-  private someExampleIsPicked: boolean
+  constructor(private behaviors: Array<ConfigurableBehavior>, private options: BehaviorValidationOptions) { }
 
-  constructor(private behaviors: Array<ValidatableBehavior>, private options: BehaviorValidationOptions) {
-    this.someExampleIsPicked = this.behaviors.find(behavior => behavior.hasPickedExamples) !== undefined
-  }
+  async validate(): Promise<Summary> {
+    const runner = new DocumentationRunner(this.options)
 
-  async validate(reporter: Reporter): Promise<Summary> {
-    return this.execute(this.getValidator(reporter))
-  }
-
-  private async execute(validator: BehaviorValidator): Promise<Summary> {
-    let summary = emptySummary()
+    runner.start()
 
     for (const behavior of this.options.orderProvider.order(this.behaviors)) {
-      summary = addBehavior(summary)
-
-      validator.start(behavior)
-      for (const example of this.options.orderProvider.order(behavior.examples)) {
-        const behaviorSummary = await validator.validate(example)
-        summary = addSummary(summary)(behaviorSummary)
-      }
-      validator.end(behavior)
+      await runner.run(behavior, this.options)
     }
 
-    return summary
-  }
+    runner.end()
 
-  private getValidator(reporter: Reporter): BehaviorValidator {
-    let validator = this.someExampleIsPicked ?
-      new PickedExamplesValidator(reporter) :
-      new AllBehaviorsValidator(reporter)
-
-    if (this.options.failFast) {
-      return new FailFastBehaviorValidator(validator)
-    }
-
-    return validator
-  }
-}
-
-interface BehaviorValidator {
-  start(behavior: ValidatableBehavior): void
-  end(behavior: ValidatableBehavior): void
-  validate(example: ExecutableExample): Promise<Summary>
-}
-
-class AllBehaviorsValidator implements BehaviorValidator {
-  constructor(private reporter: Reporter) { }
-
-  start(behavior: ValidatableBehavior): void {
-    this.reporter.startBehavior(behavior.description)
-  }
-
-  end(behavior: ValidatableBehavior): void {
-    this.reporter.endBehavior()
-  }
-
-  validate(example: ExecutableExample): Promise<Summary> {
-    if (example.mode === ValidationMode.Skipped) {
-      return example.skip(this.reporter)
-    } else {
-      return example.validate(this.reporter)
-    }
-  }
-}
-
-class PickedExamplesValidator implements BehaviorValidator {
-  private nullReporter = new NullReporter()
-
-  constructor(private reporter: Reporter) { }
-
-  start(behavior: ValidatableBehavior): void {
-    if (behavior.hasPickedExamples) {
-      this.reporter.startBehavior(behavior.description)
-    }
-  }
-
-  end(behavior: ValidatableBehavior): void {
-    if (behavior.hasPickedExamples) {
-      this.reporter.endBehavior()
-    }
-  }
-
-  validate(example: ExecutableExample): Promise<Summary> {
-    if (example.mode === ValidationMode.Picked) {
-      return example.validate(this.reporter)
-    } else {
-      return example.skip(this.nullReporter)
-    }
-  }
-}
-
-class SkipBehaviorsValidator implements BehaviorValidator {
-  private nullReporter = new NullReporter()
-
-  start(behavior: ValidatableBehavior): void { }
-
-  end(behavior: ValidatableBehavior): void { }
-
-  validate(example: ExecutableExample): Promise<Summary> {
-    return example.skip(this.nullReporter)
-  }
-}
-
-class FailFastBehaviorValidator implements BehaviorValidator {
-  private hasFailed = false
-  private hasStartedBehavior = false
-  private skipValidator = new SkipBehaviorsValidator()
-
-  constructor(private validator: BehaviorValidator) { }
-
-  start(behavior: ValidatableBehavior): void {
-    if (this.hasFailed) {
-      this.skipValidator.start(behavior)
-      return
-    }
-    this.validator.start(behavior)
-    this.hasStartedBehavior = true
-  }
-
-  end(behavior: ValidatableBehavior): void {
-    if (!this.hasStartedBehavior && this.hasFailed) {
-      this.skipValidator.start(behavior)
-      return
-    }
-    this.validator.end(behavior)
-    this.hasStartedBehavior = false
-  }
-
-  async validate(example: ExecutableExample): Promise<Summary> {
-    if (this.hasFailed) {
-      return this.skipValidator.validate(example)
-    }
-
-    const summary = await this.validator.validate(example)
-
-    if (summary.invalid > 0) {
-      this.hasFailed = true
-    }
-
-    return summary
+    return runner.getSummary()
   }
 }
