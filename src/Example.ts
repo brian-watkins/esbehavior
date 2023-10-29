@@ -119,7 +119,7 @@ class ExampleRun<T> implements ModeDelegate<T> {
         this.mode = new SkipMode(this.reporter)
       }
 
-      summary = addSummary(summary)(scriptSummary)
+      summary = addSummary(summary, scriptSummary)
     }
 
     return summary
@@ -130,17 +130,17 @@ class ExampleRun<T> implements ModeDelegate<T> {
 
     for (let presupposition of script.suppose ?? []) {
       const result = await this.mode.handlePresupposition(this, presupposition)
-      summary = addSummary(summary)(summarize(result))
+      summary = addSummary(summary, summarize(result))
     }
 
     for (let step of script.perform ?? []) {
       const result = await this.mode.handleAction(this, step)
-      summary = addSummary(summary)(summarize(result))
+      summary = addSummary(summary, summarize(result))
     }
 
     for (let observation of this.options.orderProvider.order(script.observe ?? [])) {
       const result = await this.mode.handleObservation(this, observation)
-      summary = addSummary(summary)(summarize(result))
+      summary = addSummary(summary, summarize(result))
     }
 
     return summary

@@ -38,7 +38,7 @@ export class DocumentationRunner {
 
     for (const configurableExample of options.orderProvider.order(behavior.examples)) {
       const exampleSummary = await runner.run(configurableExample, options)
-      this.summary = addSummary(this.summary)(exampleSummary)
+      this.summary = addSummary(this.summary, exampleSummary)
     }
 
     runner.end(behavior)

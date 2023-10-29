@@ -1,5 +1,5 @@
 import { Failure } from "./Reporter.js"
-import { addInvalid, addSkipped, addValid, combineSummaries, emptySummary, Summary } from "./Summary.js"
+import { addInvalid, addSkipped, addSummary, addValid, emptySummary, Summary } from "./Summary.js"
 import { Timer } from "./Timer.js"
 import { waitFor } from "./waitFor.js"
 
@@ -130,7 +130,7 @@ export function summarize(result: ClaimResult): Summary {
   if (result.subsumedResults.length > 0) {
     return result.subsumedResults
       .map(result => summarize(result))
-      .reduce(combineSummaries, emptySummary())
+      .reduce(addSummary, emptySummary())
   } else {
     switch (result.type) {
       case "valid-claim": return addValid(emptySummary())

@@ -31,16 +31,12 @@ export function addSkipped(results: Summary): Summary {
   return { ...results, skipped: results.skipped + 1 }
 }
 
-export function addSummary(current: Summary): (next: Summary) => Summary {
-  return (next) => ({
+export function addSummary(current: Summary, next: Summary): Summary {
+  return {
     behaviors: current.behaviors + next.behaviors,
     examples: current.examples + next.examples,
     valid: current.valid + next.valid,
     invalid: current.invalid + next.invalid,
     skipped: current.skipped + next.skipped
-  })
-}
-
-export function combineSummaries(current: Summary, next: Summary): Summary {
-  return addSummary(current)(next)
+  }
 }
