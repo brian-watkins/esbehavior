@@ -1,5 +1,17 @@
 # Changelog
 
+### 10/29/2023
+
+esbehavior 4.2.0
+
+### Added
+- Expose validation logic via DocumentRunner so that it's easier to build
+alternative runners
+- Expose some previously unexposed types that alternative runners would
+typically need
+- Add exports field to specify esbehavior entrypoint
+
+
 ### 10/14/2023
 
 esbehavior 4.1.0
