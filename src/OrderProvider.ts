@@ -1,4 +1,4 @@
-import seedrandom from "seedrandom"
+import { RandomGenerator, unsafeUniformIntDistribution, xoroshiro128plus } from "pure-rand"
 
 export interface OrderProvider {
   description: string
@@ -14,33 +14,52 @@ export class DefaultOrderProvider implements OrderProvider {
 }
 
 export class SeededRandomizer implements OrderProvider {
-  private generator: seedrandom.PRNG
-  public seed: string
+  private generator: RandomGenerator
+  private _seed: number
 
   constructor (seed?: string) {
-    this.seed = seed ? seed : Math.random().toString(32).substring(2).toUpperCase()
-    this.generator = seedrandom(this.seed)
+    this._seed = seed ? this.toNumericSeed(seed) : this.generateNumericSeed();
+    this.generator = xoroshiro128plus(this._seed)
+  }
+
+  private generateNumericSeed(): number {
+    return Date.now() ^ (Math.random() * 0x100000000)
+  }
+
+  private toNumericSeed(seed: string): number {
+    if (seed[0] === 'X') {
+      return parseInt(seed.substring(1), 32) * -1
+    } else {
+      return parseInt(seed.substring(1), 32)
+    }
+  }
+
+  get seed(): string {
+    if (this._seed < 0) {
+      return `X${this._seed.toString(32).substring(1).toUpperCase()}`
+    } else {
+      return `Y${this._seed.toString(32).toUpperCase()}`
+    }
   }
 
   get description(): string {
     return `Randomized ordering with seed: ${this.seed}`
   }
 
+  private nextValue(min: number, max: number): number {
+    return unsafeUniformIntDistribution(min, max, this.generator)
+  }
+
   order<T>(items: Array<T>): Array<T> {
     let randomItems: Array<T> = items.slice()
 
-    if (randomItems.length == 2) {
-      if (this.generator() > 0.5) return randomItems
-    }
-
-    let remainingSize = randomItems.length
-    while (remainingSize > 0) {
-      remainingSize = remainingSize - 1
-      const randomIndex = Math.floor(this.generator() * remainingSize)
+    // Fisher-Yates Suffle
+    for (let i = 0; i < randomItems.length; i++) {
+      const randomIndex = this.nextValue(i, randomItems.length - 1)
       const randomItem = randomItems[randomIndex]
-      const item = randomItems[remainingSize]
-      randomItems[remainingSize] = randomItem
-      randomItems[randomIndex] = item  
+      const current = randomItems[i]
+      randomItems[i] = randomItem
+      randomItems[randomIndex] = current
     }
 
     return randomItems;

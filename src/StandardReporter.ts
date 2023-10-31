@@ -3,7 +3,7 @@ import { ConsoleWriter } from "./ConsoleWriter.js";
 import { Failure, Reporter, Writer } from "./Reporter.js";
 import { Summary } from "./Summary.js";
 import { Timer, TimerFactory } from "./Timer.js";
-import { prettyPrint } from "@base2/pretty-print-object";
+import stringifyObject from "stringify-object"
 
 export interface StandardReporterOptions {
   writer?: Writer
@@ -273,7 +273,7 @@ export class StandardReporter implements Reporter {
 }
 
 function stringify(value: any): string {
-  return prettyPrint(value, {
+  return stringifyObject(value, {
     indent: '  ',
     singleQuotes: false
   })
