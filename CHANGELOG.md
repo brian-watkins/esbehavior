@@ -1,5 +1,13 @@
 # Changelog
 
+### 10/31/2023
+
+esbehavior 4.2.1
+
+### Changed
+- All dependencies now have esmodule versions
+
+
 ### 10/29/2023
 
 esbehavior 4.2.0
