@@ -242,12 +242,13 @@ export class StandardReporter implements Reporter {
   }
 
   writeStack(stack: string, { indentLevel }: { indentLevel: number } = { indentLevel: 2 }) {
+    const currentFile = getFileNameFromScriptLocation(this.currentScriptLocation)
     stack
       .split("\n")
       .map(line => line.trim())
       .filter((line) => line.startsWith("at"))
       .forEach(line => {
-        if (line.includes("Fact.execute") || line.includes("Step.execute") || line.includes("Effect.execute")) {
+        if (line.includes(currentFile)) {
           this.writer.writeLine(indent(indentLevel, this.format.cyan(line)))
         } else {
           this.writer.writeLine(indent(indentLevel, this.format.dim(line)))
@@ -270,6 +271,12 @@ export class StandardReporter implements Reporter {
   space() {
     this.writer.writeLine("")
   }
+}
+
+function getFileNameFromScriptLocation(location: string): string {
+  const lastToken = location.split("/").pop()
+  if (!lastToken) return ""
+  return lastToken.substring(0, lastToken.indexOf(":")) ?? ""
 }
 
 function stringify(value: any): string {
