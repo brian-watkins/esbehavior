@@ -1,5 +1,14 @@
 # Changelog
 
+### 11/6/2023
+
+esbehavior 4.2.2
+
+### Fixed
+- Better highlighting of relevant lines in stack traces
+- Invalid claim error objects are serializable by the reporter
+
+
 ### 10/31/2023
 
 esbehavior 4.2.1
