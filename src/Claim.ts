@@ -10,8 +10,8 @@ export interface Claim<T> {
 }
 
 export class SimpleClaim<T> implements Claim<T> {
-  constructor(public description: string, private execute: (context: T) => void | Promise<void>, private timer: Timer) {}
-  
+  constructor(public description: string, private execute: (context: T) => void | Promise<void>, private timer: Timer) { }
+
   async validate(context: T): Promise<ClaimResult> {
     let claimResult: ClaimResult
 
@@ -20,9 +20,9 @@ export class SimpleClaim<T> implements Claim<T> {
     try {
       await waitFor(this.execute(context))
       claimResult = validClaim(this.description)
-    } catch (failure: any) {  
+    } catch (failure: any) {
       claimResult = invalidClaim(this.description, failure)
-    } 
+    }
 
     this.timer.stop()
 
@@ -37,7 +37,7 @@ export class SimpleClaim<T> implements Claim<T> {
 }
 
 export abstract class ComplexClaim<T> implements Claim<T> {
-  constructor(public description: string, private claims: Array<Claim<T>>) {}
+  constructor(public description: string, private claims: Array<Claim<T>>) { }
 
   abstract evaluateSubsumedClaim(claim: Claim<T>, context: T): Promise<ClaimResult>
 
@@ -101,13 +101,35 @@ export interface InvalidClaim {
   subsumedResults: Array<ClaimResult>
 }
 
-export function invalidClaim(description: string, error: Failure): InvalidClaim {
+export function invalidClaim(description: string, failure: any): InvalidClaim {
   return {
     type: "invalid-claim",
     description,
-    error,
+    error: serializableFailure(failure),
     subsumedResults: []
   }
+}
+
+function serializableFailure(error: any): Failure {
+  const failure: Failure = {}
+
+  if (error.message) {
+    failure.message = error.message
+  }
+  if (error.operator) {
+    failure.operator = error.operator
+  }
+  if (error.expected) {
+    failure.expected = error.expected
+  }
+  if (error.actual) {
+    failure.actual = error.actual
+  }
+  if (error.stack) {
+    failure.stack = error.stack
+  }
+
+  return failure
 }
 
 export type ClaimResult = ValidClaim | InvalidClaim | SkippedClaim
