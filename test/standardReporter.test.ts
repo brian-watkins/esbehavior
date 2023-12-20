@@ -508,7 +508,7 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
     ])
   })
 
-  test.only(`invalid ${name} with no failure properties`, () => {
+  test(`invalid ${name} with no failure properties`, () => {
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
@@ -556,9 +556,9 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
     const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), slowClaimInMillis: 100 })
 
     const err = {
-      message: "expected true to be false",
-      expected: false,
-      actual: true,
+      message: "expected something to be nothing",
+      expected: undefined,
+      actual: "something",
       stack: "some message\n   at some.line.of.code\n   at another.line.of.code"
     }
     const claim = invalidClaim(description, err)
@@ -567,11 +567,11 @@ const invalidClaimBehavior = (name: string, writeToReport: <T>(reporter: Reporte
 
     writer.expectLines([
       `  ✖ ${description} (1.24s)`,
-      "    expected true to be false",
+      "    expected something to be nothing",
       "    Actual",
-      "      true",
+      "      something",
       "    Expected",
-      "      false",
+      "      undefined",
       "    Script Failed",
       "      file://some/file/location.ts:58:19",
       "    at some.line.of.code",
@@ -627,22 +627,27 @@ invalidClaimBehavior("observation", (reporter, scriptLocation, claimResult) => {
 }, "some observation")
 
 
-const errorHighlightBehavior = function (name: string, expectedHighlightedLines: number, generateInvalidClaim: () => Promise<ClaimResult>, writeToReport: <T>(reporter: Reporter, scriptLocation: string, claimResult: ClaimResult) => void) {
+const errorHighlightBehavior = function (name: string, expectedHighlightedLines: number, generateInvalidClaim: (filename: string) => Promise<ClaimResult>, writeToReport: <T>(reporter: Reporter, scriptLocation: string, claimResult: ClaimResult) => void) {
   test(`highlighting ${name} function call in stack`, async () => {
     const writer = new FakeReportWriter()
     const reporter = new StandardReporter({ writer, formatter: new FakeColorFormatter(), slowClaimInMillis: 100 })
 
-    const result = await generateInvalidClaim()
+    const result = await generateInvalidClaim("file://some/file/myTest.test.ts")
 
-    writeToReport(reporter, "file://some/file/location.ts:58:19", result)
+    writeToReport(reporter, "file://some/file/myTest.test.ts:58:19", result)
 
     assert.equal(writer.logLines.filter((line) => line.includes("[highlight")).length, expectedHighlightedLines, "it highlights the expected number of lines in the stack trace")
   })
 }
 
-errorHighlightBehavior("condition", 1, () => {
+errorHighlightBehavior("condition", 1, (filename) => {
   const fact = new Fact("some fact", () => {
-    assert.ok(false)
+    throw {
+      message: "expected true to be false",
+      expected: false,
+      actual: true,
+      stack: `some message\n   at Effect.execute (${filename}:669:12\n   at another.line.of.code`
+    }
   }, new FakeTimer(80))
   return fact.validate(null)
 }, (reporter, scriptLocation, claimResult) => {
@@ -651,9 +656,14 @@ errorHighlightBehavior("condition", 1, () => {
   reporter.endScript()
 })
 
-errorHighlightBehavior("step", 1, () => {
+errorHighlightBehavior("step", 1, (filename) => {
   const step = new Step("some step", () => {
-    assert.ok(false)
+    throw {
+      message: "expected true to be false",
+      expected: false,
+      actual: true,
+      stack: `some message\n   at Effect.execute (${filename}:669:12\n   at another.line.of.code`
+    }
   }, new FakeTimer(80))
   return step.validate(null)
 }, (reporter, scriptLocation, claimResult) => {
@@ -662,9 +672,14 @@ errorHighlightBehavior("step", 1, () => {
   reporter.endScript()
 })
 
-errorHighlightBehavior("effect", 1, () => {
+errorHighlightBehavior("effect", 2, (filename) => {
   const effect = new Effect("some effect", () => {
-    assert.ok(false)
+    throw {
+      message: "expected true to be false",
+      expected: false,
+      actual: true,
+      stack: `some message\n   at Effect.execute (${filename}:669:12)\n   at another.line.of.code (${filename}:720)`
+    }
   }, new FakeTimer(80))
   return effect.validate(null)
 }, (reporter, scriptLocation, claimResult) => {

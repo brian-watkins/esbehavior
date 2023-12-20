@@ -113,19 +113,19 @@ export function invalidClaim(description: string, failure: any): InvalidClaim {
 function serializableFailure(error: any): Failure {
   const failure: Failure = {}
 
-  if (error.message) {
+  if ("message" in error) {
     failure.message = error.message
   }
-  if (error.operator) {
+  if ("operator" in error) {
     failure.operator = error.operator
   }
-  if (error.expected) {
+  if ("expected" in error) {
     failure.expected = error.expected
   }
-  if (error.actual) {
+  if ("actual" in error) {
     failure.actual = error.actual
   }
-  if (error.stack) {
+  if ("stack" in error) {
     failure.stack = error.stack
   }
 
