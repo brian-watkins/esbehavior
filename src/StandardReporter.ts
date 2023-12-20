@@ -89,7 +89,9 @@ export class StandardReporter implements Reporter {
       this.space()
     }
     if (error.message) {
-      this.writer.writeLine(indent(1, this.format.red(error.message)))
+      forEachLine(error.message, (line) => {
+        this.writer.writeLine(indent(1, this.format.red(line))) 
+      })
       this.space()
     }
     if (error.stack) {
@@ -205,13 +207,12 @@ export class StandardReporter implements Reporter {
     } else {
       this.space()
       if (error.message !== undefined) {
-        const messageLines = error.message.split(/\r?\n/);
-        for (const line of messageLines) {
+        forEachLine(error.message, (line) => {
           this.writer.writeLine(indent(indentLevel + 1, this.format.red(line)))
-        }
+        })
       }
       this.space()
-      if (error.expected != undefined && error.actual != undefined) {
+      if ("expected" in error && "actual" in error) {
         this.writeDetail("Actual", error.actual, indentLevel + 1)
         this.writeDetail("Expected", error.expected, indentLevel + 1)
       }
@@ -232,10 +233,9 @@ export class StandardReporter implements Reporter {
 
   writeDetailMessage(detail: any, indentLevel: number = 2) {
     if (typeof detail === "string") {
-      const detailLines = detail.split(/\r?\n/);
-      for (const line of detailLines) {
+      forEachLine(detail, (line) => {
         this.writer.writeLine(indent(indentLevel, line))
-      }
+      })
     } else {
       this.writeDetailMessage(stringify(detail), indentLevel)
     }
@@ -284,6 +284,13 @@ function stringify(value: any): string {
     indent: '  ',
     singleQuotes: false
   })
+}
+
+function forEachLine(message: string, handler: (line: string) => void) {
+  const lines = message.split(/\r?\n/);
+  for (const line of lines) {
+    handler(line)
+  }
 }
 
 class ANSIFormatter implements Formatter {

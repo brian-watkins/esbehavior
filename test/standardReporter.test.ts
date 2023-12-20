@@ -218,7 +218,7 @@ test("when the validation run is terminated", () => {
   const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
   const error = {
-    message: "some failure",
+    message: "some failure message\nwith multiple lines",
     stack: "some stack trace\r\nat some.line.of.code\r\nat another.line.of.code"
   }
 
@@ -228,7 +228,8 @@ test("when the validation run is terminated", () => {
   writer.expectLines([
     "Failed to validate behaviors!",
     "Default ordering",
-    "  some failure",
+    "  some failure message",
+    "  with multiple lines",
     "  at some.line.of.code",
     "  at another.line.of.code"
   ])
