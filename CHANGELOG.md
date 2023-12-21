@@ -1,5 +1,14 @@
 # Changelog
 
+### 12/20/2023
+
+esbehavior 4.2.3
+
+### Fixed
+- Format termination errors with multiline messages
+- Properly serialize errors with falsey properties
+
+
 ### 11/6/2023
 
 esbehavior 4.2.2
