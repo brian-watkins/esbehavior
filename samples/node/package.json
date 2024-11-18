@@ -6,20 +6,19 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test:raw": "ts-node --swc --esm ./specs/runner.ts",
+    "test:raw": "tsx ./specs/runner.ts",
     "test:tap": "npm run test:raw | tap-difflet"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@swc/core": "^1.3.95",
     "@types/proclaim": "^3.6.2",
     "esbehavior": "file:../..",
     "globby": "^11.0.3",
     "proclaim": "^3.6.0",
     "tap-difflet": "^0.7.2",
-    "ts-node": "^10.9.1",
+    "tsx": "^4.19.2",
     "typescript": "^4.6.2"
   }
 }
