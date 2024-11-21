@@ -1,4 +1,4 @@
-import { Writer } from "./Reporter.js"
+import { Writer } from "./index.js"
 
 export class ConsoleWriter implements Writer {
   writeLine(message: string) {

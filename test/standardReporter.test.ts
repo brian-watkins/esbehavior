@@ -1,9 +1,9 @@
 import { test } from 'uvu'
 import * as assert from 'uvu/assert'
 import { FakeReportWriter } from './helpers/FakeReportWriter.js'
-import { Formatter, StandardReporter } from '../src/StandardReporter.js'
+import { Formatter, StandardReporter } from '../src/reporter/StandardReporter.js'
 import { behavior, example, validate, Fact, Step, Effect, defaultOrder } from '../src/index.js'
-import { Failure, Reporter } from '../src/Reporter.js'
+import { Failure, Reporter } from '../src/reporter/index.js'
 import { ClaimResult, invalidClaim, skippedClaim, validClaim } from '../src/Claim.js'
 import { FakeTimer, fakeTimer } from './helpers/FakeTimer.js'
 

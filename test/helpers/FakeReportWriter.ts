@@ -1,4 +1,4 @@
-import { Writer } from "../../src/Reporter";
+import { Writer } from "../../src/reporter/index.js";
 import * as assert from 'uvu/assert'
 
 export class FakeReportWriter implements Writer {

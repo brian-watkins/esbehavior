@@ -1,8 +1,8 @@
-import { ClaimResult } from "./Claim.js";
+import { ClaimResult } from "../Claim.js";
 import { ConsoleWriter } from "./ConsoleWriter.js";
-import { Failure, Reporter, Writer } from "./Reporter.js";
-import { Summary } from "./Summary.js";
-import { Timer, TimerFactory } from "./Timer.js";
+import { Failure, Reporter, Writer } from "./index.js";
+import { Summary } from "../Summary.js";
+import { Timer, TimerFactory } from "../Timer.js";
 import stringifyObject from "stringify-object"
 
 export interface StandardReporterOptions {

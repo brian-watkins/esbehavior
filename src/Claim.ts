@@ -1,4 +1,4 @@
-import { Failure } from "./Reporter.js"
+import { Failure } from "./reporter/index.js"
 import { addInvalid, addSkipped, addSummary, addValid, emptySummary, Summary } from "./Summary.js"
 import { Timer } from "./Timer.js"
 import { waitFor } from "./waitFor.js"

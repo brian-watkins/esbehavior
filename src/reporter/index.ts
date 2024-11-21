@@ -1,5 +1,5 @@
-import { ClaimResult } from "./Claim.js"
-import { Summary } from "./Summary.js"
+import { ClaimResult } from "../Claim.js"
+import { Summary } from "../Summary.js"
 
 export interface Writer {
   writeLine(message: string): void

@@ -1,4 +1,4 @@
-import { NullReporter, Reporter } from "./Reporter.js"
+import { NullReporter, Reporter } from "./reporter/index.js"
 import { addExample, addSummary, emptySummary, Summary } from "./Summary.js"
 import { waitFor } from "./waitFor.js"
 import { Observation } from "./Observation.js"

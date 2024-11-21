@@ -1,5 +1,5 @@
 import { ClaimResult } from "../../src/Claim.js";
-import { Failure, Reporter } from "../../src/Reporter.js";
+import { Failure, Reporter } from "../../src/reporter/index.js";
 import { Summary } from "../../src/Summary.js";
 import * as assert from 'uvu/assert'
 

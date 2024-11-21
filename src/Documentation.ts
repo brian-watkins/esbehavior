@@ -1,6 +1,7 @@
 import { BehaviorOptions, ConfigurableBehavior, ExampleOptions, ValidationMode } from "./Behavior.js"
-import { BehaviorValidationOptions, DocumentationRunner } from "./DocumentationRunner.js"
-import { Summary } from "./Summary.js"
+import { BehaviorValidationOptions } from "./behaviorRunner/index.js"
+import { runBehavior, ValidationStatus } from "./behaviorRunner/run.js"
+import { addSummary, emptySummary, Summary } from "./Summary.js"
 
 export function hasPickedExamples(configurableBehaviors: Array<ConfigurableBehavior>): boolean {
   for (const configurableBehavior of configurableBehaviors) {
@@ -29,19 +30,25 @@ export function hasPickedExamples(configurableBehaviors: Array<ConfigurableBehav
 }
 
 export class Documentation {
+  private validationStatus: ValidationStatus = ValidationStatus.VALID
+
   constructor(private behaviors: Array<ConfigurableBehavior>, private options: BehaviorValidationOptions) { }
 
   async validate(): Promise<Summary> {
-    const runner = new DocumentationRunner(this.options)
+    this.options.reporter.start(this.options.orderProvider.description)
 
-    runner.start()
-
+    let summary = emptySummary()
     for (const behavior of this.options.orderProvider.order(this.behaviors)) {
-      await runner.run(behavior, this.options)
+      const behaviorSummary = await runBehavior(this.options, this.validationStatus, behavior)
+      summary = addSummary(summary, behaviorSummary)
+
+      if (summary.invalid > 0) {
+        this.validationStatus = ValidationStatus.INVALID
+      }
     }
 
-    runner.end()
+    this.options.reporter.end(summary)
 
-    return runner.getSummary()
+    return summary
   }
 }

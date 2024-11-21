@@ -1,7 +1,7 @@
-import { ClaimResult } from "./Claim.js"
+import { ClaimResult } from "../Claim.js"
 import { ConsoleWriter } from "./ConsoleWriter.js"
-import { Failure, Reporter, Writer } from "./Reporter.js"
-import { Summary } from "./Summary.js"
+import { Failure, Reporter, Writer } from "./index.js"
+import { Summary } from "../Summary.js"
 
 export class TAPReporter implements Reporter {
   private writer: Writer
