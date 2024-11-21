@@ -1,5 +1,23 @@
 # Changelog
 
+### 11/21/2024
+
+esbehavior 5.0.0
+
+### Changed
+- Removed (undocumented) DocumentationRunner api and replaced with
+(undocumented) runBehavior function for more flexibility in running
+behaviors programmatically within best-behavior
+
+
+### 11/11/2024
+
+esbehavior 4.2.4
+
+### Fixed
+- Export Claim types
+
+
 ### 12/20/2023
 
 esbehavior 4.2.3
