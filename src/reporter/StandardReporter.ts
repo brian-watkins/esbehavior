@@ -9,7 +9,6 @@ import { ANSIFormatter, Formatter } from "./formatter.js";
 export interface StandardReporterOptions {
   writer?: Writer
   formatter?: Formatter
-  timer?: Timer
   slowClaimInMillis?: number
 }
 
@@ -31,7 +30,7 @@ export class StandardReporter implements Reporter {
   constructor(options: StandardReporterOptions = {}) {
     this.writer = options.writer ?? new ConsoleWriter()
     this.format = options.formatter ?? new ANSIFormatter()
-    this.timer = options.timer ?? TimerFactory.newTimer()
+    this.timer = TimerFactory.newTimer()
     this.slowClaimInMillis = options.slowClaimInMillis ?? 100
   }
 

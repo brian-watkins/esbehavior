@@ -7,13 +7,18 @@ import { Failure, Reporter } from '../src/reporter/index.js'
 import { ClaimResult, invalidClaim, skippedClaim, validClaim } from '../src/Claim.js'
 import { FakeTimer, fakeTimer } from './helpers/FakeTimer.js'
 import { Formatter } from '../src/reporter/formatter.js'
+import { TimerFactory } from '../src/Timer.js'
+
+test.after.each(() => {
+  TimerFactory.unsetTimer()
+})
 
 test("multiple examples with valid and skipped claims", async () => {
+  TimerFactory.setTimer(fakeTimer(13))
   const writer = new FakeReportWriter()
   const reporter = new StandardReporter({
     writer,
     formatter: new FakeFormatter(),
-    timer: fakeTimer(13),
     slowClaimInMillis: 100
   })
 
@@ -78,8 +83,9 @@ test("multiple examples with valid and skipped claims", async () => {
 })
 
 test("multiple behaviors, multiple examples, multiple claims", () => {
+  TimerFactory.setTimer(fakeTimer(8))
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(8) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
   reporter.end({
     behaviors: 3, examples: 4, valid: 12, invalid: 0, skipped: 0
@@ -93,8 +99,9 @@ test("multiple behaviors, multiple examples, multiple claims", () => {
 })
 
 test("multiple behaviors, multiple examples, multiple claims, one skipped", () => {
+  TimerFactory.setTimer(fakeTimer(8))
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(8) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
   reporter.end({
     behaviors: 3, examples: 4, valid: 11, invalid: 0, skipped: 1
@@ -108,8 +115,9 @@ test("multiple behaviors, multiple examples, multiple claims, one skipped", () =
 })
 
 test("multiple behaviors, multiple examples, multiple claims, one invalid", () => {
+  TimerFactory.setTimer(fakeTimer(8))
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(8) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
   reporter.end({
     behaviors: 3, examples: 4, valid: 11, invalid: 1, skipped: 0
@@ -123,8 +131,9 @@ test("multiple behaviors, multiple examples, multiple claims, one invalid", () =
 })
 
 test("multiple behaviors, multiple examples, multiple claims, multiple invalid", () => {
+  TimerFactory.setTimer(fakeTimer(8))
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(8) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
   reporter.end({
     behaviors: 3, examples: 4, valid: 10, invalid: 2, skipped: 0
@@ -138,8 +147,9 @@ test("multiple behaviors, multiple examples, multiple claims, multiple invalid",
 })
 
 test("multiple behaviors, multiple examples, multiple claims, one invalid, one skipped", () => {
+  TimerFactory.setTimer(fakeTimer(8))
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(8) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
   reporter.end({
     behaviors: 3, examples: 4, valid: 10, invalid: 1, skipped: 1
@@ -155,8 +165,9 @@ test("multiple behaviors, multiple examples, multiple claims, one invalid, one s
 
 
 test("one behavior, one example, one claim", () => {
+  TimerFactory.setTimer(fakeTimer(14))
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(14) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
   reporter.end({
     behaviors: 1, examples: 1, valid: 1, invalid: 0, skipped: 0
@@ -170,8 +181,9 @@ test("one behavior, one example, one claim", () => {
 })
 
 test("duration at 499", () => {
+  TimerFactory.setTimer(fakeTimer(499))
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(499) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
   reporter.end({
     behaviors: 1, examples: 1, valid: 1, invalid: 0, skipped: 0
@@ -185,8 +197,9 @@ test("duration at 499", () => {
 })
 
 test("duration at 500ms", () => {
+  TimerFactory.setTimer(fakeTimer(500))
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(500) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
   reporter.end({
     behaviors: 1, examples: 1, valid: 1, invalid: 0, skipped: 0
@@ -200,8 +213,9 @@ test("duration at 500ms", () => {
 })
 
 test("duration above 1 second", () => {
+  TimerFactory.setTimer(fakeTimer(1765))
   const writer = new FakeReportWriter()
-  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter(), timer: fakeTimer(1765) })
+  const reporter = new StandardReporter({ writer, formatter: new FakeFormatter() })
 
   reporter.end({
     behaviors: 1, examples: 1, valid: 1, invalid: 0, skipped: 0

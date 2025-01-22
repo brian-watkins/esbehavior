@@ -6,8 +6,21 @@ export interface Timer {
 
 export class TimerFactory {
   private static timerIndex: number = 0
+  private static timer: Timer | undefined
+
+  static setTimer(timer: Timer) {
+    this.timer = timer
+  }
+
+  static unsetTimer() {
+    this.timer = undefined
+  }
 
   static newTimer(): Timer {
+    if (TimerFactory.timer !== undefined) {
+      return TimerFactory.timer
+    }
+
     if (typeof window !== "undefined" && window.performance) {
       return new BrowserTimer(TimerFactory.timerIndex++)
     } else {
@@ -17,7 +30,7 @@ export class TimerFactory {
 }
 
 export class BrowserTimer implements Timer {
-  constructor (private index: number) {}
+  constructor(private index: number) { }
 
   start() {
     performance.mark(`start_validation_${this.index}`)
@@ -42,7 +55,7 @@ export class NodeTimer implements Timer {
   }
 
   stop(): void {
-    this.endTime = process.hrtime.bigint() 
+    this.endTime = process.hrtime.bigint()
   }
 
   durationInMillis(): number {
