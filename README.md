@@ -365,7 +365,8 @@ are two options at the moment:
 prints nicely formatted output to the console. By default, it will print the duration of
 any claims that take longer than 100ms. This value can be changed by providing your
 own instance of `StandardReporter` -- with the `slowClaim` option set to whatever you want --
-to the `validate` function.
+to the `validate` function. Set the `NO_COLOR` environment variable to a non-empty value
+to disable ANSI codes in the reporter output.
 2. `TAPReporter` -- This reporter prints TAP formatted output to the console. Use this to tie
 into the larger ecosystem of tools that use TAP, which includes other reporters (tap-spec,
 tap-mocha-reporter, tap-difflet, etc) as well as other tools.
