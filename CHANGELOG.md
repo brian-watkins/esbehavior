@@ -1,5 +1,18 @@
 # Changelog
 
+### 1/22/2025
+
+esbehavior 5.1.0
+
+### Added
+- Set the NO_COLOR environment variable to a non-empty value to
+disable ANSI codes in the output of the standard reporter
+
+### Changed
+- Timer is no longer a configurable option of StandardReporter
+(non-breaking since Timer was not exposed as part of the API)
+
+
 ### 11/21/2024
 
 esbehavior 5.0.0
