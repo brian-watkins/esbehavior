@@ -330,6 +330,46 @@ Combine observations into a group that has its own description. Useful for descr
 complication assertions.
 
 
+### Setup and Teardown for a Behavior
+
+If you need to do any setup or teardown for each *example* in a behavior, you should put this
+logic in a Context and supply it to each example. Sometimes, however, you may find that you want
+to do setup or teardow operations for the Behavior as a whole. For example, suppose there is a
+containerized database that will be exercised by all the examples in a behavior, and suppose it is
+slow to start and stop this container for each example. In this case, you can use `behaviorUsing`
+to generate a behavior with a Context that handles the setup and teardown logic for the behavior
+as a whole.
+
+#### behaviorUsing(context: Context\<T\>): (description: string, contextGenerator: (use: \<S\>(childContext: Context\<S, T\>) => Context\<S\>) => Array\<ConfigurableExample\>) => Behavior
+
+Generate a function that can create a behavior that allows examples to use the provided Context. The
+`init` function of the Context will be called the first time an example tries to use it, and the
+`teardown` function will be called after all examples have been completed (or skipped). For example:
+
+```
+const databaseContext = { init: () => createTheDatabase() }
+const exampleContext = { init: (database) => createTheExampleContext(database) }
+
+const databaseBehavior = behaviorUsing(databaseContext)
+
+databaseBehavior("reading and writing", use => [
+
+  example(use(exampleContext))
+    .description("my description")
+    .script({
+      suppose: [ ... ],
+      perform: [ ... ],
+      observe: [ ... ],
+    })
+
+])
+```
+
+Each example that wants to use the behavior's context should supply a Context to the provided `use`
+function. This context should have an `init` function that takes the value of the behavior's context
+as its argument.
+
+
 ### Validating Behaviors
 
 #### validate(behaviors: ConfigurableBehavior[], options: ValidationOptions): Promise\<Summary\>

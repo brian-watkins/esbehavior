@@ -7,6 +7,7 @@ import { Script, ScriptContext, scriptContext } from "./Script.js"
 import { ClaimResult, summarize } from "./Claim.js"
 import { Action } from "./Action.js"
 import { OrderProvider } from "./OrderProvider.js"
+import { Context } from "./Context.js"
 
 export interface ExampleValidationOptions {
   orderProvider: OrderProvider,
@@ -16,11 +17,6 @@ export interface ExampleValidationOptions {
 export interface Example {
   validate(reporter: Reporter, options: ExampleValidationOptions): Promise<Summary>
   skip(reporter: Reporter, options: ExampleValidationOptions): Promise<Summary>
-}
-
-export interface Context<T> {
-  init: () => T | Promise<T>
-  teardown?: (context: T) => void | Promise<void>
 }
 
 export interface ExampleSetup<T> extends Example {

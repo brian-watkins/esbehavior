@@ -1,4 +1,4 @@
-import { Context, BehaviorExampleBuilder, ExampleSetup } from "./Example.js"
+import { BehaviorExampleBuilder, ExampleSetup } from "./Example.js"
 import { Reporter } from "./reporter/index.js"
 import { Behavior, ConfigurableBehavior, ConfigurableExample } from "./Behavior.js"
 import { Effect, Observation, Outcome } from "./Observation.js"
@@ -9,6 +9,7 @@ import { Action, Procedure, Step } from "./Action.js"
 import { Documentation, hasPickedExamples } from "./Documentation.js"
 import { TimerFactory } from "./Timer.js"
 import { DefaultOrderProvider, OrderProvider, SeededRandomizer } from "./OrderProvider.js"
+import { BehaviorContext, Context } from "./Context.js"
 export { Effect, Outcome } from "./Observation.js"
 export type { Observation } from "./Observation.js"
 export { Fact, Situation } from "./Presupposition.js"
@@ -17,8 +18,8 @@ export { Procedure, Step } from "./Action.js"
 export type { Action } from "./Action.js"
 export type { Claim, ClaimResult, ValidClaim, InvalidClaim, SkippedClaim } from "./Claim.js"
 export type { OrderProvider } from "./OrderProvider.js"
-export { Behavior, ExampleOptions, BehaviorOptions, ValidationMode } from "./Behavior.js"
-export type { ConfigurableBehavior, ConfigurableExample } from "./Behavior.js"
+export { ExampleOptions, BehaviorOptions, ValidationMode } from "./Behavior.js"
+export type { Behavior, ConfigurableBehavior, ConfigurableExample } from "./Behavior.js"
 export type { Summary } from "./Summary.js"
 export type { Reporter, Writer, Failure } from "./reporter/index.js"
 export { StandardReporter } from "./reporter/StandardReporter.js"
@@ -26,7 +27,8 @@ export type { StandardReporterOptions } from "./reporter/StandardReporter.js"
 export { ANSIFormatter } from "./reporter/formatter.js"
 export type { Formatter } from "./reporter/formatter.js"
 export { TAPReporter } from "./reporter/TAPReporter.js"
-export type { Example, ExampleValidationOptions, Context, ExampleSetup, ExampleScript, ExampleScripts } from "./Example.js"
+export type { Example, ExampleValidationOptions, ExampleSetup, ExampleScript, ExampleScripts } from "./Example.js"
+export type { Context } from "./Context.js"
 export type { Script } from "./Script.js"
 export type { BehaviorValidationOptions } from "./behaviorRunner/index.js"
 export { ValidationStatus, runBehavior } from "./behaviorRunner/run.js"
@@ -67,10 +69,23 @@ export function randomOrder(seed?: string): OrderProvider {
 }
 
 export function behavior(description: string, examples: Array<ConfigurableExample>): Behavior {
-  return new Behavior(description, examples)
+  return {
+    description,
+    examples
+  }
 }
 
-const voidContext: Context<any> = { init: () => {} }
+export function behaviorUsing<T>(context: Context<T>): (description: string, contextGenerator: (use: <S>(childContext: Context<S, T>) => Context<S>) => Array<ConfigurableExample>) => Behavior {
+  const behaviorContext = new BehaviorContext(context)
+
+  return (description, contextGenerator) => ({
+    description,
+    examples: contextGenerator((childContext) => behaviorContext.useWithContext(childContext)),
+    context: behaviorContext
+  })
+}
+
+const voidContext: Context<any> = { init: () => { } }
 
 export function example<T = void>(context: Context<T> = voidContext): ExampleSetup<T> {
   return new BehaviorExampleBuilder(context)

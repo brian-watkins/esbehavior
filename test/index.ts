@@ -1,6 +1,7 @@
+import "./assumption.test.js"
 import "./async.test.js"
 import "./bail.test.js"
-import "./assumption.test.js"
+import "./behaviorContext.test.js"
 import "./claimTimer.test.js"
 import "./formatter.test.js"
 import "./multipleBehavior.test.js"

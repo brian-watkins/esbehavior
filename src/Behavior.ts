@@ -1,3 +1,4 @@
+import { Context } from "./Context.js"
 import { Example } from "./Example.js"
 
 export enum ValidationMode {
@@ -36,6 +37,8 @@ export class ExampleOptions {
   }
 }
 
-export class Behavior {
-  constructor(public description: string, public examples: Array<ConfigurableExample>) {}
+export interface Behavior {
+  description: string
+  examples: Array<ConfigurableExample>
+  context?: Context<void>
 }
