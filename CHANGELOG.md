@@ -2,13 +2,14 @@
 
 ### 1/23/2025
 
-esbehavior 5.2.0
+esbehavior 5.2.1
 
 ### Added
 - Support for Behavior contexts
 
 ### Fixed
 - ANSIFormatter works in browser environments
+- Missing extension in file import
 
 
 ### 1/22/2025
