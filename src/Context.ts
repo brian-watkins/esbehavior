@@ -1,4 +1,4 @@
-import { waitFor } from "./waitFor"
+import { waitFor } from "./waitFor.js"
 
 export interface Context<T, Initial = void> {
   init: (initialValue: Initial) => T | Promise<T>
