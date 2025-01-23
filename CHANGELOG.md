@@ -1,5 +1,16 @@
 # Changelog
 
+### 1/23/2025
+
+esbehavior 5.2.0
+
+### Added
+- Support for Behavior contexts
+
+### Fixed
+- ANSIFormatter works in browser environments
+
+
 ### 1/22/2025
 
 esbehavior 5.1.0
