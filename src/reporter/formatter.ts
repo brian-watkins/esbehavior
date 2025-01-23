@@ -12,9 +12,8 @@ export class ANSIFormatter implements Formatter {
   private isDisabled = false
 
   constructor() {
-    this.isDisabled =
-      process.env["NO_COLOR"] !== undefined &&
-      process.env["NO_COLOR"] !== ""
+    const noColor = getEnvironmentVariable("NO_COLOR")
+    this.isDisabled = noColor !== undefined && noColor !== ""
   }
 
   private wrap(start: string, end: string, message: string): string {
@@ -56,4 +55,12 @@ export class ANSIFormatter implements Formatter {
   cyan(message: string): string {
     return this.wrapColor("36", message)
   }
+}
+
+function getEnvironmentVariable(name: string): string | undefined {
+  if (typeof process === "undefined") {
+    return undefined
+  }
+
+  return process.env[name]
 }
