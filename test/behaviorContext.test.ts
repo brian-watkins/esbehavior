@@ -1,6 +1,6 @@
 import { test } from "uvu";
 import * as assert from 'uvu/assert'
-import { behavior, behaviorContext, Context, contextGenerator, defaultOrder, effect, example, validate } from "../src";
+import { behavior, behaviorContext, Context, defaultOrder, effect, example, useWithContext, validate } from "../src";
 import { FakeReporter, withBehavior, withExample, withSkippedClaim, withValidClaim } from "./helpers/FakeReporter";
 
 test("behavior with a context", async () => {
@@ -8,7 +8,7 @@ test("behavior with a context", async () => {
   const contextForTheBehavior = new TestContext()
   const exampleContext = new TestExampleContext()
 
-  const withContext = contextGenerator({
+  const withContext = useWithContext({
     behaviorScoped: behaviorContext(contextForTheBehavior)
   })
 
@@ -75,7 +75,7 @@ test("all examples are skipped", async () => {
   const testContext = new TestContext()
   const exampleContext = new TestExampleContext()
 
-  const withContext = contextGenerator({
+  const withContext = useWithContext({
     behaviorScoped: behaviorContext(testContext)
   })
 

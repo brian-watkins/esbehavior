@@ -1,12 +1,12 @@
 import { test } from "uvu";
 import * as assert from 'uvu/assert'
-import { Context, contextGenerator } from "../src";
+import { Context, useWithContext } from "../src";
 
 test("context generator with contexts", async () => {
   const stringContext = new TestContext(() => "some string")
   const numberContext = new TestContext(() => 14)
 
-  const generator = contextGenerator({
+  const generator = useWithContext({
     someString: stringContext,
     someNumber: numberContext
   })

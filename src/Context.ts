@@ -9,7 +9,7 @@ export type ContextValues<T extends Record<string, Context<any>>> = {
   [K in keyof T]: ExtractContextTypes<T[K]>['value'];
 };
 
-export function contextGenerator<D extends Record<string, Context<any>>>(dependencies: D): <T>(ctx: Context<T, ContextValues<D>>) => Context<T> {
+export function useWithContext<D extends Record<string, Context<any>>>(dependencies: D): <T>(ctx: Context<T, ContextValues<D>>) => Context<T> {
   let dependencyValues = {} as ContextValues<D>
 
   return (childContext) => {
