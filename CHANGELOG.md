@@ -1,5 +1,17 @@
 # Changelog
 
+### 2/3/2025
+
+esbehavior 6.0.0
+
+### Changed
+- Better API for managing context dependencies
+- Removed old API for behavior contexts
+
+### Added
+- behaviorContext function generates contexts for a behavior
+
+
 ### 1/23/2025
 
 esbehavior 5.2.1
