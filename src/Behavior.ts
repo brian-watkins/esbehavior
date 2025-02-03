@@ -40,5 +40,4 @@ export class ExampleOptions {
 export interface Behavior {
   description: string
   examples: Array<ConfigurableExample>
-  context?: Context<void>
 }

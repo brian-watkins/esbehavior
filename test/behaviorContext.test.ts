@@ -1,18 +1,20 @@
 import { test } from "uvu";
 import * as assert from 'uvu/assert'
-import { behaviorUsing, Context, defaultOrder, effect, example, validate } from "../src";
+import { behavior, behaviorContext, Context, contextGenerator, defaultOrder, effect, example, validate } from "../src";
 import { FakeReporter, withBehavior, withExample, withSkippedClaim, withValidClaim } from "./helpers/FakeReporter";
 
 test("behavior with a context", async () => {
   const reporter = new FakeReporter()
-  const testContext = new TestContext()
+  const contextForTheBehavior = new TestContext()
   const exampleContext = new TestExampleContext()
 
-  const upgradedBehavior = behaviorUsing(testContext)
+  const withContext = contextGenerator({
+    behaviorScoped: behaviorContext(contextForTheBehavior)
+  })
 
   await validate([
-    upgradedBehavior("my behavior with a context", use => [
-      example(use(exampleContext))
+    behavior("my behavior with a context", [
+      example(withContext(exampleContext))
         .description("example 1")
         .script({
           observe: [
@@ -21,7 +23,7 @@ test("behavior with a context", async () => {
             })
           ]
         }),
-      example(use(exampleContext))
+      example(withContext(exampleContext))
         .description("example 2")
         .script({
           observe: [
@@ -30,6 +32,18 @@ test("behavior with a context", async () => {
             })
           ]
         }),
+    ]),
+    behavior("another behavior with a behavior context", [
+      example(withContext(exampleContext))
+        .description("example 3")
+        .script({
+          observe: [
+            effect("it checks all the things", (context) => {
+              assert.equal(context, "example plus blah")
+            })
+          ]
+        }),
+
     ])
   ], { reporter, order: defaultOrder() })
 
@@ -41,14 +55,19 @@ test("behavior with a context", async () => {
       withExample("example 2", [
         withValidClaim("it checks more things")
       ])
+    ]),
+    withBehavior("another behavior with a behavior context", [
+      withExample("example 3", [
+        withValidClaim("it checks all the things")
+      ])
     ])
   ])
 
-  assert.equal(exampleContext.calledInit, 2)
-  assert.equal(exampleContext.calledTeardownWith, [ "example plus blah", "example plus blah" ])
+  assert.equal(exampleContext.calledInit, 3)
+  assert.equal(exampleContext.calledTeardownWith, ["example plus blah", "example plus blah", "example plus blah"])
 
-  assert.equal(testContext.calledInit, 1)
-  assert.equal(testContext.calledTeardownWith, [ "blah" ])
+  assert.equal(contextForTheBehavior.calledInit, 2)
+  assert.equal(contextForTheBehavior.calledTeardownWith, ["blah", "blah"])
 })
 
 test("all examples are skipped", async () => {
@@ -56,11 +75,13 @@ test("all examples are skipped", async () => {
   const testContext = new TestContext()
   const exampleContext = new TestExampleContext()
 
-  const upgradedBehavior = behaviorUsing(testContext)
+  const withContext = contextGenerator({
+    behaviorScoped: behaviorContext(testContext)
+  })
 
   await validate([
-    upgradedBehavior("my behavior with a context", use => [
-      (m) => m.skip() && example(use(exampleContext))
+    behavior("my behavior with a context", [
+      (m) => m.skip() && example(withContext(exampleContext))
         .description("example 1")
         .script({
           observe: [
@@ -69,7 +90,7 @@ test("all examples are skipped", async () => {
             })
           ]
         }),
-      (m) => m.skip() && example(use(exampleContext))
+      (m) => m.skip() && example(withContext(exampleContext))
         .description("example 2")
         .script({
           observe: [
@@ -103,7 +124,7 @@ test("all examples are skipped", async () => {
 class TestContext implements Context<string> {
   calledInit: number = 0
   calledTeardownWith: Array<string> = []
-  
+
   async init(): Promise<string> {
     this.calledInit++
     return "blah"
@@ -114,13 +135,13 @@ class TestContext implements Context<string> {
   }
 }
 
-class TestExampleContext implements Context<string, string> {
+class TestExampleContext implements Context<string, { behaviorScoped: string }> {
   calledInit: number = 0
   calledTeardownWith: Array<string> = []
-  
-  async init(word: string): Promise<string> {
+
+  async init(initialValue: { behaviorScoped: string }): Promise<string> {
     this.calledInit++
-    return `example plus ${word}`
+    return `example plus ${initialValue.behaviorScoped}`
   }
 
   async teardown(context: string): Promise<void> {

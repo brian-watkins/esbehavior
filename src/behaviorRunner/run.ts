@@ -6,7 +6,7 @@ import { FailFastBehaviorRunner } from "./FailFastBehaviorRunner.js"
 import { PickedOnlyBehaviorRunner } from "./PickedOnlyBehaviorRunner.js"
 import { SkipBehaviorRunner } from "./SkipBehaviorRunner.js"
 import { StandardBehaviorRunner } from "./StandardBehaviorRunner.js"
-import { waitFor } from "../waitFor.js"
+import { teardownBehaviorContexts } from "../Context.js"
 
 export enum ValidationStatus {
   VALID,
@@ -25,7 +25,7 @@ export async function runBehavior(options: BehaviorValidationOptions, status: Va
     summary = addSummary(summary, exampleSummary)
   }
 
-  await waitFor(behavior.context?.teardown?.())
+  await teardownBehaviorContexts()
 
   runner.end(behavior)
 

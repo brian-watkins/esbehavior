@@ -1,34 +1,70 @@
-import { waitFor } from "./waitFor.js"
-
 export interface Context<T, Initial = void> {
   init: (initialValue: Initial) => T | Promise<T>
   teardown?: (context: T) => void | Promise<void>
 }
 
-export class BehaviorContext<T> implements Context<void> {
-  private contextValue: T | undefined
+type ExtractContextTypes<C> = C extends Context<infer T, infer I> ? { value: T; init: I } : never;
 
-  constructor(private context: Context<T>) { }
+type ContextValues<T> = {
+  [K in keyof T]: ExtractContextTypes<T[K]>['value'];
+};
 
-  async init(): Promise<void> { }
+export function contextGenerator<D extends Record<string, Context<any>>>(dependencies: D): <T>(ctx: Context<T, ContextValues<D>>) => Context<T> {
+  let initialValue = {} as ContextValues<D>
 
-  useWithContext<S>(context: Context<S, T>): Context<S> {
+  return (childContext) => {
     return {
       init: async () => {
-        if (this.contextValue === undefined) {
-          this.contextValue = await waitFor(this.context.init())
+        for (const dependency in dependencies) {
+          initialValue[dependency] = await dependencies[dependency].init()
         }
-        return context.init(this.contextValue)
+
+        return childContext.init(initialValue)
       },
-      teardown: async (exampleContextValue) => {
-        await waitFor(context.teardown?.(exampleContextValue))
+      teardown: async (value) => {
+        for (const dependency in initialValue) {
+          await dependencies[dependency].teardown?.(initialValue[dependency])
+        }
+
+        await childContext.teardown?.(value)
       }
     }
   }
+}
 
-  teardown(): void | Promise<void> {
-    if (this.contextValue !== undefined) {
-      this.context.teardown?.(this.contextValue)
+interface CustomGlobalThis extends Global {
+  __esbehaviorContexts: Array<() => Promise<void>>
+}
+
+declare let globalThis: CustomGlobalThis
+
+globalThis.__esbehaviorContexts = []
+
+export async function teardownBehaviorContexts(): Promise<void> {
+  for (const teardown of globalThis.__esbehaviorContexts) {
+    await teardown()
+  }
+  globalThis.__esbehaviorContexts = []
+}
+
+function addBehaviorContextTeardown(handler: () => Promise<void>) {
+  globalThis.__esbehaviorContexts.push(handler)
+}
+
+export function behaviorContext<T>(context: Context<T>): Context<T> {
+  let contextValue: T | undefined = undefined
+
+  return {
+    init: async () => {
+      if (contextValue === undefined) {
+        contextValue = await context.init()
+
+        addBehaviorContextTeardown(async () => {
+          await context.teardown?.(contextValue!)
+          contextValue = undefined
+        })
+      }
+      return contextValue!
     }
   }
 }

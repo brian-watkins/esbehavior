@@ -9,7 +9,7 @@ import { Action, Procedure, Step } from "./Action.js"
 import { Documentation, hasPickedExamples } from "./Documentation.js"
 import { TimerFactory } from "./Timer.js"
 import { DefaultOrderProvider, OrderProvider, SeededRandomizer } from "./OrderProvider.js"
-import { BehaviorContext, Context } from "./Context.js"
+import { Context } from "./Context.js"
 export { Effect, Outcome } from "./Observation.js"
 export type { Observation } from "./Observation.js"
 export { Fact, Situation } from "./Presupposition.js"
@@ -29,6 +29,7 @@ export type { Formatter } from "./reporter/formatter.js"
 export { TAPReporter } from "./reporter/TAPReporter.js"
 export type { Example, ExampleValidationOptions, ExampleSetup, ExampleScript, ExampleScripts } from "./Example.js"
 export type { Context } from "./Context.js"
+export { contextGenerator, behaviorContext } from "./Context.js"
 export type { Script } from "./Script.js"
 export type { BehaviorValidationOptions } from "./behaviorRunner/index.js"
 export { ValidationStatus, runBehavior } from "./behaviorRunner/run.js"
@@ -73,16 +74,6 @@ export function behavior(description: string, examples: Array<ConfigurableExampl
     description,
     examples
   }
-}
-
-export function behaviorUsing<T>(context: Context<T>): (description: string, contextGenerator: (use: <S>(childContext: Context<S, T>) => Context<S>) => Array<ConfigurableExample>) => Behavior {
-  const behaviorContext = new BehaviorContext(context)
-
-  return (description, contextGenerator) => ({
-    description,
-    examples: contextGenerator((childContext) => behaviorContext.useWithContext(childContext)),
-    context: behaviorContext
-  })
 }
 
 const voidContext: Context<any> = { init: () => { } }
