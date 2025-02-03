@@ -5,26 +5,27 @@ export interface Context<T, Initial = void> {
 
 type ExtractContextTypes<C> = C extends Context<infer T, infer I> ? { value: T; init: I } : never;
 
-type ContextValues<T> = {
+export type ContextValues<T extends Record<string, Context<any>>> = {
   [K in keyof T]: ExtractContextTypes<T[K]>['value'];
 };
 
 export function contextGenerator<D extends Record<string, Context<any>>>(dependencies: D): <T>(ctx: Context<T, ContextValues<D>>) => Context<T> {
-  let initialValue = {} as ContextValues<D>
+  let dependencyValues = {} as ContextValues<D>
 
   return (childContext) => {
     return {
       init: async () => {
         for (const dependency in dependencies) {
-          initialValue[dependency] = await dependencies[dependency].init()
+          dependencyValues[dependency] = await dependencies[dependency].init()
         }
 
-        return childContext.init(initialValue)
+        return childContext.init(dependencyValues)
       },
       teardown: async (value) => {
-        for (const dependency in initialValue) {
-          await dependencies[dependency].teardown?.(initialValue[dependency])
+        for (const dependency in dependencyValues) {
+          await dependencies[dependency].teardown?.(dependencyValues[dependency])
         }
+        dependencyValues = {} as ContextValues<D>
 
         await childContext.teardown?.(value)
       }
