@@ -260,6 +260,26 @@ script, if the `teardown` method is defined, it will be called at the end of the
 example. If the `init` method or the `teardown` method fails, then the validation
 run will be terminated.
 
+Encapsulate reusable dependencies for tests in Contexts and provide them
+to other Contexts via `useWithContext`:
+
+#### useWithContext\<D extends Record\<string, Context\<any\>\>\>(dependencies: D): \<T\>(ctx: Context\<T, ContextValues\<D\>\>) => Context\<T\> {
+
+Use this function to create a function that provides dependencies to a Context
+upon initialization. For example, suppose you have a function `browserContext()`
+that produces a `Context<WebBrowser>` that manages a reference to a web browser
+instance. You can create contexts that use this context like so:
+
+```
+const useBrowser = useWithContext({ browser: browserContext() })
+
+const myContext = useBrowser({
+  init: ({ browser }) => {
+    // browser is the initialized value of the Context<WebBrowser>
+  }
+})
+```
+
 #### example\<T\>(context?: Context\<T\>): Fluent Example builder API
 
 Use this function to start the construction of an example. Provide a context, if
@@ -336,38 +356,14 @@ If you need to do any setup or teardown for each *example* in a behavior, you sh
 logic in a Context and supply it to each example. Sometimes, however, you may find that you want
 to do setup or teardow operations for the Behavior as a whole. For example, suppose there is a
 containerized database that will be exercised by all the examples in a behavior, and suppose it is
-slow to start and stop this container for each example. In this case, you can use `behaviorUsing`
-to generate a behavior with a Context that handles the setup and teardown logic for the behavior
-as a whole.
+slow to start and stop this container for each example. In this case, you can use `behaviorContxt`
+to generate a Context that handles the setup and teardown logic for the behavior as a whole.
 
-#### behaviorUsing(context: Context\<T\>): (description: string, contextGenerator: (use: \<S\>(childContext: Context\<S, T\>) => Context\<S\>) => Array\<ConfigurableExample\>) => Behavior
+#### behaviorContext(context: Context\<T\>): Context\<T\>
 
-Generate a function that can create a behavior that allows examples to use the provided Context. The
-`init` function of the Context will be called the first time an example tries to use it, and the
-`teardown` function will be called after all examples have been completed (or skipped). For example:
-
-```
-const databaseContext = { init: () => createTheDatabase() }
-const exampleContext = { init: (database) => createTheExampleContext(database) }
-
-const databaseBehavior = behaviorUsing(databaseContext)
-
-databaseBehavior("reading and writing", use => [
-
-  example(use(exampleContext))
-    .description("my description")
-    .script({
-      suppose: [ ... ],
-      perform: [ ... ],
-      observe: [ ... ],
-    })
-
-])
-```
-
-Each example that wants to use the behavior's context should supply a Context to the provided `use`
-function. This context should have an `init` function that takes the value of the behavior's context
-as its argument.
+Generate a Context based on the provided context. The generated Context will be
+initialized the first time it is referenced. The `teardown` function will be called
+at the end of the behavior, after all examples have been completed or skipped.
 
 
 ### Validating Behaviors
