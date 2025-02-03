@@ -1,8 +1,10 @@
 import { test } from "uvu";
 import * as assert from 'uvu/assert'
-import { Context, useWithContext } from "../src";
+import { behavior, Context, defaultOrder, effect, example, useWithContext, validate } from "../src";
+import { FakeReporter, withBehavior, withExample, withValidClaim } from "./helpers/FakeReporter";
 
-test("context generator with contexts", async () => {
+test("useWithContext", async () => {
+  const reporter = new FakeReporter()
   const stringContext = new TestContext(() => "some string")
   const numberContext = new TestContext(() => 14)
 
@@ -15,15 +17,40 @@ test("context generator with contexts", async () => {
     return initial.someString.length + initial.someNumber + 2
   })
 
-  const myContext = generator(childContext)
+  await validate([
+    behavior("my behavior with a context", [
+      example(generator(childContext))
+        .description("example 1")
+        .script({
+          observe: [
+            effect("it checks things", (context) => {
+              assert.equal(context, 27)
+            })
+          ]
+        }),
+      example(generator(childContext))
+        .description("example 2")
+        .script({
+          observe: [
+            effect("it checks more things", (context) => {
+              assert.equal(context, 27)
+            })
+          ]
+        }),
+    ]),
+  ], { reporter, order: defaultOrder() })
 
-  const contextValue = await myContext.init()
-  await myContext.teardown?.(contextValue)
+  reporter.expectReport([
+    withBehavior("my behavior with a context", [
+      withExample("example 1", [
+        withValidClaim("it checks things")
+      ]),
+      withExample("example 2", [
+        withValidClaim("it checks more things")
+      ])
+    ])
+  ])
 
-  const contextValue2 = await myContext.init()
-  await myContext.teardown?.(contextValue2)
-
-  assert.equal(contextValue, 27)
   assert.equal(childContext.calledInit, 2)
   assert.equal(childContext.calledTeardownWith, [ 27, 27 ])
 
