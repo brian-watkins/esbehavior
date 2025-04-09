@@ -261,22 +261,37 @@ example. If the `init` method or the `teardown` method fails, then the validatio
 run will be terminated.
 
 Encapsulate reusable dependencies for tests in Contexts and provide them
-to other Contexts via `useWithContext`:
+to other Contexts via `contextMap`:
 
-#### useWithContext\<D extends Record\<string, Context\<any\>\>\>(dependencies: D): \<T\>(ctx: Context\<T, ContextValues\<D\>\>) => Context\<T\> {
+#### contextMap\<D extends Record\<string, Context\<any\>\>\>(map?: D): ContextMap\<ContextValues\<D\>\>
 
-Use this function to create a function that provides dependencies to a Context
-upon initialization. For example, suppose you have a function `browserContext()`
-that produces a `Context<WebBrowser>` that manages a reference to a web browser
-instance. You can create contexts that use this context like so:
+Use this function to build a `ContextMap` from a record with Contexts. `ContextMap` is itself
+a `Context` whose value is a record with the values of each initialized Context. Extend an existing
+`ContextMap` by calling `set` to add another context with a named key that may depend on values
+already in the `ContextMap`. For example, suppose you have a function `serverContext()` that starts
+a web server and returns an object with a `host` property, and suppose you have a function `databaseContext()`
+that initializes a database and provides an object with a `connectionURL` property. And, finally, suppose
+you have a function `browserContext(host: string)` that initializes a web browser with a base url. You could
+construct a context map that provides all three contexts and allows the browserContext to be initialized
+based on the value of the serverContext like so:
 
 ```
-const useBrowser = useWithContext({ browser: browserContext() })
+const context = contextMap({
+  database: databaseContext(),
+  server: serverContext()
+})
+  .set("browser", ({ server }) => browserContext(server.host))
+```
 
-const myContext = useBrowser({
-  init: ({ browser }) => {
-    // browser is the initialized value of the Context<WebBrowser>
-  }
+#### use\<T, S\>(context: Context\<T\>, dependentContext: Context\<S, T\>): Context\<S\>
+
+Use this function to provide a Context as a dependency to another Context. Suppose you
+have an example that uses a `testableApp` context which itself needs to use a web browser
+supplied with a context generated using `browserContext()`. You could set that up like so:
+
+```
+const testableApp: Context<TestableApp> = use(browserContext(), {
+  init(browser) => new TestableApp(browser)
 })
 ```
 
