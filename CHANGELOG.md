@@ -1,5 +1,16 @@
 # Changelog
 
+### 4/10/2025
+
+esbehavior 7.0.0
+
+### Removed
+- useWithContext
+
+### Added
+- contextMap and use functions for better managing contexts
+
+
 ### 2/3/2025
 
 esbehavior 6.0.0
