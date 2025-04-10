@@ -260,40 +260,66 @@ script, if the `teardown` method is defined, it will be called at the end of the
 example. If the `init` method or the `teardown` method fails, then the validation
 run will be terminated.
 
-Encapsulate reusable dependencies for tests in Contexts and provide them
-to other Contexts via `contextMap`:
-
-#### contextMap\<D extends Record\<string, Context\<any\>\>\>(map?: D): ContextMap\<ContextValues\<D\>\>
-
-Use this function to build a `ContextMap` from a record with Contexts. `ContextMap` is itself
-a `Context` whose value is a record with the values of each initialized Context. Extend an existing
-`ContextMap` by calling `set` to add another context with a named key that may depend on values
-already in the `ContextMap`. For example, suppose you have a function `serverContext()` that starts
-a web server and returns an object with a `host` property, and suppose you have a function `databaseContext()`
-that initializes a database and provides an object with a `connectionURL` property. And, finally, suppose
-you have a function `browserContext(host: string)` that initializes a web browser with a base url. You could
-construct a context map that provides all three contexts and allows the browserContext to be initialized
-based on the value of the serverContext like so:
-
-```
-const context = contextMap({
-  database: databaseContext(),
-  server: serverContext()
-})
-  .set("browser", ({ server }) => browserContext(server.host))
-```
-
 #### use\<T, S\>(context: Context\<T\>, dependentContext: Context\<S, T\>): Context\<S\>
 
 Use this function to provide a Context as a dependency to another Context. Suppose you
 have an example that uses a `testableApp` context which itself needs to use a web browser
-supplied with a context generated using `browserContext()`. You could set that up like so:
+supplied with a context generated using a function called `browserContext()`. You could
+set that up like so:
 
 ```
 const testableApp: Context<TestableApp> = use(browserContext(), {
-  init(browser) => new TestableApp(browser)
+  init(browser) => new TestApp(browser)
 })
 ```
+
+#### contextMap\<D extends Record\<string, Context\<any\>\>\>(map?: D): ContextMap\<ContextValues\<D\>\>
+
+Sometimes an example might make use of several services. It might need a
+reference to a browser page to load the application under test inside, and it
+might need a reference to a database to set up things for the test, and
+it might even need to start and stop a web service. Each of these services --
+the browser, the database, the web service -- can be managed through their
+own Context, with service-specific initialization and teardown functions. So
+you might have a function called `browserContext(config)` that
+builds a context to initialize and teardown a browser page based on some
+config. Or `serverContext(config)` that starts and stops a web service based
+on some config. When working with multiple contexts, provide them to an
+example via a `ContextMap`.
+
+A `ContextMap` is itself a Context that provides an object with keys that each
+map to a value of some other Context. The `ContextMap` will manage initializing
+and tearing down each of the included contexts in the right order.
+
+Use the `contextMap` function to build a `ContextMap` from other contexts. And
+note that `ContextMap` has a method called `set` which creates a new `ContextMap`
+with a new context, based on the existing values in the `ContextMap`.
+
+For example, we can create a `ContextMap` with the contexts described above like
+so:
+
+```
+const appContext = contextMap({ database: databaseContext() })
+  .set("server", ({ database }) => serverContext(database.connectionString))
+  .set("browser", ({ server }) => browserContext(server.host))
+```
+
+In this example, `appContext` is a `Context<{ database: Database, server: WebService, browser: BrowserPage }>`
+where `Database`, `WebService`, and `BrowserPage` are the values of the respective contexts.
+
+This context can then be used to build an example-specific context like so:
+
+```
+const exampleContext = use(appContext, {
+  init({ browser }) => new TestApp(browser)
+})
+```
+
+#### Example
+
+An example is just an object that conforms to the `Example` interface defined
+above. esbehavior includes a default implementation of `Example` that should
+serve well for most purposes; it is available via the `example` function.
 
 #### example\<T\>(context?: Context\<T\>): Fluent Example builder API
 
@@ -369,9 +395,9 @@ complication assertions.
 
 If you need to do any setup or teardown for each *example* in a behavior, you should put this
 logic in a Context and supply it to each example. Sometimes, however, you may find that you want
-to do setup or teardow operations for the Behavior as a whole. For example, suppose there is a
+to do setup or teardown operations for the Behavior as a whole. For example, suppose there is a
 containerized database that will be exercised by all the examples in a behavior, and suppose it is
-slow to start and stop this container for each example. In this case, you can use `behaviorContxt`
+slow to start and stop this container for each example. In this case, you can use `behaviorContext`
 to generate a Context that handles the setup and teardown logic for the behavior as a whole.
 
 #### behaviorContext(context: Context\<T\>): Context\<T\>
