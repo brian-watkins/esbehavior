@@ -14,7 +14,7 @@ export function contextMap<T extends Record<string, Context<any>>>(base: T = {} 
 }
 
 export interface ContextMap<T> extends Context<T> {
-  set<S, N extends string>(name: N, generator: (dependencies: T) => Context<S, void>): ContextMap<T & Record<N, S>>
+  thenSet<S, N extends string>(name: N, generator: (dependencies: T) => Context<S, void>): ContextMap<T & Record<N, S>>
 }
 
 class InnerContextMap<T extends Record<string, any>> implements Context<T> {
@@ -28,7 +28,7 @@ class InnerContextMap<T extends Record<string, any>> implements Context<T> {
     return this.dependencyContext.teardown?.(context)
   }
 
-  set<S, N extends string>(name: N, generator: (dependencies: T) => Context<S, void>): ContextMap<T & Record<N, S>> {
+  thenSet<S, N extends string>(name: N, generator: (dependencies: T) => Context<S, void>): ContextMap<T & Record<N, S>> {
     let context: Context<S>
     const wrapperContext: Context<T & Record<N, S>> = {
       init: async () => {

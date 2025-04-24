@@ -67,8 +67,8 @@ test("context map with one context that depends on a previously added one", asyn
   let numberContext!: TestContext<number, void>
 
   const dependenciesContext = contextMap()
-    .set("someString", () => stringContext)
-    .set("someNumber", ({ someString }) => {
+    .thenSet("someString", () => stringContext)
+    .thenSet("someNumber", ({ someString }) => {
       if (numberContext === undefined) {
         numberContext = new TestContext(() => someString.length)
       }
@@ -130,7 +130,7 @@ test("context map with context that depends on an initial context", async () => 
   let numberContext!: TestContext<number, void>
 
   const dependenciesContext = contextMap({ basis: stringContext })
-    .set("someNumber", ({ basis }) => {
+    .thenSet("someNumber", ({ basis }) => {
       if (numberContext === undefined) {
         numberContext = new TestContext(() => basis.length)
       }

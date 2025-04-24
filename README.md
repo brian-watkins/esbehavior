@@ -292,7 +292,7 @@ map to a value of some other Context. The `ContextMap` will manage initializing
 and tearing down each of the included contexts in the right order.
 
 Use the `contextMap` function to build a `ContextMap` from other contexts. And
-note that `ContextMap` has a method called `set` which creates a new `ContextMap`
+note that `ContextMap` has a method called `thenSet` which creates a new `ContextMap`
 with a new context, based on the existing values in the `ContextMap`.
 
 For example, we can create a `ContextMap` with the contexts described above like
@@ -300,8 +300,8 @@ so:
 
 ```
 const appContext = contextMap({ database: databaseContext() })
-  .set("server", ({ database }) => serverContext(database.connectionString))
-  .set("browser", ({ server }) => browserContext(server.host))
+  .thenSet("server", ({ database }) => serverContext(database.connectionString))
+  .thenSet("browser", ({ server }) => browserContext(server.host))
 ```
 
 In this example, `appContext` is a `Context<{ database: Database, server: WebService, browser: BrowserPage }>`
