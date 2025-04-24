@@ -1,5 +1,16 @@
 # Changelog
 
+### 4/24/2025
+
+esbehavior 8.0.0
+
+### Removed
+- contextMap#set
+
+### Added
+- contextMap#thenSet
+
+
 ### 4/10/2025
 
 esbehavior 7.0.0
