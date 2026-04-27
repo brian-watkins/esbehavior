@@ -106,16 +106,18 @@ For more examples, see the [tests](https://github.com/brian-watkins/esbehavior/t
 ## Running Behaviors
 
 esbehavior is just a framework for writing executable documentation in terms of
-behaviors and examples. In order to validate the behaviors you write, you'll need to
-write a 'runner' script that gathers the appropriate behaviors and passes them to
-the `validate` function, which will then run all the examples for each behavior and print
-the results to the console.
+behaviors and examples; it's a library one could use to build a testing tool.
 
-This 'runner' script could be executed with node, or it could be executed in a
-browser context.
+In order to actually use this to validate the behaviors
+you write, you'll need some script that imports the appropriate behaviors and
+passes them to the `validate` function, which will then run all the examples
+for each behavior and print the results to the console. esbehavior does not make
+any assumptions about the runtime environment, so behaviors can be validated
+in this way either in node or the browser.
 
-Here's a sample with [behaviors evaluated in node](https://github.com/brian-watkins/esbehavior/tree/main/samples/node) -- note the runner file at `esbehavior/samples/node/specs/runner.ts` -- and here's
-a sample for a React app with [behaviors evaluated in a browser](https://github.com/brian-watkins/esbehavior/tree/main/samples/react) -- with the runner file at `esbehavior/samples/react/specs/runner.mjs`.
+Unless you have some very special use case or just want to build your own
+testing tool, the best way to write executable documentation with esbehavior
+is to use [best-behavior](https://www.npmjs.com/package/best-behavior).
 
 
 ### Running particular examples only; Skipping examples
