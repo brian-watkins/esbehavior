@@ -86,11 +86,11 @@ export function use<T, S>(context: Context<T>, dependentContext: Context<S, T>):
 
 // Behavior Contexts
 
-interface CustomGlobalThis extends Global {
+interface CustomGlobalThis {
   __esbehaviorContexts: Array<() => Promise<void>>
 }
 
-declare let globalThis: CustomGlobalThis
+declare const globalThis: CustomGlobalThis
 
 globalThis.__esbehaviorContexts = []
 

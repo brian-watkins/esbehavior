@@ -1,4 +1,6 @@
-import { RandomGenerator, unsafeUniformIntDistribution, xoroshiro128plus } from "pure-rand"
+import { uniformInt } from "pure-rand/distribution/uniformInt"
+import { xoroshiro128plus } from "pure-rand/generator/xoroshiro128plus"
+import { RandomGenerator } from "pure-rand/types/RandomGenerator"
 
 export interface OrderProvider {
   description: string
@@ -47,7 +49,7 @@ export class SeededRandomizer implements OrderProvider {
   }
 
   private nextValue(min: number, max: number): number {
-    return unsafeUniformIntDistribution(min, max, this.generator)
+    return uniformInt(this.generator, min, max)
   }
 
   order<T>(items: Array<T>): Array<T> {

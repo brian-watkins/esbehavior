@@ -16,8 +16,10 @@ const browser = await chromium.launch({
 
 const page = await browser.newPage()
 page.on("console", (message) => {
-  if (message.text().startsWith("[vite] connect")) return
-  process.stdout.write(message.text())
+  const text = message.text()
+  if (text.startsWith("[vite] connect")) return
+  if (text.includes("has been externalized for browser compatibility")) return
+  process.stdout.write(text)
 })
 page.on("pageerror", (message) => {
   process.stdout.write(JSON.stringify(message))
