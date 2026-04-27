@@ -1,5 +1,13 @@
 # Changelog
 
+### 4/27/2026
+
+esbehavior 8.0.1
+
+### Changed
+- updated dependencies
+
+
 ### 4/24/2025
 
 esbehavior 8.0.0
